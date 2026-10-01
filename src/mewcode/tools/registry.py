@@ -25,11 +25,18 @@ class ToolRegistry:
             raise ToolError("unknown_tool", "工具未注册，请使用提供的工具列表", name=name)
         return self._tools[name]
 
-    def definitions(self) -> tuple[ToolDefinition, ...]:
-        return tuple(ToolDefinition(t.name, t.description, t.input_schema) for t in self._tools.values())
+    def names(self, *, read_only: bool | None = None) -> frozenset[str]:
+        return frozenset(t.name for t in self._tools.values()
+                         if read_only is None or bool(getattr(t, "read_only", False)) == read_only)
 
-    def prepare(self, name: str, raw: str) -> tuple[Tool, dict[str, Any]]:
+    def definitions(self, *, allowed_tools: frozenset[str] | None = None) -> tuple[ToolDefinition, ...]:
+        return tuple(ToolDefinition(t.name, t.description, t.input_schema, bool(getattr(t, "read_only", False)))
+                     for t in self._tools.values() if allowed_tools is None or t.name in allowed_tools)
+
+    def prepare(self, name: str, raw: str, *, allowed_tools: frozenset[str] | None = None) -> tuple[Tool, dict[str, Any]]:
         tool = self.get(name)
+        if allowed_tools is not None and name not in allowed_tools:
+            raise ToolError("tool_not_allowed", "当前模式禁止使用此工具", name=name)
         try:
             if len(raw.encode("utf-8")) > ARGUMENT_LIMIT:
                 raise ToolError("input_too_large", "工具参数超过 2 MiB 上限")
@@ -45,9 +52,10 @@ class ToolRegistry:
             raise ToolError("invalid_arguments", f"{location} 不满足 {error.validator} 约束，请核对参数 Schema")
         return tool, arguments
 
-    def invoke(self, name: str, raw: str, context: ToolContext) -> ToolResult:
+    def invoke(self, name: str, raw: str, context: ToolContext, *,
+               allowed_tools: frozenset[str] | None = None) -> ToolResult:
         try:
-            tool, arguments = self.prepare(name, raw)
+            tool, arguments = self.prepare(name, raw, allowed_tools=allowed_tools)
             return tool.execute(arguments, context)
         except ToolError as error:
             return error.result()

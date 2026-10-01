@@ -1,6 +1,7 @@
 """Anthropic Messages 流式适配器。"""
 
-from collections.abc import Iterator, Sequence
+from collections.abc import AsyncIterator, Sequence
+from dataclasses import replace
 import json
 import re
 from typing import Any, Literal
@@ -11,7 +12,7 @@ import anthropic
 from ..config import ProviderConfig
 from ..errors import safe_provider_error
 from ..tools.base import ARGUMENT_LIMIT, ToolDefinition
-from ..types import Message, ProviderError, StreamEvent, ToolCall
+from ..types import Message, ProviderError, ProviderEvent, TokenUsage, ToolCall
 from .tool_messages import anthropic_messages, anthropic_tools, input_object, validate_calls
 
 
@@ -46,22 +47,29 @@ def _is_deepseek_anthropic(base_url: str) -> bool:
 class AnthropicProvider:
     def __init__(self, config: ProviderConfig, *, client: Any | None = None) -> None:
         self.config = config
-        self.client = client or anthropic.Anthropic(
+        self.client = client or anthropic.AsyncAnthropic(
             api_key=config.api_key,
             base_url=config.base_url,
+            max_retries=0,
         )
 
-    def stream(self, messages: Sequence[Message], *, tools: Sequence[ToolDefinition] = (),
-               tool_choice: Literal["auto", "none"] = "auto") -> Iterator[StreamEvent]:
+    async def aclose(self) -> None:
+        await self.client.close()
+
+    async def stream(self, messages: Sequence[Message], *, tools: Sequence[ToolDefinition] = (),
+                     tool_choice: Literal["auto", "none"] = "auto",
+                     system_prompt: str = "") -> AsyncIterator[ProviderEvent]:
         deepseek_compatible = _is_deepseek_anthropic(self.config.base_url)
         provider_name = "DeepSeek" if deepseek_compatible else "Claude"
         request: dict[str, Any] = {
             "model": self.config.model, "max_tokens": 8192, "stream": True,
             "messages": anthropic_messages(messages),
         }
+        if system_prompt:
+            request["system"] = system_prompt
         if tools:
             request["tools"] = anthropic_tools(tools)
-            request["tool_choice"] = ({"type": "auto", "disable_parallel_tool_use": True}
+            request["tool_choice"] = ({"type": "auto"}
                                       if tool_choice == "auto" else {"type": "none"})
         if deepseek_compatible:
             request["thinking"] = ({"type": "enabled", "budget_tokens": 2048}
@@ -73,13 +81,21 @@ class AnthropicProvider:
         opened: set[int] = set()
         raw_arguments: dict[int, str] = {}
         argument_bytes = 0
+        usage = TokenUsage()
         try:
             # 原始流不会提前解析工具 JSON；坏参数也能得到配对的错误结果。
-            with self.client.messages.create(**request) as stream:
-                for event in stream:
+            async with await self.client.messages.create(**request) as stream:
+                async for event in stream:
                     if saw_stop and event.type != "ping":
                         raise ProviderError(f"{provider_name} 在结束标记后继续返回内容")
-                    if event.type == "content_block_start":
+                    if event.type == "message_start":
+                        source = getattr(event.message, "usage", None)
+                        if source is not None:
+                            usage = replace(usage, input_tokens=getattr(source, "input_tokens", None),
+                                            cache_read_tokens=getattr(source, "cache_read_input_tokens", None),
+                                            cache_write_tokens=getattr(source, "cache_creation_input_tokens", None))
+                            yield ProviderEvent("usage", usage=usage)
+                    elif event.type == "content_block_start":
                         index = event.index
                         if index in blocks or not isinstance(index, int) or index < 0 or index >= 128:
                             raise ProviderError("工具协议错误：内容块索引无效或重复")
@@ -88,9 +104,9 @@ class AnthropicProvider:
                         blocks[index] = block
                         opened.add(index)
                         if block["type"] == "text" and block.get("text"):
-                            yield StreamEvent("text_delta", block["text"])
+                            yield ProviderEvent("text_delta", block["text"])
                         elif block["type"] == "thinking" and self.config.thinking and block.get("thinking"):
-                            yield StreamEvent("thinking_delta", block["thinking"])
+                            yield ProviderEvent("thinking_delta", block["thinking"])
                     elif event.type == "content_block_delta":
                         if event.index not in opened:
                             raise ProviderError("工具协议错误：内容片段缺少起始块")
@@ -103,7 +119,7 @@ class AnthropicProvider:
                             value = getattr(delta, field)
                             block[field] = block.get(field, "") + value
                             if value and (field == "text" or (field == "thinking" and self.config.thinking)):
-                                yield StreamEvent("text_delta" if field == "text" else "thinking_delta", value)
+                                yield ProviderEvent("text_delta" if field == "text" else "thinking_delta", value)
                         elif delta.type == "input_json_delta" and block["type"] == "tool_use":
                             argument_bytes += len(delta.partial_json.encode("utf-8"))
                             if argument_bytes > ARGUMENT_LIMIT:
@@ -119,6 +135,17 @@ class AnthropicProvider:
                             raise ProviderError("工具协议错误：内容块未打开或重复结束")
                         opened.remove(event.index)
                     elif event.type == "message_delta":
+                        source = getattr(event, "usage", None)
+                        if source is not None:
+                            fields = {}
+                            for local, remote in (("input_tokens", "input_tokens"), ("output_tokens", "output_tokens"),
+                                                  ("cache_read_tokens", "cache_read_input_tokens"),
+                                                  ("cache_write_tokens", "cache_creation_input_tokens")):
+                                value = getattr(source, remote, None)
+                                if value is not None:
+                                    fields[local] = value
+                            usage = replace(usage, **fields)
+                            yield ProviderEvent("usage", usage=usage)
                         if event.delta.stop_reason is not None:
                             stop_reason = event.delta.stop_reason
                     elif event.type == "message_stop":
@@ -141,10 +168,10 @@ class AnthropicProvider:
                 block["input"] = input_object(raw)
         if stop_reason != ("tool_use" if calls else "end_turn"):
             raise ProviderError(f"{provider_name} 回答未正常完成")
-        if calls:
-            validate_calls(calls)
-            ordered = tuple(blocks[index] for index in sorted(blocks))
-            text = "".join(b["text"] for b in ordered if b["type"] == "text")
-            yield StreamEvent("completed", message=Message("assistant", text, tuple(calls), provider_content=ordered))
-        else:
-            yield StreamEvent("completed")
+        validate_calls(calls)
+        ordered = tuple(blocks[index] for index in sorted(blocks))
+        text = "".join(b["text"] for b in ordered if b["type"] == "text")
+        if usage.input_tokens is not None or usage.output_tokens is not None:
+            usage = replace(usage, complete=usage.input_tokens is not None and usage.output_tokens is not None)
+            yield ProviderEvent("usage", usage=usage)
+        yield ProviderEvent("completed", message=Message("assistant", text, tuple(calls), provider_content=ordered))

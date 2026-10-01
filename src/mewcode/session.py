@@ -1,13 +1,27 @@
-"""一轮最多执行一个工具；已执行的结果先于最终答复提交。"""
+"""会话历史的所有者；单次任务交由 Agent 编排。"""
 
-from collections.abc import Generator, Iterator, Sequence
+import asyncio
+from collections.abc import AsyncIterator
+from dataclasses import dataclass
 from pathlib import Path
 
-from .providers.tool_messages import validate_calls
+from .agent import Agent
+from .async_utils import protected
 from .tools import default_registry
-from .tools.base import ToolContext, ToolResult, strict_json
+from .tools.base import ToolContext, strict_json
 from .tools.executor import ToolExecutor
-from .types import ContextLimitError, Message, Provider, ProviderError, StreamEvent, ToolCall
+from .types import AgentEvent, AgentMode, Message, Provider, ToolCall
+
+
+class PlanStateError(RuntimeError):
+    """没有可执行的待执行计划，可直接提示用户。"""
+
+
+@dataclass(frozen=True)
+class _PlanSnapshot:
+    task: str
+    answer: str
+    context: tuple[Message, ...]
 
 
 def operation_summary(call: ToolCall) -> str:
@@ -23,89 +37,46 @@ def operation_summary(call: ToolCall) -> str:
     return "校验参数"
 
 
+
 class ChatSession:
-    def __init__(self, provider: Provider, *, executor: ToolExecutor | None = None) -> None:
+    def __init__(self, provider: Provider, *, executor: ToolExecutor | None = None,
+                 max_iterations: int = 20) -> None:
         self.provider = provider
         self.executor = executor or ToolExecutor(default_registry(), ToolContext(Path.cwd()))
         self.history: list[Message] = []
+        self.mode: AgentMode = "execute"
+        self._pending_plan: _PlanSnapshot | None = None
+        self.agent = Agent(provider, self.executor, max_iterations=max_iterations)
 
-    def _drop_oldest_turns(self, count: int, *, keep_last_turn: bool) -> int:
-        """从头部删除至多 count 轮完整对话并返回实际删除数；一轮自 user 消息起至下一个 user 消息之前。"""
-        starts = [index for index, message in enumerate(self.history) if message.role == "user"]
-        removable = max(len(starts) - (1 if keep_last_turn else 0), 0)
-        count = min(count, removable)
-        if count:
-            end = starts[count] if count < len(starts) else len(self.history)
-            del self.history[:end]
-        return count
+    def enter_plan(self) -> None:
+        self.mode = "plan"
+        self._pending_plan = None
 
-    def _response(self, pending: Sequence[Message], choice: str) -> Generator[StreamEvent, None, Message]:
-        """请求既有历史加 pending；上下文超限时按指数步长丢弃最早轮次并重试。"""
-        drops = 1
-        while True:
-            parts, response, completed, yielded = [], None, False, False
-            try:
-                for event in self.provider.stream([*self.history, *pending],
-                                                  tools=self.executor.registry.definitions(), tool_choice=choice):
-                    if completed:
-                        raise ProviderError("模型在完整响应之后继续返回数据")
-                    if event.kind == "text_delta":
-                        parts.append(event.text)
-                    if event.kind == "completed":
-                        completed, response = True, event.message
-                    else:
-                        yielded = True
-                        yield event
-            except ContextLimitError:
-                # 已向终端输出片段后重试会重复显示，只允许在请求被拒、尚无输出时裁剪。
-                if yielded:
-                    raise ProviderError("上下文超限出现在流式输出之后，本轮未完成") from None
-                # pending 携带本轮 user 消息时全部历史皆可丢弃，否则历史最后一组属于当前轮。
-                keep_last_turn = not any(message.role == "user" for message in pending)
-                dropped = self._drop_oldest_turns(drops, keep_last_turn=keep_last_turn)
-                if not dropped:
-                    raise
-                yield StreamEvent("history_trimmed", f"上下文超限，已丢弃 {dropped} 轮较早对话并重试")
-                drops *= 2
-                continue
-            if not completed:
-                raise ProviderError("本轮流式回答未完成")
-            return response or Message("assistant", "".join(parts))
+    async def ask(self, question: str, *, cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
+        cancel = cancel_event if cancel_event is not None else asyncio.Event()
+        if self.mode == "plan":
+            self._pending_plan = None
+        source = self.agent.run(question, history=self.history, mode=self.mode, cancel_event=cancel)
+        try:
+            async for event in source:
+                if self.mode == "plan" and event.kind == "finished" and event.reason == "model_done":
+                    self._pending_plan = _PlanSnapshot(question, self.history[-1].content, tuple(self.history))
+                yield event
+        finally:
+            await protected(source.aclose(), cancel_event=cancel)
 
-    def ask(self, question: str) -> Iterator[StreamEvent]:
-        user = Message("user", question)
-        first = yield from self._response((user,), "auto")
-        if not first.tool_calls:
-            if not first.content:
-                raise ProviderError("模型返回空回答，本轮未完成")
-            self.history.extend((user, Message("assistant", first.content)))
-            yield StreamEvent("completed")
-            return
-        validate_calls(first.tool_calls)
-        results: list[Message] = []
-        if len(first.tool_calls) > 1:
-            result = ToolResult.failure("too_many_tool_calls", "每轮最多一个工具，本次所有调用均未执行；请下一轮只选择一个工具")
-            results = [Message("tool", tool_call_id=call.id, tool_result=result) for call in first.tool_calls]
-        else:
-            call = first.tool_calls[0]
-            yield StreamEvent("tool_started", operation_summary(call), tool_name=call.name)
-            try:
-                result = self.executor.execute(call.name, call.arguments)
-            except KeyboardInterrupt:
-                # 覆盖校验/启动交界处的取消；执行器内部负责终止已启动的进程。
-                result = ToolResult.failure("cancelled", "用户取消工具执行；可能已有副作用，请先检查实际状态",
-                                            details={"side_effects_may_have_occurred": True})
-            results.append(Message("tool", tool_call_id=call.id, tool_result=result))
-        # 在任何展示或网络请求之前提交成对记录，避免操作已完成却丢失历史。
-        self.history.extend((user, first, *results))
-        for call, message in zip(first.tool_calls, results):
-            yield StreamEvent("tool_result", tool_name=call.name, result=message.tool_result)
-        if any(m.tool_result.error and m.tool_result.error["code"] == "cancelled" for m in results):
-            return
-        final = yield from self._response((), "none")
-        if final.tool_calls:
-            raise ProviderError("工具协议不兼容：最终答复仍请求工具，已阻止执行；之前的结果已保留")
-        if not final.content:
-            raise ProviderError("模型返回空回答；之前的工具结果已保留")
-        self.history.append(Message("assistant", final.content))
-        yield StreamEvent("completed")
+    async def execute_plan(self, *, cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
+        if self._pending_plan is None:
+            raise PlanStateError("没有有效的待执行计划，请先使用 /plan 生成计划")
+        snapshot = self._pending_plan
+        # 取出与消费标记不包含 await，重复 /do 无法重放已启动计划。
+        self._pending_plan = None
+        self.mode = "execute"
+        question = ("请直接执行以下最新计划，按需核对当前文件状态，完成后验证结果。\n"
+                    f"任务上下文：{snapshot.task}\n最新计划：\n{snapshot.answer}")
+        source = self.ask(question, cancel_event=cancel_event)
+        try:
+            async for event in source:
+                yield event
+        finally:
+            await protected(source.aclose(), cancel_event=cancel_event)

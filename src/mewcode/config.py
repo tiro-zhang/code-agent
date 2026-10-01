@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 from urllib.parse import urlsplit
 
 from dotenv import dotenv_values
@@ -19,6 +20,7 @@ class ProviderConfig:
     base_url: str
     api_key: str
     thinking: bool
+    max_iterations: int = 20
 
 
 def load_config(path: str | Path) -> ProviderConfig:
@@ -48,6 +50,10 @@ def load_config(path: str | Path) -> ProviderConfig:
     if protocol == "openai" and thinking:
         raise ConfigError("thinking=true 目前仅适用于 anthropic 协议")
 
+    budget = values.get("max_iterations", "20")
+    if budget is None or not re.fullmatch(r"[0-9]+", budget.strip()) or int(budget) <= 0:
+        raise ConfigError("max_iterations 必须是十进制正整数")
+
     return ProviderConfig(
         name=values["name"].strip(),
         protocol=protocol,
@@ -55,4 +61,5 @@ def load_config(path: str | Path) -> ProviderConfig:
         base_url=base_url,
         api_key=values["api_key"].strip(),
         thinking=thinking,
+        max_iterations=int(budget),
     )

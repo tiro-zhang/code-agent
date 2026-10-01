@@ -16,6 +16,7 @@ class ToolDefinition:
     name: str
     description: str
     input_schema: dict[str, Any]
+    read_only: bool = False
 
 
 @dataclass(frozen=True)
@@ -69,6 +70,7 @@ class Tool(Protocol):
     name: str
     description: str
     input_schema: dict[str, Any]
+    read_only: bool
 
     def execute(self, arguments: dict[str, Any], context: ToolContext) -> ToolResult: ...
 

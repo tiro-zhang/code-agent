@@ -75,3 +75,15 @@ def test_openai_compatible_profile_cannot_enable_claude_thinking(tmp_path: Path)
 
     with pytest.raises(ConfigError, match="thinking"):
         load_config(path)
+
+
+def test_request_budget_defaults_and_custom_value(tmp_path):
+    assert load_config(write_config(tmp_path / "default")).max_iterations == 20
+    assert load_config(write_config(tmp_path / "custom", max_iterations="5")).max_iterations == 5
+
+
+@pytest.mark.parametrize("value", ["0", "-1", "", "1.5", "abc", "1e2", "５"])
+def test_invalid_request_budget_is_rejected(tmp_path, value):
+    with pytest.raises(ConfigError, match="max_iterations") as error:
+        load_config(write_config(tmp_path / "bad", max_iterations=value))
+    assert "secret-sentinel" not in str(error.value)

@@ -33,8 +33,9 @@ def stage_file(target: Path, data: bytes, mode: int = 0o600) -> Path:
 
 
 class ReadFile:
+    read_only = True
     name = "read_file"
-    description = "读取工作目录内的 UTF-8 文本，支持行范围。每轮最多一个工具，结果后只生成答复。"
+    description = "读取工作目录内的 UTF-8 文本，支持行范围。只读工具，可用于规划或核对修改后的实际内容。"
     input_schema = object_schema({"path": PATH,
         "start_line": {"type": "integer", "minimum": 1, "default": 1},
         "max_lines": {"type": "integer", "minimum": 1, "maximum": 1000, "default": 200}}, ["path"])
@@ -74,6 +75,7 @@ class ReadFile:
 
 
 class WriteFile:
+    read_only = False
     name = "write_file"
     description = "在工作目录内新建 UTF-8 文件，自动创建父目录；目标已存在则拒绝覆盖，请用 edit_file 修改。内容上限 1 MiB。"
     input_schema = object_schema({"path": PATH, "content": TEXT}, ["path", "content"])
@@ -97,6 +99,7 @@ class WriteFile:
 
 
 class EditFile:
+    read_only = False
     name = "edit_file"
     description = "修改现存 UTF-8 文件：old_text 必须非空且精确匹配一次；零次或多次会报错。请提供足够上下文，文件和新内容上限 1 MiB。"
     input_schema = object_schema({"path": PATH, "old_text": {"type": "string", "minLength": 1},

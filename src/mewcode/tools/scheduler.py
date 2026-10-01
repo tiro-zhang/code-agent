@@ -1,0 +1,123 @@
+"""保持调用顺序，以连续只读组并发执行，副作用调用形成边界。"""
+
+import asyncio
+from collections.abc import AsyncIterator, Sequence
+
+from ..async_utils import protected
+from ..types import AgentEvent, AgentMode, ToolCall
+from .base import ToolError, ToolResult
+from .executor import ToolExecutor
+
+
+class ToolScheduler:
+    def __init__(self, executor: ToolExecutor, *, max_parallel: int = 4) -> None:
+        if max_parallel < 1:
+            raise ValueError("并发上限必须是正整数")
+        self.executor = executor
+        self.max_parallel = min(max_parallel, 4)
+        self.results: tuple[ToolResult, ...] = ()
+
+    async def run(self, calls: Sequence[ToolCall], *, allowed_tools: frozenset[str] | None,
+                  run_id: str, iteration: int, mode: AgentMode,
+                  cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
+        cancel = cancel_event if cancel_event is not None else asyncio.Event()
+        queue: asyncio.Queue[tuple[int, AgentEvent]] = asyncio.Queue(maxsize=self.max_parallel)
+        results: dict[int, ToolResult] = {}
+        jobs: dict[int, asyncio.Task] = {}
+        self.results = ()
+        normal_end = False
+
+        def event(kind, index, **fields):
+            call = calls[index]
+            return AgentEvent(kind, run_id=run_id, iteration=iteration, mode=mode,
+                              tool_call_id=call.id, tool_name=call.name, **fields)
+
+        def unstarted():
+            return ToolResult.failure("cancelled", "任务取消，工具未启动", details={"not_started": True})
+
+        async def execute_one(index):
+            call = calls[index]
+            operation = None
+            if cancel.is_set():
+                result = unstarted()
+            else:
+                try:
+                    self.executor.registry.prepare(call.name, call.arguments, allowed_tools=allowed_tools)
+                except ToolError as error:
+                    result = error.result()
+                else:
+                    operation = asyncio.create_task(self.executor.execute(
+                        call.name, call.arguments, allowed_tools=allowed_tools, cancel_event=cancel))
+                    try:
+                        # 让执行入口先运行，避免背压把尚未启动的调用显示为开始。
+                        await asyncio.sleep(0)
+                        not_started = (operation.done() and not operation.cancelled()
+                                       and operation.exception() is None
+                                       and operation.result().error is not None
+                                       and operation.result().error["details"].get("not_started"))
+                        if not not_started:
+                            await queue.put((index, event("tool_started", index)))
+                        result = await operation
+                    except asyncio.CancelledError:
+                        cancel.set()
+                        result = await protected(operation, cancel_event=cancel)
+                    except Exception:
+                        result = ToolResult.failure("execution_error", "工具执行入口异常结束")
+            await queue.put((index, event("tool_result", index, result=result)))
+
+        async def drain_and_cleanup():
+            # 关闭消费者时也排空有界通道，使清理不被背压锁住。
+            while any(not task.done() for task in jobs.values()):
+                while not queue.empty():
+                    index, item = queue.get_nowait()
+                    if item.kind == "tool_result":
+                        results[index] = item.result
+                await asyncio.sleep(0.01)
+            if jobs:
+                await asyncio.gather(*jobs.values(), return_exceptions=True)
+            while not queue.empty():
+                index, item = queue.get_nowait()
+                if item.kind == "tool_result":
+                    results[index] = item.result
+
+        try:
+            for index, call in enumerate(calls):
+                yield event("tool_call", index, call=call)
+            readonly = self.executor.registry.names(read_only=True)
+            position = 0
+            while position < len(calls) and not cancel.is_set():
+                end = position + 1
+                limit = 1
+                if calls[position].name in readonly:
+                    limit = self.max_parallel
+                    while end < len(calls) and calls[end].name in readonly:
+                        end += 1
+                next_index = position
+                active: dict[int, asyncio.Task] = {}
+                while next_index < end or active:
+                    while next_index < end and len(active) < limit and not cancel.is_set():
+                        task = asyncio.create_task(execute_one(next_index))
+                        jobs[next_index] = active[next_index] = task
+                        next_index += 1
+                    if not active:
+                        break
+                    try:
+                        index, item = await queue.get()
+                    except asyncio.CancelledError:
+                        cancel.set()
+                        continue
+                    if item.kind == "tool_result":
+                        results[index] = item.result
+                        await protected(active.pop(index), cancel_event=cancel)
+                    yield item
+                position = end
+            for index in range(len(calls)):
+                if index not in results:
+                    results[index] = unstarted()
+                    yield event("tool_result", index, result=results[index])
+            normal_end = True
+        finally:
+            if not normal_end:
+                cancel.set()
+            await protected(drain_and_cleanup(), cancel_event=cancel)
+            self.results = tuple(results.get(index, unstarted()) for index in range(len(calls)))

@@ -4,7 +4,9 @@ from dataclasses import replace
 import multiprocessing
 import os
 import signal
-import threading
+import asyncio
+
+from ..async_utils import protected
 import time
 
 from .base import ToolContext, ToolError, ToolResult
@@ -22,50 +24,39 @@ def _worker(connection, registry: ToolRegistry, context: ToolContext, name: str,
         connection.close()
 
 
-def _cleanup(process, grouped: bool) -> bool:
+def _cleanup(process, grouped: bool) -> None:
+    """在辅助线程回收进程，不修改进程级信号处理器。"""
     if process.pid is None:
-        return False
-    cancelled = False
+        process.close()
+        return
 
-    def remember_cancel(signum, frame):
-        nonlocal cancelled
-        cancelled = True
-
-    # 清理期间记住 Ctrl+C，先回收资源，再让调用方保存取消结果。
-    main_thread = threading.current_thread() is threading.main_thread()
-    previous = signal.signal(signal.SIGINT, remember_cancel) if main_thread else None
-    try:
-        # ready 消息可能尚未读取，检查组号以处理启动阶段取消。
+    def stop(sig):
+        nonlocal grouped
         try:
+            # ready 尚未读到也可检查组长；绝不使用父进程组。
             grouped |= os.getpgid(process.pid) == process.pid
         except ProcessLookupError:
             pass
-
-        def stop(sig):
-            try:
-                if grouped:
-                    os.killpg(process.pid, sig)
-                elif process.is_alive():
-                    os.kill(process.pid, sig)
-            except ProcessLookupError:
-                pass
-            except PermissionError:
-                # macOS 对只剩僵尸成员的组返回 EPERM，而非 ESRCH。
-                if process.is_alive():
-                    raise
-
         try:
-            stop(signal.SIGTERM)
-            # 强制清理前保留组长，避免组长已回收但后代尚未退出的竞争。
-            time.sleep(0.2)
-        finally:
-            stop(signal.SIGKILL)
-            process.join()
-            process.close()
+            if grouped:
+                os.killpg(process.pid, sig)
+            elif process.is_alive():
+                os.kill(process.pid, sig)
+        except ProcessLookupError:
+            pass
+        except PermissionError:
+            # macOS 对只剩僵尸成员的组可能返回 EPERM。
+            if process.is_alive():
+                raise
+
+    try:
+        stop(signal.SIGTERM)
+        # 保留组长直到强制清理后代，再回收 PID。
+        time.sleep(0.2)
     finally:
-        if main_thread:
-            signal.signal(signal.SIGINT, previous)
-    return cancelled
+        stop(signal.SIGKILL)
+        process.join()
+        process.close()
 
 
 class ToolExecutor:
@@ -74,11 +65,15 @@ class ToolExecutor:
             raise ValueError("工具执行目前需要 macOS 或 Linux 等 POSIX 环境")
         self.registry, self.context, self.timeout = registry, context, timeout
 
-    def execute(self, name: str, raw: str) -> ToolResult:
+    async def execute(self, name: str, raw: str, *, allowed_tools: frozenset[str] | None = None,
+                      cancel_event: asyncio.Event | None = None) -> ToolResult:
         try:
-            _, arguments = self.registry.prepare(name, raw)
+            tool, arguments = self.registry.prepare(name, raw, allowed_tools=allowed_tools)
         except ToolError as error:
             return error.result()
+        cancel_event = cancel_event if cancel_event is not None else asyncio.Event()
+        if cancel_event.is_set():
+            return ToolResult.failure("cancelled", "任务取消，工具未启动", details={"not_started": True})
         deadline = time.monotonic() + (arguments.get("timeout_seconds", self.timeout) if name == "execute_command" else self.timeout)
         mp = multiprocessing.get_context("spawn")
         receive, send = mp.Pipe(duplex=False)
@@ -91,15 +86,18 @@ class ToolExecutor:
             process.start()
             send.close()
             while True:
+                if cancel_event.is_set():
+                    failure = "cancelled"
+                    break
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     failure = "timeout"
                     break
-                if not receive.poll(min(remaining, 0.05)):
+                if not await asyncio.to_thread(receive.poll, min(remaining, 0.025)):
                     if not process.is_alive():
                         break
                     continue
-                event = receive.recv()
+                event = await asyncio.to_thread(receive.recv)
                 if event["kind"] == "ready":
                     grouped = True
                 elif event["kind"] == "output":
@@ -109,19 +107,21 @@ class ToolExecutor:
                 elif event["kind"] == "result":
                     completed_result = ToolResult.from_dict(event["result"])
                     break
-        except KeyboardInterrupt:
+        except asyncio.CancelledError:
+            cancel_event.set()
             failure = "cancelled"
-        except (EOFError, OSError, ValueError):
+        except Exception:
             failure = "execution_error"
         finally:
-            if _cleanup(process, grouped):
+            await protected(asyncio.to_thread(_cleanup, process, grouped), cancel_event=cancel_event)
+            if cancel_event.is_set():
                 failure = "cancelled"
             receive.close()
             send.close()
-        if completed_result is not None and failure != "cancelled":
+        if completed_result is not None:
             return completed_result
         detail = {"timeout": "工具执行超时", "cancelled": "用户取消工具执行", "execution_error": "工具工作进程异常结束"}[failure]
-        mutating = name in {"write_file", "edit_file", "execute_command"}
+        mutating = not bool(getattr(tool, "read_only", False))
         if mutating:
             detail += "；可能已有副作用，请先检查实际状态"
         data = None
@@ -130,8 +130,4 @@ class ToolExecutor:
             data = {"exit_code": None, **{key: value[0] for key, value in decoded.items()}}
             truncated |= any(value[1] for value in decoded.values())
         details = {"side_effects_may_have_occurred": mutating}
-        if completed_result is not None:
-            data, truncated = completed_result.data, completed_result.truncated
-            details.update(execution_completed=True, execution_ok=completed_result.ok)
-            detail = "用户取消本轮；工具已返回结果，实际结果已保留"
         return ToolResult.failure(failure, detail, details=details, data=data, truncated=truncated)

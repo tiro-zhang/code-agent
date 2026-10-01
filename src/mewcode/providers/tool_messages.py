@@ -9,8 +9,11 @@ from ..types import Message, ProviderError, ToolCall
 
 
 def validate_calls(calls: Sequence[ToolCall]) -> None:
+    if any(not isinstance(call.id, str) or not call.id.strip()
+           or not isinstance(call.name, str) or not call.name.strip() for call in calls):
+        raise ProviderError("工具协议错误：调用 ID 或工具名称必须是非空字符串")
     ids = [call.id for call in calls]
-    if any(not call.id or not call.name for call in calls) or len(set(ids)) != len(ids):
+    if len(set(ids)) != len(ids):
         raise ProviderError("工具协议错误：调用 ID 缺失、重复或工具名称缺失")
 
 

@@ -1,147 +1,73 @@
-"""会话只依赖统一 Provider 事件。"""
-
-from collections.abc import Iterator, Sequence
-
+"""会话历史、上下文恢复与统一请求预算。"""
 import pytest
-
+from conftest import ScriptedProvider, async_test, collect
 from mewcode.session import ChatSession
-from mewcode.types import ContextLimitError, Message, ProviderError, StreamEvent
+from mewcode.types import ContextLimitError, Message, ProviderEvent
+from test_agent_loop import answer, calls, tool
 
 
-class FakeProvider:
-    def __init__(self) -> None:
-        self.requests: list[list[Message]] = []
-
-    def stream(self, messages: Sequence[Message], **options) -> Iterator[StreamEvent]:
-        self.requests.append(list(messages))
-        yield StreamEvent("text_delta", "答")
-        yield StreamEvent("text_delta", "复")
-        yield StreamEvent("completed")
-
-
-def test_session_uses_only_unified_events_and_sends_previous_text() -> None:
-    provider = FakeProvider()
+@async_test
+async def test_previous_answer_is_sent_and_thinking_is_not_answer():
+    provider = ScriptedProvider([[ProviderEvent("thinking_delta", "思考"), *answer("答复")], answer("第二答")])
     session = ChatSession(provider)
-
-    first = list(session.ask("第一问"))
-    second = list(session.ask("第二问"))
-
-    assert first == second == [
-        StreamEvent("text_delta", "答"),
-        StreamEvent("text_delta", "复"),
-        StreamEvent("completed"),
-    ]
-    assert provider.requests == [
-        [Message("user", "第一问")],
-        [
-            Message("user", "第一问"),
-            Message("assistant", "答复"),
-            Message("user", "第二问"),
-        ],
-    ]
+    await collect(session.ask("第一问"))
+    events = await collect(session.ask("第二问"))
+    assert events[-1].reason == "model_done"
+    assert provider.requests[1][0] == (Message("user", "第一问"), Message("assistant", "答复"), Message("user", "第二问"))
+    assert "思考" not in repr(session.history)
 
 
-def test_session_rejects_stream_without_completion_and_keeps_history_clean() -> None:
-    class IncompleteProvider:
-        def stream(self, messages: Sequence[Message], **options) -> Iterator[StreamEvent]:
-            yield StreamEvent("text_delta", "部分")
-
-    session = ChatSession(IncompleteProvider())
-
-    with pytest.raises(ProviderError, match="未完成"):
-        list(session.ask("问题"))
-    assert session.history == []
+@pytest.mark.parametrize("response", [[ProviderEvent("text_delta", "残缺")], answer("")])
+@async_test
+async def test_incomplete_or_empty_first_response_does_not_commit(response):
+    session = ChatSession(ScriptedProvider([response]))
+    events = await collect(session.ask("问"))
+    assert events[-1].reason == "stream_error" and session.history == []
 
 
-def test_session_stores_only_answer_not_thinking_summary() -> None:
-    class ThinkingProvider:
-        def stream(self, messages: Sequence[Message], **options) -> Iterator[StreamEvent]:
-            yield StreamEvent("thinking_delta", "秘密摘要")
-            yield StreamEvent("text_delta", "最终答案")
-            yield StreamEvent("completed")
-
-    session = ChatSession(ThinkingProvider())
-
-    list(session.ask("问题"))
-    assert session.history == [Message("user", "问题"), Message("assistant", "最终答案")]
-
-
-def test_session_rejects_empty_completed_answer() -> None:
-    class EmptyProvider:
-        def stream(self, messages: Sequence[Message], **options) -> Iterator[StreamEvent]:
-            yield StreamEvent("completed")
-
-    session = ChatSession(EmptyProvider())
-
-    with pytest.raises(ProviderError, match="空"):
-        list(session.ask("问题"))
-    assert session.history == []
-
-
-def test_session_trims_oldest_turns_on_context_limit_and_informs_user() -> None:
-    class OverflowProvider:
-        def __init__(self) -> None:
-            self.requests: list[list[Message]] = []
-
-        def stream(self, messages: Sequence[Message], **options) -> Iterator[StreamEvent]:
-            self.requests.append(list(messages))
-            if len(messages) > 3:
-                raise ContextLimitError("服务 上下文长度已超出模型限制")
-            yield StreamEvent("text_delta", "答复")
-            yield StreamEvent("completed")
-
-    provider = OverflowProvider()
+@async_test
+async def test_context_recovery_drops_whole_turns_in_one_two_four_steps():
+    overflow = [ContextLimitError("上下文超限")]
+    provider = ScriptedProvider([overflow, overflow, overflow, answer()])
     session = ChatSession(provider)
-    list(session.ask("第一问"))
-    list(session.ask("第二问"))
-
-    events = list(session.ask("第三问"))
-
-    assert events == [
-        StreamEvent("history_trimmed", "上下文超限，已丢弃 1 轮较早对话并重试"),
-        StreamEvent("text_delta", "答复"),
-        StreamEvent("completed"),
-    ]
-    assert provider.requests[-1] == [
-        Message("user", "第二问"),
-        Message("assistant", "答复"),
-        Message("user", "第三问"),
-    ]
-    assert session.history == [
-        Message("user", "第二问"),
-        Message("assistant", "答复"),
-        Message("user", "第三问"),
-        Message("assistant", "答复"),
-    ]
+    session.history = [m for i in range(8) for m in [Message("user", f"旧{i}"), Message("assistant", "旧答")]]
+    events = await collect(session.ask("新任务"))
+    assert [e.text.split("轮")[0].strip()[-1] for e in events if e.kind == "history_trimmed"] == ["1", "2", "4"]
+    assert events[-1].iteration == 4 and events[-1].reason == "model_done"
+    assert session.history[0].content == "旧7"
 
 
-def test_session_raises_context_limit_when_no_history_can_be_dropped() -> None:
-    class AlwaysOverflowProvider:
-        def stream(self, messages: Sequence[Message], **options) -> Iterator[StreamEvent]:
-            raise ContextLimitError("服务 上下文长度已超出模型限制")
-            yield  # 使函数成为生成器，异常在迭代时抛出。
-
-    session = ChatSession(AlwaysOverflowProvider())
-
-    with pytest.raises(ContextLimitError, match="上下文"):
-        list(session.ask("过长的问题"))
-    assert session.history == []
-
-
-def test_session_does_not_retry_context_limit_after_streamed_output() -> None:
-    class LateOverflowProvider:
-        def __init__(self) -> None:
-            self.requests = 0
-
-        def stream(self, messages: Sequence[Message], **options) -> Iterator[StreamEvent]:
-            self.requests += 1
-            yield StreamEvent("text_delta", "部分")
-            raise ContextLimitError("服务 上下文长度已超出模型限制")
-
-    provider = LateOverflowProvider()
+@pytest.mark.parametrize("prior_text", [False, True])
+@async_test
+async def test_context_error_without_older_turn_or_after_text_does_not_retry(prior_text):
+    response = ([ProviderEvent("text_delta", "部分")] if prior_text else []) + [ContextLimitError("上下文超限")]
+    provider = ScriptedProvider([response])
     session = ChatSession(provider)
+    if prior_text: session.history = [Message("user", "旧"), Message("assistant", "旧答")]
+    before = tuple(session.history)
+    events = await collect(session.ask("新"))
+    assert events[-1].reason == "stream_error" and len(provider.requests) == 1
+    assert tuple(session.history) == before
 
-    with pytest.raises(ProviderError, match="流式输出之后"):
-        list(session.ask("问题"))
-    assert provider.requests == 1
-    assert session.history == []
+
+@async_test
+async def test_context_retry_uses_budget_and_does_not_add_summary():
+    provider = ScriptedProvider([[ContextLimitError("超限")], [ContextLimitError("超限")], answer("不可请求")])
+    session = ChatSession(provider, max_iterations=2)
+    session.history = [m for i in range(4) for m in [Message("user", f"旧{i}"), Message("assistant", "旧答")]]
+    events = await collect(session.ask("新"))
+    assert events[-1].reason == "max_iterations" and events[-1].iteration == 2
+    assert len(provider.requests) == 2
+    assert len([e for e in events if e.kind == "usage"]) == 2
+
+
+@async_test
+async def test_recovery_preserves_current_multi_stage_task_and_unknown_count():
+    unknown = calls(tool("u", "absent", "{}"))
+    provider = ScriptedProvider([unknown, unknown, [ContextLimitError("超限")], unknown])
+    session = ChatSession(provider)
+    session.history = [Message("user", "旧"), Message("assistant", "旧答")]
+    events = await collect(session.ask("当前任务"))
+    assert events[-1].reason == "unknown_tool_limit" and events[-1].iteration == 4
+    assert [m.role for m in provider.requests[-1][0]] == ["user", "assistant", "tool", "assistant", "tool"]
+    assert session.history[0].content == "当前任务"

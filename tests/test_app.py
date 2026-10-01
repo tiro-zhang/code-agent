@@ -1,225 +1,139 @@
-"""终端输入、输出与会话生命周期测试。"""
-
-from collections.abc import Iterator, Sequence
+"""同步启动入口中的异步会话、指令、信号与事件展示。"""
+import asyncio
+import json
+import signal
 from io import StringIO
 from pathlib import Path
-
+import pytest
+from conftest import ScriptedProvider
 from mewcode.app import run
-from mewcode.types import ContextLimitError, Message, ProviderError, StreamEvent
+from mewcode.types import ContextLimitError, Message, ProviderError, ProviderEvent, ToolCall
+from test_agent_loop import answer, calls
 
 
-class FakeProvider:
-    def __init__(self) -> None:
-        self.requests: list[list[Message]] = []
-
-    def stream(self, messages: Sequence[Message], **options) -> Iterator[StreamEvent]:
-        self.requests.append(list(messages))
-        yield StreamEvent("text_delta", "答复")
-        yield StreamEvent("completed")
+class FakeProvider(ScriptedProvider):
+    def __init__(self):
+        super().__init__([answer("答复")] * 20)
 
 
 def config_file(tmp_path: Path) -> Path:
     path = tmp_path / ".env.test"
-    path.write_text(
-        "name=测试后端\n"
-        "protocol=openai\n"
-        "model=test-model\n"
-        "base_url=https://example.com/v1\n"
-        "api_key=dummy\n"
-        "thinking=false\n"
-    )
+    path.write_text("name=测试后端\nprotocol=openai\nmodel=test-model\nbase_url=https://example.com/v1\napi_key=dummy\nthinking=false\n")
     return path
 
 
-def test_prompt_loop_accepts_two_turns_empty_input_and_exit(tmp_path: Path) -> None:
+def invoke(tmp_path, provider, text, output=None):
+    output = output if output is not None else StringIO()
+    code = run(config_file(tmp_path), stdin=StringIO(text), stdout=output,
+               provider_factory=lambda config: provider)
+    return code, output.getvalue()
+
+
+def test_prompt_loop_accepts_two_turns_empty_input_and_exit(tmp_path):
     provider = FakeProvider()
-    output = StringIO()
-
-    exit_code = run(
-        config_file(tmp_path),
-        stdin=StringIO("第一问\n\n第二问\n/exit\n"),
-        stdout=output,
-        provider_factory=lambda config: provider,
-    )
-
-    assert exit_code == 0
-    assert "测试后端" in output.getvalue()
-    assert output.getvalue().count("你> ") == 4
-    assert len(provider.requests) == 2
-    assert provider.requests[1] == [
-        Message("user", "第一问"),
-        Message("assistant", "答复"),
-        Message("user", "第二问"),
-    ]
+    code, shown = invoke(tmp_path, provider, "第一问\n\n第二问\n/exit\n")
+    assert code == 0 and "测试后端" in shown and shown.count("你> ") == 4
+    assert provider.requests[1][0] == (Message("user", "第一问"), Message("assistant", "答复"), Message("user", "第二问"))
+    assert provider.closed
 
 
-def test_prompt_loop_exits_on_eof(tmp_path: Path) -> None:
+@pytest.mark.parametrize("text", ["", "/exit\n"])
+def test_idle_exit_closes_client_without_request(tmp_path, text):
     provider = FakeProvider()
-    output = StringIO()
-
-    assert run(
-        config_file(tmp_path),
-        stdin=StringIO(""),
-        stdout=output,
-        provider_factory=lambda config: provider,
-    ) == 0
-    assert provider.requests == []
+    assert invoke(tmp_path, provider, text)[0] == 0
+    assert provider.closed and provider.requests == []
 
 
-def test_streaming_flushes_thinking_and_answer_before_completion(tmp_path: Path) -> None:
-    class ObservedOutput(StringIO):
-        flushed = ""
+def test_idle_ctrl_c_exits_and_closes_client(tmp_path):
+    class InterruptedInput(StringIO):
+        def readline(self): raise KeyboardInterrupt
+    provider = FakeProvider()
+    assert run(config_file(tmp_path), stdin=InterruptedInput(), stdout=StringIO(), provider_factory=lambda c: provider) == 0
+    assert provider.closed
 
-        def flush(self) -> None:
-            self.flushed = self.getvalue()
-            super().flush()
 
+class ObservedOutput(StringIO):
+    flushed = ""
+    def flush(self): self.flushed = self.getvalue()
+
+
+def test_streaming_flushes_thinking_and_answer_before_completion(tmp_path):
     output = ObservedOutput()
-
-    class StreamingProvider:
-        def stream(self, messages: Sequence[Message], **options) -> Iterator[StreamEvent]:
-            yield StreamEvent("thinking_delta", "先分析")
-            assert "思考> 先分析" in output.flushed
-            yield StreamEvent("text_delta", "最终回答")
-            assert "MewCode> 最终回答" in output.flushed
-            yield StreamEvent("completed")
-
-    run(
-        config_file(tmp_path),
-        stdin=StringIO("问题\n/exit\n"),
-        stdout=output,
-        provider_factory=lambda config: StreamingProvider(),
-    )
-
-    assert output.getvalue().index("思考> 先分析") < output.getvalue().index("MewCode> 最终回答")
+    async def response():
+        yield ProviderEvent("thinking_delta", "先分析")
+        assert "思考> 先分析" in output.flushed
+        yield ProviderEvent("text_delta", "最终回答")
+        assert "MewCode> 最终回答" in output.flushed
+        yield ProviderEvent("completed", message=Message("assistant", "最终回答"))
+    provider = ScriptedProvider([response])
+    _, shown = invoke(tmp_path, provider, "问题\n/exit\n", output)
+    assert shown.index("思考> 先分析") < shown.index("MewCode> 最终回答")
 
 
-def test_answer_without_thinking_does_not_show_thinking_label(tmp_path: Path) -> None:
-    output = StringIO()
-    run(
-        config_file(tmp_path),
-        stdin=StringIO("问题\n/exit\n"),
-        stdout=output,
-        provider_factory=lambda config: FakeProvider(),
-    )
-
-    assert "MewCode> 答复" in output.getvalue()
-    assert "思考>" not in output.getvalue()
+def test_stream_failure_discards_candidate_and_reports_reason(tmp_path):
+    provider = ScriptedProvider([[ProviderEvent("text_delta", "残缺"), ProviderError("模拟故障")], answer("正常")])
+    _, shown = invoke(tmp_path, provider, "第一问\n第二问\n/exit\n")
+    assert "本轮未完成" in shown and "stream_error" in shown
+    assert provider.requests[1][0] == (Message("user", "第二问"),)
 
 
-def test_failed_turn_does_not_enter_next_request(tmp_path: Path) -> None:
-    class FailsFirstProvider:
-        def __init__(self) -> None:
-            self.requests: list[list[Message]] = []
-
-        def stream(self, messages: Sequence[Message], **options) -> Iterator[StreamEvent]:
-            self.requests.append(list(messages))
-            if len(self.requests) == 1:
-                yield StreamEvent("text_delta", "残缺")
-                raise ProviderError("模拟故障")
-            yield StreamEvent("text_delta", "正常")
-            yield StreamEvent("completed")
-
-    provider = FailsFirstProvider()
-    output = StringIO()
-    run(
-        config_file(tmp_path),
-        stdin=StringIO("第一问\n第二问\n/exit\n"),
-        stdout=output,
-        provider_factory=lambda config: provider,
-    )
-
-    assert "本轮未完成" in output.getvalue()
-    assert provider.requests[1] == [Message("user", "第二问")]
+def test_real_sigint_during_stream_closes_stream_and_continues_input(tmp_path):
+    async def interrupted():
+        yield ProviderEvent("text_delta", "残缺")
+        signal.raise_signal(signal.SIGINT)
+        await asyncio.Event().wait()
+    provider = ScriptedProvider([interrupted, answer("正常")])
+    _, shown = invoke(tmp_path, provider, "第一问\n第二问\n/exit\n")
+    assert "cancelled" in shown and "正常" in shown
+    assert provider.requests[1][0] == (Message("user", "第二问"),)
+    assert provider.closed_streams == 2 and provider.closed
 
 
-def test_ctrl_c_during_stream_discards_turn_and_returns_to_prompt(tmp_path: Path) -> None:
-    class InterruptedProvider:
-        def __init__(self) -> None:
-            self.requests: list[list[Message]] = []
-
-        def stream(self, messages: Sequence[Message], **options) -> Iterator[StreamEvent]:
-            self.requests.append(list(messages))
-            if len(self.requests) == 1:
-                yield StreamEvent("text_delta", "残缺")
-                raise KeyboardInterrupt
-            yield StreamEvent("text_delta", "正常")
-            yield StreamEvent("completed")
-
-    provider = InterruptedProvider()
-    output = StringIO()
-    run(
-        config_file(tmp_path),
-        stdin=StringIO("第一问\n第二问\n/exit\n"),
-        stdout=output,
-        provider_factory=lambda config: provider,
-    )
-
-    assert "本轮未完成" in output.getvalue()
-    assert provider.requests[1] == [Message("user", "第二问")]
+def test_plan_commands_and_do_without_pending_plan(tmp_path):
+    provider = ScriptedProvider([answer("目标A步骤A验证A"), answer("目标B步骤B验证B"), answer("执行完成"), answer("下一答")])
+    _, shown = invoke(tmp_path, provider, "/plan\n任务A\n修订B\n/do\n/do\n下一问\n/exit\n")
+    assert len(provider.requests) == 4
+    assert len(provider.requests[0][1]["tools"]) == len(provider.requests[1][1]["tools"]) == 3
+    assert len(provider.requests[2][1]["tools"]) == len(provider.requests[3][1]["tools"]) == 6
+    assert "目标B步骤B验证B" in provider.requests[2][0][-1].content
+    assert "没有有效" in shown and shown.count("你> ") == 7
 
 
-def test_context_trim_notice_is_displayed(tmp_path: Path) -> None:
-    class OverflowProvider:
-        def __init__(self) -> None:
-            self.requests: list[list[Message]] = []
-
-        def stream(self, messages: Sequence[Message], **options) -> Iterator[StreamEvent]:
-            self.requests.append(list(messages))
-            if len(messages) > 2:
-                raise ContextLimitError("服务 上下文长度已超出模型限制")
-            yield StreamEvent("text_delta", "答复")
-            yield StreamEvent("completed")
-
-    provider = OverflowProvider()
-    output = StringIO()
-    run(
-        config_file(tmp_path),
-        stdin=StringIO("第一问\n第二问\n/exit\n"),
-        stdout=output,
-        provider_factory=lambda config: provider,
-    )
-
-    shown = output.getvalue()
-    assert "提示>" in shown and "已丢弃 1 轮" in shown
-    assert "本轮未完成" not in shown
-    assert provider.requests[-1] == [Message("user", "第二问")]
+def test_context_trim_notice_and_unknown_usage_are_visible(tmp_path):
+    provider = ScriptedProvider([answer(), [ContextLimitError("超限")], answer()])
+    _, shown = invoke(tmp_path, provider, "第一问\n第二问\n/exit\n")
+    assert "已丢弃 1 轮" in shown and "未知" in shown and "统计不完整" in shown
+    assert "输入 0" not in shown and "本轮未完成" not in shown
 
 
-def test_tool_status_is_flushed_before_execution_and_summary_hides_body_and_secret(tmp_path,monkeypatch):
+def test_tool_metadata_is_flushed_redacted_and_body_not_printed(tmp_path, monkeypatch):
     from mewcode.tools.base import ToolResult
-    from mewcode.types import ToolCall
-    from test_tool_session import ScriptedProvider, call, answer
-    import json
-
-    class ObservedOutput(StringIO):
-        flushed=''
-        def flush(self):
-            self.flushed=self.getvalue()
-
-    output=ObservedOutput()
-    provider=ScriptedProvider(call(ToolCall('a','write_file',json.dumps({'path':'dummy\x1b[31m\nfile','content':'正文不要打印'*100}))),answer())
-    def execute(self,*args):
-        assert '工具> write_file' in output.flushed and '[已隐藏]' in output.flushed
-        assert '\x1b' not in output.flushed and '正文不要打印' not in output.flushed
-        return ToolResult.success({'path':'x'},truncated=True)
-    monkeypatch.setattr('mewcode.tools.executor.ToolExecutor.execute',execute)
-    run(config_file(tmp_path),stdin=StringIO('创建\n/exit\n'),stdout=output,provider_factory=lambda config:provider)
-    shown=output.getvalue()
-    assert '成功' in shown and '截断' in shown and 'dummy' not in shown
-    assert shown.index('工具>')<shown.index('成功')<shown.index('MewCode> 答复')
+    output = ObservedOutput()
+    provider = ScriptedProvider([calls(ToolCall("a", "write_file", json.dumps({"path":"dummy\x1b[31m\nfile", "content":"正文不要打印" * 100}))), answer()])
+    async def execute(self, *args, **options):
+        assert "已接收" in output.flushed and "[已隐藏]" in output.flushed
+        assert "\x1b" not in output.flushed and "正文不要打印" not in output.flushed
+        return ToolResult.success({"path":"x"}, truncated=True)
+    monkeypatch.setattr("mewcode.tools.executor.ToolExecutor.execute", execute)
+    _, shown = invoke(tmp_path, provider, "创建\n/exit\n", output)
+    assert "成功" in shown and "截断" in shown and "dummy" not in shown
+    assert shown.index("已接收") < shown.index("开始") < shown.index("成功") < shown.index("MewCode> 完成")
 
 
-def test_tool_failure_timeout_and_cancel_have_visible_status(tmp_path,monkeypatch):
+@pytest.mark.parametrize("code,label", [("file_exists", "失败"), ("timeout", "超时"), ("cancelled", "取消")])
+def test_tool_failures_have_visible_status(tmp_path, monkeypatch, code, label):
     from mewcode.tools.base import ToolResult
-    from mewcode.types import ToolCall
-    from test_tool_session import ScriptedProvider, call, answer
-    for code,label in [('file_exists','失败'),('timeout','超时'),('cancelled','取消')]:
-        output=StringIO()
-        provider=ScriptedProvider(call(ToolCall('a','write_file','{"path":"x","content":"data"}')),answer())
-        monkeypatch.setattr('mewcode.tools.executor.ToolExecutor.execute',lambda *args:ToolResult.failure(code,'dummy\x1b详情'))
-        run(config_file(tmp_path),stdin=StringIO('创建\n/exit\n'),stdout=output,provider_factory=lambda config:provider)
-        shown=output.getvalue()
-        assert label in shown and 'dummy' not in shown and '\x1b' not in shown
-        assert shown.count('你> ')==2
-        assert len(provider.requests)==(1 if code=='cancelled' else 2)
+    provider = ScriptedProvider([calls(ToolCall("a", "write_file", '{"path":"x","content":"data"}')), answer()])
+    async def execute(self, *args, **options):
+        return ToolResult.failure(code, "dummy\x1b详情")
+    monkeypatch.setattr("mewcode.tools.executor.ToolExecutor.execute", execute)
+    _, shown = invoke(tmp_path, provider, "创建\n/exit\n")
+    assert label in shown and "dummy" not in shown and "\x1b" not in shown
+    assert len(provider.requests) == (1 if code == "cancelled" else 2)
+
+
+def test_iteration_limit_is_reported_without_completion_claim(tmp_path):
+    provider = ScriptedProvider([calls(ToolCall("a", "read_file", "{"))] * 20)
+    _, shown = invoke(tmp_path, provider, "操作\n/exit\n")
+    assert "max_iterations" in shown and "本轮未完成" in shown and "20/20" in shown
+    assert "model_done" not in shown and shown.count("你> ") == 2
