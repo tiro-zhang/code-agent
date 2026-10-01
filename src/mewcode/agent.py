@@ -35,10 +35,9 @@ async def _next_event(stream, cancel: asyncio.Event):
         cancel.set()
     finally:
         waiter.cancel()
-        if cancel.is_set():
-            pending.cancel()
         await protected(asyncio.gather(waiter, return_exceptions=True), cancel_event=cancel)
         if cancel.is_set():
+            # 只取消一次；再次取消会打断 Provider 的异步流关闭。
             pending.cancel()
             await protected(asyncio.gather(pending, return_exceptions=True), cancel_event=cancel)
     if cancel.is_set():

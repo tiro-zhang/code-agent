@@ -1,8 +1,11 @@
 """不依赖终端消费者，验证自主循环、预算与五种终止原因。"""
 
 import asyncio
+from types import SimpleNamespace
 import pytest
 from conftest import ScriptedProvider, async_test, collect
+from mewcode.config import ProviderConfig
+from mewcode.providers.openai import OpenAIProvider
 from mewcode.tools import default_registry
 from mewcode.tools.base import ToolContext
 from mewcode.tools.executor import ToolExecutor
@@ -126,6 +129,63 @@ async def test_network_cancel_closes_stream_and_preserves_partial_usage(tmp_path
     assert events[-1].reason == "cancelled" and history == []
     assert provider.closed_streams == 1
     assert [e.usage for e in events if e.kind == "usage"] == [TokenUsage(17)]
+
+
+@pytest.mark.parametrize("cancellation", ["event", "task", "repeated_task"])
+@async_test
+async def test_network_cancel_waits_for_async_provider_close(tmp_path, cancellation):
+    from mewcode.agent import Agent
+
+    class ClosingStream:
+        def __init__(self):
+            self.reading = asyncio.Event()
+            self.closing = asyncio.Event()
+            self.closed = False
+            self.close_interrupted = False
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            self.closing.set()
+            try:
+                # 连接关闭需要异步等待，不能在等待期间再次取消读取任务。
+                await asyncio.sleep(0.05)
+                self.closed = True
+            except asyncio.CancelledError:
+                self.close_interrupted = True
+                raise
+
+        async def __aiter__(self):
+            self.reading.set()
+            await asyncio.Event().wait()
+            yield ProviderEvent("completed")
+
+    stream = ClosingStream()
+
+    async def create(**kwargs):
+        return stream
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    config = ProviderConfig("测试", "openai", "test", "https://example.invalid", "dummy", False)
+    provider = OpenAIProvider(config, client=client)
+    agent = Agent(provider, ToolExecutor(default_registry(), ToolContext(tmp_path)))
+    cancel = asyncio.Event()
+    task = asyncio.create_task(run(agent, cancel=cancel))
+    await asyncio.wait_for(stream.reading.wait(), 2)
+    if cancellation == "event":
+        cancel.set()
+    else:
+        task.cancel()
+    await asyncio.wait_for(stream.closing.wait(), 2)
+    if cancellation == "repeated_task":
+        task.cancel()
+        await asyncio.sleep(0)
+        task.cancel()
+    events, history = await asyncio.wait_for(task, 2)
+    assert stream.closed and not stream.close_interrupted
+    assert history == []
+    assert [event.reason for event in events if event.kind == "finished"] == ["cancelled"]
 
 
 @async_test

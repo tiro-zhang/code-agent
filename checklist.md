@@ -93,6 +93,7 @@
 - [x] 双路收集即时展示；异常流不执行工具，不提交残缺答复（确定性测试）。
 - [x] 连续读组最多 4 个真实工作进程并发，编辑和 shell 是串行边界；结果事件可乱序，历史始终按模型顺序（进程握手测试）。
 - [x] 实际子进程超时/取消、ready 前取消、清理期间重复取消、已完成结果保留和背压收尾（真实进程测试）。
+- [x] 模型流取消等待 Provider 异步关闭完成；事件取消、任务取消和关闭期间重复取消均有回归（实际 Agent/Provider，替换网络传输）。
 - [x] 上下文恢复按完整轮次 1/2/4 裁剪，保留当前多阶段任务且消耗同一预算（确定性测试）。
 - [x] 规划仅开放三个读工具，执行入口再次拦截写/编辑/shell；普通修订保持只读（确定性测试）。
 - [x] 正常最终答复才成为计划；失败修订使旧计划失效；/do 直接消费最新计划且不可重放（确定性测试）。
@@ -106,15 +107,22 @@
 
 | 项目 | 结果 | 证据或原因 |
 | --- | --- | --- |
-| 完整自动化回归 | 通过 | 161 项通过，25.97 秒；日志 `/private/tmp/mewcode-agent-e2e/pre-review-suite.log` |
+| 完整自动化回归 | 通过 | 164 项通过，26.10 秒；日志 `/private/tmp/mewcode-agent-e2e/final-suite.log` |
 | OpenSpec 严格校验 | 通过 | `openspec validate add-agent-loop --strict --json`，无问题 |
+| 独立最终审查及必修项 | 通过 | 取消路径重复中断异步关闭已修复；3 个场景先失败再通过，完整套件通过；记录 `/private/tmp/mewcode-agent-e2e/final-review.md` |
 | 三份配置示例 | 通过 | 均能加载，默认示例预算 20 |
 | OpenAI 兼容真实多步与历史 | 通过 | `.env`，方舟 `ark-code-latest`；4 个工具、5 次请求完成修复并输出 `LOOP_OK_42`；下一轮 1 次请求引用文件与标记 |
 | DeepSeek 只读规划/修订 | 通过 | `.env.claude`，`deepseek-v4-pro`，thinking=true；规划中两个读工具同批调用，4 次请求后成计划；普通修订 1 次请求，文件仍为 `return a - b` |
 | DeepSeek `/do` 直接执行 | 通过 | 新预算从 1/20 开始，实际编辑；命令 `python` 失败后模型改用 `python3`，`add(7,8)==15` 通过并输出 `PLAN_OK_15`，5 次请求后结束 |
 | 连续取消与后续上下文 | 通过 | 启动标记出现后立即发送两次 Ctrl+C；1 次模型请求后 cancelled，已知子进程 PID 退出，超过 30 秒后无 `cancel2-leak`；下一轮解释不回滚已有标记 |
+| 真实模型流取消与后续输入 | 通过 | 方舟文本流开始后 Ctrl+C，返回提示符；下一轮正常输出 `NETWORK_CANCEL_OK`，正常退出；日志 `openai-3-stream-cancel.log`、`openai-4-after-stream-cancel.log` |
 | 官方 Claude 真实 API | 未执行 | 当前只有方舟 OpenAI 兼容与 DeepSeek Anthropic 兼容配置；没有官方 Claude 凭据 |
 
-2026-10-01 本章有效 tmux 验收 7 轮，证据与实际样例位于 `/private/tmp/mewcode-agent-e2e/`：`report.json`、`openai-1-repair.log`、`openai-2-history.log`、`deepseek-1-plan.log` 至 `deepseek-5-after-cancel.log`。
+2026-10-01 本章有效 tmux 验收 9 轮，证据与实际样例位于 `/private/tmp/mewcode-agent-e2e/`：`report.json`、`openai-1-repair.log` 至 `openai-4-after-stream-cancel.log`、`deepseek-1-plan.log` 至 `deepseek-5-after-cancel.log`。
 
 首次取消尝试的外部控制发送较晚，8 秒命令已经结束，空闲 Ctrl+C 按设计退出，该次不作为取消通过证据。复验由控制脚本观察启动标记后立即发送信号，并用进程退出和延迟写入未发生验证；保留 `cancel-leak` 作为首轮控制失误记录，与复验的 `cancel2-leak` 区分。
+
+### 后续优化
+
+- Anthropic 起始事件已知的输出 Token 在中途断流时未保留；后续补齐初始部分统计，最终完整计数不受影响。
+- `/do` 引用规划任务背景可能带入旧只读指令；真实验收最终执行成功，后续明确该背景属于规划阶段。
