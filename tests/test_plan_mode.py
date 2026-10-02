@@ -57,7 +57,8 @@ async def test_do_executes_latest_plan_directly_with_new_budget_and_all_tools(tm
     assert events[-1].reason == "model_done" and events[-1].iteration == 2
     assert (tmp_path / "b").read_text() == "done" and chat.mode == "execute"
     messages, options = provider.requests[3]
-    assert "目标B、步骤B、验证B" in messages[-1].content and "任务B" in messages[-1].content
+    execution = [m for m in messages if m.role == "user"][-1]
+    assert "目标B、步骤B、验证B" in execution.content and "任务B" in execution.content
     assert any(m.content == "任务A" for m in messages[:-1])
     assert len(options["tools"]) == 6
     from mewcode.session import PlanStateError

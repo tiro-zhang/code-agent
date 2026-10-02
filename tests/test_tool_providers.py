@@ -34,7 +34,7 @@ async def test_openai_usage_after_finish_is_not_extra_content():
     events = await collect(OpenAIProvider(openai_config(), client=client).stream(
         [Message("user", "问")], system_prompt="独立指令"))
     assert events[-1].message.content == "好"
-    assert [e.usage for e in events if e.kind == "usage"][-1] == TokenUsage(11, 9, True, 3)
+    assert [e.usage for e in events if e.kind == "usage"][-1] == TokenUsage(11, 9, True, 3, total_input_tokens=11, cache_miss_tokens=8, cache_complete=True)
     assert client.chat.completions.request["messages"][0] == {"role": "system", "content": "独立指令"}
     assert client.chat.completions.request["stream_options"] == {"include_usage": True}
 
@@ -48,8 +48,8 @@ async def test_anthropic_usage_is_cumulative():
              event("message_stop")]
     client = anthropic_client(items)
     received = await collect(AnthropicProvider(anthropic_config(), client=client).stream([], system_prompt="规划"))
-    assert [e.usage for e in received if e.kind == "usage"][-1] == TokenUsage(11, 9, True, 4, 2)
-    assert client.messages.request["system"] == "规划"
+    assert [e.usage for e in received if e.kind == "usage"][-1] == TokenUsage(11, 9, True, 4, 2, total_input_tokens=17, cache_miss_tokens=13, cache_complete=True)
+    assert client.messages.request["system"] == [{"type": "text", "text": "规划", "cache_control": {"type": "ephemeral"}}]
 
 
 @async_test

@@ -8,7 +8,8 @@ import openai
 from ..config import ProviderConfig
 from ..errors import safe_provider_error
 from ..tools.base import ARGUMENT_LIMIT, ToolDefinition
-from ..types import Message, ProviderError, ProviderEvent, TokenUsage, ToolCall
+from ..types import Message, ProviderError, ProviderEvent, ToolCall
+from .usage import openai_usage
 from .tool_messages import openai_messages, openai_tools, validate_calls
 
 
@@ -34,16 +35,13 @@ class OpenAIProvider:
         calls: dict[int, dict[str, str]] = {}
         text, reasoning = [], []
         argument_bytes = 0
+        counts: dict[str, int] = {}
         try:
             async with await self.client.chat.completions.create(**request) as stream:
                 async for response in stream:
                     usage = getattr(response, "usage", None)
                     if usage is not None:
-                        input_tokens = getattr(usage, "prompt_tokens", None)
-                        output_tokens = getattr(usage, "completion_tokens", None)
-                        cached = getattr(getattr(usage, "prompt_tokens_details", None), "cached_tokens", None)
-                        yield ProviderEvent("usage", usage=TokenUsage(input_tokens, output_tokens,
-                                            input_tokens is not None and output_tokens is not None, cached))
+                        yield ProviderEvent("usage", usage=openai_usage(counts, usage))
                     if not response.choices:
                         continue
                     choice = response.choices[0]

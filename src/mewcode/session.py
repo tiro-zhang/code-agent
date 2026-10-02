@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .agent import Agent
 from .async_utils import protected
+from .prompts import PromptState
 from .tools import default_registry
 from .tools.base import ToolContext, strict_json
 from .tools.executor import ToolExecutor
@@ -46,10 +47,12 @@ class ChatSession:
         self.history: list[Message] = []
         self.mode: AgentMode = "execute"
         self._pending_plan: _PlanSnapshot | None = None
-        self.agent = Agent(provider, self.executor, max_iterations=max_iterations)
+        self.prompt_state = PromptState(self.executor.context.root)
+        self.agent = Agent(provider, self.executor, max_iterations=max_iterations, prompt_state=self.prompt_state)
 
     def enter_plan(self) -> None:
         self.mode = "plan"
+        self.prompt_state.enter_mode("plan")
         self._pending_plan = None
 
     async def ask(self, question: str, *, cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
@@ -72,6 +75,7 @@ class ChatSession:
         # 取出与消费标记不包含 await，重复 /do 无法重放已启动计划。
         self._pending_plan = None
         self.mode = "execute"
+        self.prompt_state.enter_mode("execute")
         question = ("请直接执行以下最新计划，按需核对当前文件状态，完成后验证结果。\n"
                     f"任务上下文：{snapshot.task}\n最新计划：\n{snapshot.answer}")
         source = self.ask(question, cancel_event=cancel_event)

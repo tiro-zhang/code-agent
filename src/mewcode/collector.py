@@ -22,9 +22,12 @@ class StreamCollector:
                 if event.kind == "usage":
                     if event.usage is not None:
                         fields = {key: getattr(event.usage, key) for key in
-                                  ("input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens")
+                                  ("input_tokens", "output_tokens", "cache_read_tokens", "cache_write_tokens",
+                                   "total_input_tokens", "cache_miss_tokens")
                                   if getattr(event.usage, key) is not None}
-                        self.usage = replace(self.usage, **fields, complete=event.usage.complete)
+                        self.usage = replace(self.usage, **fields, complete=event.usage.complete,
+                                             cache_complete=event.usage.cache_complete,
+                                             incomplete_fields=event.usage.incomplete_fields)
                     continue
                 if completed:
                     raise ProviderError("模型在完成响应后继续返回内容")

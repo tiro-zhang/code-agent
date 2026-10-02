@@ -35,7 +35,7 @@ def stage_file(target: Path, data: bytes, mode: int = 0o600) -> Path:
 class ReadFile:
     read_only = True
     name = "read_file"
-    description = "读取工作目录内的 UTF-8 文本，支持行范围。只读工具，可用于规划或核对修改后的实际内容。"
+    description = "读取工作目录内的 UTF-8 文本，优先用本工具读文件，可按行范围获取相关当前内容。编辑现存文件前先成功读取，修改后按需核对；规划模式可用。"
     input_schema = object_schema({"path": PATH,
         "start_line": {"type": "integer", "minimum": 1, "default": 1},
         "max_lines": {"type": "integer", "minimum": 1, "maximum": 1000, "default": 200}}, ["path"])
@@ -77,7 +77,7 @@ class ReadFile:
 class WriteFile:
     read_only = False
     name = "write_file"
-    description = "在工作目录内新建 UTF-8 文件，自动创建父目录；目标已存在则拒绝覆盖，请用 edit_file 修改。内容上限 1 MiB。"
+    description = "在工作目录内新建 UTF-8 文件，自动创建父目录；新建不存在的文件无需先读。目标已存在则拒绝覆盖，先用 read_file 读取再用 edit_file 修改。内容上限 1 MiB。"
     input_schema = object_schema({"path": PATH, "content": TEXT}, ["path", "content"])
 
     def execute(self, arguments: dict, context: ToolContext) -> ToolResult:
@@ -101,7 +101,7 @@ class WriteFile:
 class EditFile:
     read_only = False
     name = "edit_file"
-    description = "修改现存 UTF-8 文件：old_text 必须非空且精确匹配一次；零次或多次会报错。请提供足够上下文，文件和新内容上限 1 MiB。"
+    description = "优先用本工具修改现存 UTF-8 文件；编辑前先用 read_file 成功读取相关当前内容，不猜测原文。old_text 必须非空且精确匹配一次；零次、多次或文件状态变化后重新读取并补足唯一上下文。文件和新内容上限 1 MiB。"
     input_schema = object_schema({"path": PATH, "old_text": {"type": "string", "minLength": 1},
                                   "new_text": TEXT}, ["path", "old_text", "new_text"])
 

@@ -54,7 +54,7 @@ async def test_react_read_edit_check_and_parameter_correction(tmp_path):
     assert all(options["tool_choice"] == "auto" for _, options in provider.requests)
     assert events[-1].reason == "model_done" and events[-1].iteration == 5
     assert all(event.run_id == events[-1].run_id for event in events)
-    assert [m.role for m in provider.requests[4][0]] == ["user", "assistant", "tool", "assistant", "tool", "assistant", "tool", "assistant", "tool"]
+    assert [m.role for m in provider.requests[4][0] if m.role != "context"] == ["user", "assistant", "tool", "assistant", "tool", "assistant", "tool", "assistant", "tool"]
 
 
 @pytest.mark.parametrize("budget", [1, 2, 20])
@@ -98,7 +98,7 @@ async def test_registered_invalid_or_forbidden_name_resets_unknown_counter(tmp_p
                                           missing, missing, answer()])
     events, history = await run(agent, mode=mode)
     assert events[-1].reason == "model_done" and len(provider.requests) == 6
-    assert history[5].tool_calls[0].name == known.name
+    assert [m for m in history if m.role == "assistant"][2].tool_calls[0].name == known.name
 
 
 @pytest.mark.parametrize("response", [[ProviderError("断流")], answer(""),
@@ -195,7 +195,7 @@ async def test_cancellation_after_last_tool_batch_wins_budget(tmp_path):
     async for event in agent.run("问", history=history, mode="execute", cancel_event=cancel):
         events.append(event)
         if event.kind == "tool_result": cancel.set()
-    assert events[-1].reason == "cancelled" and len(history) == 3
+    assert events[-1].reason == "cancelled" and [m.role for m in history] == ["user", "context", "assistant", "tool"]
     assert len(provider.requests) == 1
 
 
@@ -205,4 +205,6 @@ async def test_usage_one_per_request_and_incomplete_total(tmp_path):
     events, _ = await run(agent)
     usages = [e.usage for e in events if e.kind == "usage"]
     assert usages == [TokenUsage(), TokenUsage(11, 9, True)]
-    assert events[-1].usage == TokenUsage(11, 9, False)
+    assert events[-1].usage.input_tokens == 11 and events[-1].usage.output_tokens == 9
+    assert not events[-1].usage.complete
+    assert {"input_tokens", "output_tokens"} <= events[-1].usage.incomplete_fields

@@ -13,6 +13,7 @@ from ..config import ProviderConfig
 from ..errors import safe_provider_error
 from ..tools.base import ARGUMENT_LIMIT, ToolDefinition
 from ..types import Message, ProviderError, ProviderEvent, TokenUsage, ToolCall
+from .usage import anthropic_usage
 from .tool_messages import anthropic_messages, anthropic_tools, input_object, validate_calls
 
 
@@ -44,6 +45,12 @@ def _is_deepseek_anthropic(base_url: str) -> bool:
     )
 
 
+def _is_official_claude(base_url: str) -> bool:
+    parsed = urlsplit(base_url)
+    return (parsed.scheme == "https" and parsed.netloc in {"api.anthropic.com", "api.anthropic.com:443"}
+            and parsed.path.rstrip("/") in {"", "/v1"})
+
+
 class AnthropicProvider:
     def __init__(self, config: ProviderConfig, *, client: Any | None = None) -> None:
         self.config = config
@@ -60,13 +67,16 @@ class AnthropicProvider:
                      tool_choice: Literal["auto", "none"] = "auto",
                      system_prompt: str = "") -> AsyncIterator[ProviderEvent]:
         deepseek_compatible = _is_deepseek_anthropic(self.config.base_url)
+        official_claude = _is_official_claude(self.config.base_url)
+        service = "deepseek" if deepseek_compatible else "claude" if official_claude else "compatible"
         provider_name = "DeepSeek" if deepseek_compatible else "Claude"
         request: dict[str, Any] = {
             "model": self.config.model, "max_tokens": 8192, "stream": True,
             "messages": anthropic_messages(messages),
         }
         if system_prompt:
-            request["system"] = system_prompt
+            request["system"] = ([{"type": "text", "text": system_prompt,
+                                  "cache_control": {"type": "ephemeral"}}] if official_claude else system_prompt)
         if tools:
             request["tools"] = anthropic_tools(tools)
             request["tool_choice"] = ({"type": "auto"}
@@ -82,6 +92,7 @@ class AnthropicProvider:
         raw_arguments: dict[int, str] = {}
         argument_bytes = 0
         usage = TokenUsage()
+        counts: dict[str, int] = {}
         try:
             # 原始流不会提前解析工具 JSON；坏参数也能得到配对的错误结果。
             async with await self.client.messages.create(**request) as stream:
@@ -91,9 +102,7 @@ class AnthropicProvider:
                     if event.type == "message_start":
                         source = getattr(event.message, "usage", None)
                         if source is not None:
-                            usage = replace(usage, input_tokens=getattr(source, "input_tokens", None),
-                                            cache_read_tokens=getattr(source, "cache_read_input_tokens", None),
-                                            cache_write_tokens=getattr(source, "cache_creation_input_tokens", None))
+                            usage = anthropic_usage(counts, source, service=service)
                             yield ProviderEvent("usage", usage=usage)
                     elif event.type == "content_block_start":
                         index = event.index
@@ -137,14 +146,7 @@ class AnthropicProvider:
                     elif event.type == "message_delta":
                         source = getattr(event, "usage", None)
                         if source is not None:
-                            fields = {}
-                            for local, remote in (("input_tokens", "input_tokens"), ("output_tokens", "output_tokens"),
-                                                  ("cache_read_tokens", "cache_read_input_tokens"),
-                                                  ("cache_write_tokens", "cache_creation_input_tokens")):
-                                value = getattr(source, remote, None)
-                                if value is not None:
-                                    fields[local] = value
-                            usage = replace(usage, **fields)
+                            usage = anthropic_usage(counts, source, service=service)
                             yield ProviderEvent("usage", usage=usage)
                         if event.delta.stop_reason is not None:
                             stop_reason = event.delta.stop_reason

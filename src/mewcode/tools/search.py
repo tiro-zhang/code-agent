@@ -86,7 +86,7 @@ def records(process, separator: bytes, limit: int):
 class GlobFiles:
     read_only = True
     name = "glob_files"
-    description = "按工作目录相对路径 glob 查找文件，如 **/*.py。跳过隐藏/忽略文件及链接，返回排序路径；默认最多100条。"
+    description = "定位文件路径优先使用本工具：按工作目录相对路径 glob 查找文件，如 **/*.py。跳过隐藏/忽略文件及链接，返回排序路径；默认最多100条，定位后用 read_file 读取内容。"
     input_schema = object_schema({"pattern": PATTERN, "max_results": MAX_RESULTS}, ["pattern"])
 
     def execute(self, arguments: dict, context: ToolContext) -> ToolResult:
@@ -121,7 +121,7 @@ class GlobFiles:
 class SearchCode:
     read_only = True
     name = "search_code"
-    description = "在工作目录文本文件中按 ripgrep 正则搜索，glob 可限制文件。跳过隐藏/忽略/二进制文件与链接，返回路径、行号和匹配行；默认最多100条。"
+    description = "搜索代码内容优先使用本工具：在工作目录文本文件中按 ripgrep 正则搜索，glob 可限制文件。跳过隐藏/忽略/二进制文件与链接，返回路径、行号和匹配行；默认最多100条，编辑前再用 read_file 读取相关上下文。"
     input_schema = object_schema({"pattern": PATTERN, "glob": PATTERN, "max_results": MAX_RESULTS}, ["pattern"])
 
     def execute(self, arguments: dict, context: ToolContext) -> ToolResult:

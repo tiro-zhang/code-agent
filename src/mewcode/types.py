@@ -17,6 +17,20 @@ class TokenUsage:
     complete: bool = False
     cache_read_tokens: int | None = None
     cache_write_tokens: int | None = None
+    total_input_tokens: int | None = None
+    cache_miss_tokens: int | None = None
+    cache_complete: bool = False
+    incomplete_fields: frozenset[str] = frozenset()
+
+    @property
+    def cache_hit_rate(self) -> float | None:
+        total, hit, miss = self.total_input_tokens, self.cache_read_tokens, self.cache_miss_tokens
+        if (not self.cache_complete or not isinstance(total, int) or isinstance(total, bool)
+                or total <= 0 or not isinstance(hit, int) or isinstance(hit, bool) or not 0 <= hit <= total):
+            return None
+        if miss is not None and (type(miss) is not int or miss < 0 or hit + miss != total):
+            return None
+        return hit / total
 
 
 @dataclass(frozen=True)
@@ -28,7 +42,7 @@ class ToolCall:
 
 @dataclass(frozen=True)
 class Message:
-    role: Literal["user", "assistant", "tool"]
+    role: Literal["user", "assistant", "tool", "context"]
     content: str = ""
     tool_calls: tuple[ToolCall, ...] = ()
     tool_call_id: str | None = None

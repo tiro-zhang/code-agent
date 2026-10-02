@@ -38,10 +38,10 @@ async def test_multi_call_batch_commits_in_order_before_next_request(executor, t
     await collect(session.ask("创建并读取"))
     assert (tmp_path / "x").read_text() == "猫" and executor.count == 2
     assert provider.requests[1][1]["tool_choice"] == "auto"
-    assert [m.tool_call_id for m in provider.requests[1][0][2:]] == ["a", "b"]
-    assert provider.requests[1][0][-1].tool_result.data["content"] == "猫"
+    assert [m.tool_call_id for m in provider.requests[1][0] if m.role == "tool"] == ["a", "b"]
+    assert [m for m in provider.requests[1][0] if m.role == "tool"][-1].tool_result.data["content"] == "猫"
     await collect(session.ask("刚才做了什么"))
-    assert provider.requests[-1][0][:-1] == tuple(session.history[:-2]) and executor.count == 2
+    assert provider.requests[-1][0] == tuple(session.history[:-1]) and executor.count == 2
 
 
 @pytest.mark.parametrize("raw,code,count", [("{", "invalid_arguments", 0), ('{"path":"missing"}', "file_not_found", 1)])
@@ -49,7 +49,7 @@ async def test_multi_call_batch_commits_in_order_before_next_request(executor, t
 async def test_errors_return_once_without_scheduler_retry(executor, raw, code, count):
     session = ChatSession(ScriptedProvider(call(ToolCall("a", "read_file", raw)), answer("失败")), executor=executor)
     await collect(session.ask("读文件"))
-    assert executor.count == count and session.history[2].tool_result.error["code"] == code
+    assert executor.count == count and [m for m in session.history if m.role == "tool"][0].tool_result.error["code"] == code
 
 
 @async_test
@@ -58,10 +58,10 @@ async def test_write_then_stream_error_keeps_real_result_for_next_task(executor,
         [ProviderEvent("text_delta", "残缺"), ProviderError("断流")], answer("已创建"))
     session = ChatSession(provider, executor=executor)
     events = await collect(session.ask("创建"))
-    assert events[-1].reason == "stream_error" and len(session.history) == 3
+    assert events[-1].reason == "stream_error" and [m.role for m in session.history] == ["user", "context", "assistant", "tool"]
     assert (tmp_path / "x").read_text() == "done"
     await collect(session.ask("继续"))
-    assert len(provider.requests[-1][0]) == 4 and "残缺" not in repr(provider.requests[-1][0]) and executor.count == 1
+    assert [m.role for m in provider.requests[-1][0]] == ["user", "context", "assistant", "tool", "user", "context"] and "残缺" not in repr(provider.requests[-1][0]) and executor.count == 1
 
 
 @async_test
@@ -74,7 +74,7 @@ async def test_cancel_during_second_model_stream_keeps_pairs(executor, tmp_path)
     provider = ScriptedProvider(call(ToolCall("a", "write_file", '{"path":"x","content":"done"}')), interrupted, answer("下一轮"))
     session = ChatSession(provider, executor=executor)
     events = await collect(session.ask("创建", cancel_event=cancel))
-    assert events[-1].reason == "cancelled" and len(session.history) == 3
+    assert events[-1].reason == "cancelled" and [m.role for m in session.history] == ["user", "context", "assistant", "tool"]
     assert session.history[-1].tool_result.ok and (tmp_path / "x").exists()
     await collect(session.ask("继续"))
     assert "残缺" not in repr(provider.requests[-1][0])
@@ -91,11 +91,11 @@ async def test_tool_cancel_fills_later_calls_and_next_input_has_whole_batch(exec
     cancel.set()
     events = await task
     assert events[-1].reason == "cancelled"
-    assert [m.tool_call_id for m in session.history[2:]] == ["active", "queued"]
+    assert [m.tool_call_id for m in session.history if m.role == "tool"] == ["active", "queued"]
     assert session.history[-1].tool_result.error["details"]["not_started"]
     assert not (tmp_path / "never").exists() and executor.count == 1
     await collect(session.ask("继续"))
-    assert len(provider.requests[-1][0]) == 5
+    assert [m.role for m in provider.requests[-1][0]] == ["user", "context", "assistant", "tool", "tool", "user", "context"]
 
 
 @async_test

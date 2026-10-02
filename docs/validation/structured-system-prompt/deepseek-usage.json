@@ -1,0 +1,28 @@
+{
+  "model": "deepseek-v4-pro",
+  "protocol": "anthropic",
+  "base_url": "https://api.deepseek.com/anthropic",
+  "thinking": true,
+  "usage": [
+    {
+      "event": "message_start",
+      "usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 1024,
+        "input_tokens": 90,
+        "output_tokens": 0,
+        "service_tier": "standard"
+      }
+    },
+    {
+      "event": "message_delta",
+      "usage": {
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 1024,
+        "input_tokens": 90,
+        "output_tokens": 3,
+        "service_tier": "standard"
+      }
+    }
+  ]
+}

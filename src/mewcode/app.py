@@ -41,10 +41,22 @@ class _Renderer:
 
     @staticmethod
     def usage_text(usage: TokenUsage):
-        incoming = "未知" if usage.input_tokens is None else str(usage.input_tokens)
-        outgoing = "未知" if usage.output_tokens is None else str(usage.output_tokens)
-        suffix = "统计完整" if usage.complete else "统计不完整"
-        return f"输入 {incoming}，输出 {outgoing} · {suffix}"
+        def count(field):
+            value = getattr(usage, field)
+            if value is None:
+                return "未知"
+            return str(value) + ("（部分）" if field in usage.incomplete_fields else "")
+
+        incoming = f"总输入 {count('total_input_tokens')}"
+        if usage.total_input_tokens is None:
+            incoming += f"（基础输入 {count('input_tokens')}）"
+        ratio = usage.cache_hit_rate
+        rate = "未知" if ratio is None else f"{ratio:.1%}"
+        base = "统计完整" if usage.complete else "统计不完整"
+        cache = "缓存统计完整" if usage.cache_complete else "缓存统计不完整"
+        return (f"{incoming}，输出 {count('output_tokens')} · {base} · "
+                f"命中 {count('cache_read_tokens')}，未命中 {count('cache_miss_tokens')}，"
+                f"写入 {count('cache_write_tokens')}，命中率 {rate} · {cache}")
 
     def show(self, event: AgentEvent):
         if event.kind in {"text_delta", "thinking_delta"} and event.text:

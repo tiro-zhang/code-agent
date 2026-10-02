@@ -7,7 +7,7 @@ from .processes import child_process, output_chunks, output_text
 class ExecuteCommand:
     read_only = False
     name = "execute_command"
-    description = "执行完整 POSIX shell 命令，支持管道与重定向，每次从工作目录启动独立 /bin/sh。无交互输入，默认超时30秒；命令可访问目录外，勿启动后台守护进程。"
+    description = "运行测试、构建等 POSIX shell 命令，支持管道与重定向。读文件、找路径、搜内容和编辑优先用专用工具；专用能力不足时仅在执行模式考虑 shell。每次从工作目录启动独立 /bin/sh，无交互输入，默认超时30秒；命令可访问目录外，勿启动后台守护进程。"
     input_schema = object_schema({"command": {"type": "string", "minLength": 1},
         "timeout_seconds": {"type": "integer", "minimum": 1, "maximum": 120, "default": 30}}, ["command"])
 

@@ -6,14 +6,11 @@ from uuid import uuid4
 
 from .async_utils import protected
 from .collector import StreamCollector
+from .prompts import PromptState, build_system_prompt
 from .tools.executor import ToolExecutor
 from .tools.scheduler import ToolScheduler
 from .types import AgentEvent, AgentMode, ContextLimitError, Message, Provider, ProviderError, StopReason, TokenUsage
 
-EXECUTE_PROMPT = "你是 MewCode 终端编程助手。按需使用工具完成用户任务，读取工具结果后调整行动，完成检查后给出答复。"
-PLAN_PROMPT = ("当前是只读规划模式，仅允许读取、找文件和搜索代码。不能写入、修改文件或执行 shell。"
-               "先按需探索；每次最终答复都给出完整的当前计划，包括目标、实施步骤和验证方式。"
-               "修订时结合已有任务上下文，输出完整的新计划。")
 
 
 def _drop_oldest_turns(history: list[Message], count: int, *, keep_last_turn: bool) -> int:
@@ -49,21 +46,30 @@ def _total_usage(records: list[TokenUsage]) -> TokenUsage:
     def total(field):
         known = [getattr(record, field) for record in records if getattr(record, field) is not None]
         return sum(known) if known else None
-    return TokenUsage(total("input_tokens"), total("output_tokens"),
-                      bool(records) and all(record.complete for record in records),
-                      total("cache_read_tokens"), total("cache_write_tokens"))
+    fields = ("input_tokens", "output_tokens", "total_input_tokens", "cache_read_tokens",
+              "cache_miss_tokens", "cache_write_tokens")
+    return TokenUsage(**{field: total(field) for field in fields},
+                      complete=bool(records) and all(record.complete for record in records),
+                      cache_complete=bool(records) and all(record.cache_complete for record in records),
+                      incomplete_fields=frozenset(field for field in fields if
+                          any(getattr(record, field) is None or field in record.incomplete_fields for record in records)))
 
 
 class Agent:
-    def __init__(self, provider: Provider, executor: ToolExecutor, *, max_iterations: int = 20) -> None:
+    def __init__(self, provider: Provider, executor: ToolExecutor, *, max_iterations: int = 20,
+                 prompt_state: PromptState | None = None) -> None:
         if isinstance(max_iterations, bool) or not isinstance(max_iterations, int) or max_iterations <= 0:
             raise ValueError("max_iterations 必须是正整数")
         self.provider, self.executor, self.max_iterations = provider, executor, max_iterations
+        self.prompt_state = prompt_state or PromptState(executor.context.root)
 
     async def run(self, question: str, *, history: list[Message], mode: AgentMode,
                   cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
         run_id, iteration, unknown_count = uuid4().hex, 0, 0
+        if self.prompt_state.mode != mode:
+            self.prompt_state.enter_mode(mode)
+        context = None
         committed = False
         drops = 1
         user = Message("user", question)
@@ -81,6 +87,8 @@ class Agent:
             if not committed:
                 history.append(user)
                 committed = True
+            history.append(context)
+            self.prompt_state.commit(context)
             history.append(message)
             history.extend(Message("tool", tool_call_id=call.id, tool_result=result)
                            for call, result in zip(message.tool_calls, results))
@@ -92,10 +100,24 @@ class Agent:
                 if cancel.is_set():
                     break
                 iteration += 1
-                collector = StreamCollector(self.provider.stream(
-                    [*history, *(() if committed else (user,))],
-                    tools=self.executor.registry.definitions(allowed_tools=allowed),
-                    tool_choice="auto", system_prompt=PLAN_PROMPT if mode == "plan" else EXECUTE_PROMPT))
+                async def request():
+                    nonlocal context
+                    if cancel.is_set():
+                        return
+                    context = self.prompt_state.begin_request()
+                    stream = self.provider.stream(
+                        [*history, *(() if committed else (user,)), context],
+                        tools=self.executor.registry.definitions(allowed_tools=allowed),
+                        tool_choice="auto", system_prompt=build_system_prompt())
+                    try:
+                        async for item in stream:
+                            yield item
+                    finally:
+                        close = getattr(stream, "aclose", None)
+                        if close is not None:
+                            await close()
+
+                collector = StreamCollector(request())
                 source = collector.events(run_id=run_id, iteration=iteration, mode=mode)
                 failure = None
                 displayed = False
@@ -126,6 +148,7 @@ class Agent:
                             if iteration >= self.max_iterations:
                                 break
                             dropped = _drop_oldest_turns(history, drops, keep_last_turn=committed)
+                            self.prompt_state.history_trimmed()
                             yield event("history_trimmed", text=f"上下文超限，已丢弃 {dropped} 轮较早对话并重试")
                             drops *= 2
                             continue

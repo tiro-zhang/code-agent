@@ -13,7 +13,7 @@ async def test_previous_answer_is_sent_and_thinking_is_not_answer():
     await collect(session.ask("第一问"))
     events = await collect(session.ask("第二问"))
     assert events[-1].reason == "model_done"
-    assert provider.requests[1][0] == (Message("user", "第一问"), Message("assistant", "答复"), Message("user", "第二问"))
+    assert tuple(m for m in provider.requests[1][0] if m.role != "context") == (Message("user", "第一问"), Message("assistant", "答复"), Message("user", "第二问"))
     assert "思考" not in repr(session.history)
 
 
@@ -69,5 +69,5 @@ async def test_recovery_preserves_current_multi_stage_task_and_unknown_count():
     session.history = [Message("user", "旧"), Message("assistant", "旧答")]
     events = await collect(session.ask("当前任务"))
     assert events[-1].reason == "unknown_tool_limit" and events[-1].iteration == 4
-    assert [m.role for m in provider.requests[-1][0]] == ["user", "assistant", "tool", "assistant", "tool"]
+    assert [m.role for m in provider.requests[-1][0] if m.role != "context"] == ["user", "assistant", "tool", "assistant", "tool"]
     assert session.history[0].content == "当前任务"

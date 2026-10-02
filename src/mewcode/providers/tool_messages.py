@@ -40,7 +40,7 @@ def anthropic_tools(definitions: Sequence[ToolDefinition]) -> list[dict]:
 def openai_messages(messages: Sequence[Message]) -> list[dict]:
     result = []
     for message in messages:
-        item = {"role": message.role, "content": message.content}
+        item = {"role": "user" if message.role == "context" else message.role, "content": message.content}
         if message.role == "tool":
             item.update(tool_call_id=message.tool_call_id, content=message.tool_result.to_json())
         if message.tool_calls:
@@ -61,7 +61,7 @@ def anthropic_messages(messages: Sequence[Message]) -> list[dict]:
                         "content": message.tool_result.to_json(), "is_error": not message.tool_result.ok}]
             role = "user"
         else:
-            role = message.role
+            role = "user" if message.role == "context" else message.role
             if message.provider_content:
                 content = deepcopy(list(message.provider_content))
             elif message.tool_calls:

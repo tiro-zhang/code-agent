@@ -33,7 +33,7 @@ def test_prompt_loop_accepts_two_turns_empty_input_and_exit(tmp_path):
     provider = FakeProvider()
     code, shown = invoke(tmp_path, provider, "第一问\n\n第二问\n/exit\n")
     assert code == 0 and "测试后端" in shown and shown.count("你> ") == 4
-    assert provider.requests[1][0] == (Message("user", "第一问"), Message("assistant", "答复"), Message("user", "第二问"))
+    assert tuple(m for m in provider.requests[1][0] if m.role != "context") == (Message("user", "第一问"), Message("assistant", "答复"), Message("user", "第二问"))
     assert provider.closed
 
 
@@ -74,7 +74,7 @@ def test_stream_failure_discards_candidate_and_reports_reason(tmp_path):
     provider = ScriptedProvider([[ProviderEvent("text_delta", "残缺"), ProviderError("模拟故障")], answer("正常")])
     _, shown = invoke(tmp_path, provider, "第一问\n第二问\n/exit\n")
     assert "本轮未完成" in shown and "stream_error" in shown
-    assert provider.requests[1][0] == (Message("user", "第二问"),)
+    assert tuple(m for m in provider.requests[1][0] if m.role != "context") == (Message("user", "第二问"),)
 
 
 def test_real_sigint_during_stream_closes_stream_and_continues_input(tmp_path):
@@ -85,7 +85,7 @@ def test_real_sigint_during_stream_closes_stream_and_continues_input(tmp_path):
     provider = ScriptedProvider([interrupted, answer("正常")])
     _, shown = invoke(tmp_path, provider, "第一问\n第二问\n/exit\n")
     assert "cancelled" in shown and "正常" in shown
-    assert provider.requests[1][0] == (Message("user", "第二问"),)
+    assert tuple(m for m in provider.requests[1][0] if m.role != "context") == (Message("user", "第二问"),)
     assert provider.closed_streams == 2 and provider.closed
 
 
@@ -95,7 +95,7 @@ def test_plan_commands_and_do_without_pending_plan(tmp_path):
     assert len(provider.requests) == 4
     assert len(provider.requests[0][1]["tools"]) == len(provider.requests[1][1]["tools"]) == 3
     assert len(provider.requests[2][1]["tools"]) == len(provider.requests[3][1]["tools"]) == 6
-    assert "目标B步骤B验证B" in provider.requests[2][0][-1].content
+    assert "目标B步骤B验证B" in [m for m in provider.requests[2][0] if m.role == "user"][-1].content
     assert "没有有效" in shown and shown.count("你> ") == 7
 
 
