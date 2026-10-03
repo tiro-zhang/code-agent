@@ -1,0 +1,17 @@
+# 实际 tmux 验收的冲突规则；临时用户文件已移除恢复原状态。
+user:
+  path: /Users/tiro/.mewcode/permissions.yaml
+  rules:
+  - {effect: deny, rule: "write_file(blocked.txt)", match: exact}
+project:
+  path: /private/tmp/mewcode-permissions-e2e/project/.mewcode/permissions.yaml
+  rules:
+  - {effect: allow, rule: "write_file(blocked.txt)", match: exact}
+local:
+  path: /private/tmp/mewcode-permissions-e2e/project/.mewcode/permissions.local.yaml
+  rules:
+  - {effect: ask, rule: "write_file(blocked.txt)", match: exact}
+mode: bypass
+result: permission_denied
+blocked_file_exists: false
+alternative_content: fallback

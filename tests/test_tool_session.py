@@ -1,7 +1,7 @@
 """工具批次提交、真实副作用及失败/取消后的完整历史。"""
 import asyncio
 import pytest
-from conftest import ScriptedProvider as BaseProvider, async_test, collect
+from conftest import ScriptedProvider as BaseProvider, async_test, collect, permission_bypass
 from mewcode.session import ChatSession
 from mewcode.tools import default_registry
 from mewcode.tools.base import ToolContext
@@ -18,7 +18,7 @@ class ScriptedProvider(BaseProvider):
 
 class CountingExecutor(ToolExecutor):
     def __init__(self, root):
-        super().__init__(default_registry(), ToolContext(root))
+        super().__init__(default_registry(), ToolContext(root), permissions=permission_bypass(root))
         self.count = 0
     async def execute(self, name, raw, **options):
         self.count += 1

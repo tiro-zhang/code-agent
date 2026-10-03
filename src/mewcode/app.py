@@ -11,7 +11,9 @@ from typing import TextIO
 from .async_utils import protected
 from .config import ConfigError, ProviderConfig, load_config
 from .providers import make_provider
+from .permissions.terminal import InputReader, TerminalApproval
 from .session import ChatSession, PlanStateError, operation_summary
+from .tools.base import ToolError
 from .types import AgentEvent, Provider, ProviderError, TokenUsage
 
 
@@ -71,8 +73,20 @@ class _Renderer:
             if event.phase == "model":
                 self.calls.clear()
             mode = "规划" if event.mode == "plan" else "执行"
-            phase = "请求模型" if event.phase == "model" else "执行工具"
-            self.line(f"进度> {mode} · 请求 {event.iteration}/{event.max_iterations} · {phase}")
+            phase = {"model": "请求模型", "tools": "权限检查／执行工具", "permissions": "权限检查",
+                     "permission": "等待授权"}.get(event.phase, event.phase)
+            self.line(f"进度> {mode} · 权限 {event.permission_mode} · 请求 {event.iteration}/{event.max_iterations} · {phase}")
+        elif event.kind == "permission_requested":
+            request = event.permission_request
+            request_id = self.safe(request.id, 60) if request is not None else ""
+            self.line(f"权限> [{self.safe(event.tool_call_id, 60)}] {self.safe(event.tool_name, 60)} · 等待授权 · 请求 {request_id}")
+        elif event.kind == "permission_resolved":
+            labels = {"deny": "拒绝", "once": "本次批准", "session": "会话批准", "permanent": "永久批准"}
+            if event.warning and event.permission_decision == "permanent":
+                labels["permanent"] = "本次批准（永久未保存）"
+            self.line(f"权限> [{self.safe(event.tool_call_id, 60)}] {labels.get(event.permission_decision, self.safe(event.permission_decision))}")
+            if event.warning:
+                self.line(f"提示> {self.safe(event.warning, 400)}")
         elif event.kind == "history_trimmed":
             self.line(f"提示> {self.safe(event.text)}")
         elif event.kind == "usage":
@@ -94,9 +108,12 @@ class _Renderer:
                     status = "成功"
                 else:
                     code = result.error["code"]
-                    label = {"timeout": "超时", "cancelled": "取消"}.get(code, "失败")
+                    label = {"timeout": "超时", "cancelled": "取消", "permission_denied": "权限拒绝",
+                             "permission_blacklisted": "权限拒绝", "permission_protected": "权限拒绝"}.get(code, "失败")
                     status = f"{label} · {self.safe(code + '：' + result.error['message'])}"
                 suffix = " · 输出已截断" if result.truncated else ""
+                if result.ok and isinstance(result.data, dict) and result.data.get("permission_limited"):
+                    suffix += f" · 搜索范围受限，跳过 {result.data.get('skipped_files', 0)} 个文件"
                 self.line(f"{prefix} · {status}{suffix}")
         elif event.kind == "finished":
             label = "结束" if event.reason == "model_done" else "本轮未完成"
@@ -104,36 +121,47 @@ class _Renderer:
             self.line(f"用量> 累计已知 Token · {self.usage_text(event.usage)}")
 
 
-async def _run(config, input_stream, output_stream, error_stream, factory):
+async def _run(config, input_stream, output_stream, error_stream, factory, *,
+               permission_mode="default", approval_responder=None, input_reader=None):
     provider = factory(config)
+    loop = asyncio.get_running_loop()
     active_cancel = None
+    idle_cancel = asyncio.Event()
     previous_handler = None
     has_handler = threading.current_thread() is threading.main_thread()
 
     def interrupt(signum, frame):
         if active_cancel is not None:
-            active_cancel.set()
+            # 信号处理器内仅置 Event 不会唤醒阻塞的 selector，显式写入循环唤醒通道。
+            loop.call_soon_threadsafe(active_cancel.set)
         else:
-            raise KeyboardInterrupt
+            loop.call_soon_threadsafe(idle_cancel.set)
 
     if has_handler:
         previous_handler = signal.signal(signal.SIGINT, interrupt)
     renderer = _Renderer(output_stream, config.api_key)
     try:
         try:
-            session = ChatSession(provider, max_iterations=config.max_iterations)
-        except ValueError as error:
+            reader = input_reader or InputReader(input_stream)
+            session = ChatSession(provider, max_iterations=config.max_iterations, permission_mode=permission_mode)
+            session.permissions.responder = approval_responder or TerminalApproval(
+                reader, output_stream, root=session.executor.context.root, secret=config.api_key)
+            session.permissions.config.load()
+        except (ValueError, ToolError, OSError) as error:
             error_stream.write(f"启动失败：{renderer.safe(error)}\n")
             return 2
-        output_stream.write(f"MewCode · {renderer.safe(config.name, 100)}\n")
+        output_stream.write(f"MewCode · {renderer.safe(config.name, 100)} · 权限 {session.permissions.mode}\n")
         while True:
             output_stream.write("你> ")
             output_stream.flush()
             try:
-                line = input_stream.readline()
-            except KeyboardInterrupt:
+                line = await reader.readline(idle_cancel)
+            except (KeyboardInterrupt, asyncio.CancelledError):
                 output_stream.write("\n")
                 return 0
+            except (OSError, ValueError, UnicodeError) as error:
+                error_stream.write(f"输入通道失效：{renderer.safe(error)}\n")
+                return 2
             if not line:
                 output_stream.write("\n")
                 return 0
@@ -143,6 +171,12 @@ async def _run(config, input_stream, output_stream, error_stream, factory):
             if not question:
                 continue
             parts = question.split(maxsplit=1)
+            if parts[0] == "/permissions":
+                try:
+                    renderer.line(terminal_text(session.permission_command(question), config.api_key, multiline=True))
+                except (ValueError, ToolError, OSError) as error:
+                    renderer.line(f"提示> {renderer.safe(error, 400)}")
+                continue
             if parts[0] == "/plan":
                 session.enter_plan()
                 if len(parts) == 1:
@@ -158,7 +192,11 @@ async def _run(config, input_stream, output_stream, error_stream, factory):
                 renderer.line(f"提示> {renderer.safe(error, 300)}")
             finally:
                 await protected(source.aclose(), cancel_event=active_cancel)
+                if active_cancel.is_set():
+                    reader.discard_pending()
                 active_cancel = None
+            if reader.eof:
+                return 0
     finally:
         active_cancel = asyncio.Event()
         try:
@@ -169,7 +207,8 @@ async def _run(config, input_stream, output_stream, error_stream, factory):
 
 
 def run(config_path: str | Path, *, stdin: TextIO | None = None, stdout: TextIO | None = None,
-        stderr: TextIO | None = None, provider_factory: Callable[[ProviderConfig], Provider] | None = None) -> int:
+        stderr: TextIO | None = None, provider_factory: Callable[[ProviderConfig], Provider] | None = None,
+        permission_mode: str = "default", approval_responder=None, input_reader=None) -> int:
     """保留同步启动接口，由单个事件循环管理会话与客户端。"""
     input_stream = stdin if stdin is not None else sys.stdin
     output_stream = stdout if stdout is not None else sys.stdout
@@ -179,4 +218,6 @@ def run(config_path: str | Path, *, stdin: TextIO | None = None, stdout: TextIO 
     except ConfigError as error:
         error_stream.write(f"配置错误：{error}\n")
         return 2
-    return asyncio.run(_run(config, input_stream, output_stream, error_stream, provider_factory or make_provider))
+    return asyncio.run(_run(config, input_stream, output_stream, error_stream, provider_factory or make_provider,
+                           permission_mode=permission_mode, approval_responder=approval_responder,
+                           input_reader=input_reader))

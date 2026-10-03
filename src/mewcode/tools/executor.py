@@ -5,8 +5,11 @@ import multiprocessing
 import os
 import signal
 import asyncio
+import inspect
+import json
 
 from ..async_utils import protected
+from ..permissions.runtime import PermissionManager
 import time
 
 from .base import ToolContext, ToolError, ToolResult
@@ -60,13 +63,15 @@ def _cleanup(process, grouped: bool) -> None:
 
 
 class ToolExecutor:
-    def __init__(self, registry: ToolRegistry, context: ToolContext, *, timeout: float = 30) -> None:
+    def __init__(self, registry: ToolRegistry, context: ToolContext, *, timeout: float = 30,
+                 permissions: PermissionManager | None = None) -> None:
         if os.name != "posix":
             raise ValueError("工具执行目前需要 macOS 或 Linux 等 POSIX 环境")
         self.registry, self.context, self.timeout = registry, context, timeout
+        self.permissions = permissions if permissions is not None else PermissionManager(context.root)
 
     async def execute(self, name: str, raw: str, *, allowed_tools: frozenset[str] | None = None,
-                      cancel_event: asyncio.Event | None = None) -> ToolResult:
+                      cancel_event: asyncio.Event | None = None, on_event=None) -> ToolResult:
         try:
             tool, arguments = self.registry.prepare(name, raw, allowed_tools=allowed_tools)
         except ToolError as error:
@@ -74,10 +79,26 @@ class ToolExecutor:
         cancel_event = cancel_event if cancel_event is not None else asyncio.Event()
         if cancel_event.is_set():
             return ToolResult.failure("cancelled", "任务取消，工具未启动", details={"not_started": True})
+        try:
+            targets = None
+            if name in {"glob_files", "search_code"}:
+                from .search import enumerate_candidates
+                targets = await enumerate_candidates(name, arguments, self.context, cancel_event)
+            authorization = await self.permissions.authorize(
+                name, arguments, targets=targets, cancel_event=cancel_event, notify=on_event)
+            context = replace(self.context, authorized_paths=authorization.targets,
+                              permission_skipped_files=authorization.skipped_files)
+            raw = json.dumps(authorization.arguments, ensure_ascii=False)
+        except ToolError as error:
+            return error.result()
+        except asyncio.CancelledError:
+            cancel_event.set()
+            return ToolResult.failure("cancelled", "任务取消，工具未启动", details={"not_started": True})
+        # 人工审批不消耗工具的执行时间预算。
         deadline = time.monotonic() + (arguments.get("timeout_seconds", self.timeout) if name == "execute_command" else self.timeout)
         mp = multiprocessing.get_context("spawn")
         receive, send = mp.Pipe(duplex=False)
-        process = mp.Process(target=_worker, args=(send, self.registry, self.context, name, raw))
+        process = mp.Process(target=_worker, args=(send, self.registry, context, name, raw))
         buffers = {"stdout": bytearray(), "stderr": bytearray()}
         grouped, truncated = False, False
         failure = "execution_error"
@@ -85,6 +106,10 @@ class ToolExecutor:
         try:
             process.start()
             send.close()
+            if on_event:
+                notification = on_event({"kind": "tool_started"})
+                if inspect.isawaitable(notification):
+                    await notification
             while True:
                 if cancel_event.is_set():
                     failure = "cancelled"

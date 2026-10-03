@@ -18,6 +18,8 @@ def checked_path(value: str, context: ToolContext, *, resolve: bool = True) -> P
         raise ToolError("invalid_arguments", "路径无法解析或包含循环链接") from None
     if not target.is_relative_to(context.root):
         raise ToolError("path_outside_workspace", "文件路径超出启动工作目录")
+    if context.authorized_paths is not None and str(target) not in context.authorized_paths:
+        raise ToolError("permission_denied", "实际文件目标不在本次批准范围内", not_started=True)
     return target if resolve else original
 
 

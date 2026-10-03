@@ -62,3 +62,7 @@ def async_test(function):
     def run(*args, **kwargs):
         return asyncio.run(function(*args, **kwargs))
     return run
+def permission_bypass(root):
+    """旧执行行为测试显式选择放行，隔离机器上的用户权限文件。"""
+    from mewcode.permissions.runtime import PermissionManager
+    return PermissionManager(root, mode="bypass", user_path=root / ".test-user-permissions.yaml")

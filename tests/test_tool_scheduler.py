@@ -4,7 +4,7 @@ import asyncio
 import json
 import time
 import pytest
-from conftest import async_test, collect
+from conftest import async_test, collect, permission_bypass
 from mewcode.tools import default_registry
 from mewcode.tools.base import ToolContext, ToolResult, object_schema
 from mewcode.tools.executor import ToolExecutor
@@ -29,7 +29,7 @@ class Probe:
 def executor(root):
     registry = default_registry()
     registry.register(Probe())
-    return ToolExecutor(registry, ToolContext(root), timeout=15)
+    return ToolExecutor(registry, ToolContext(root), timeout=15, permissions=permission_bypass(root))
 
 
 def call(slot):

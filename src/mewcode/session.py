@@ -41,14 +41,43 @@ def operation_summary(call: ToolCall) -> str:
 
 class ChatSession:
     def __init__(self, provider: Provider, *, executor: ToolExecutor | None = None,
-                 max_iterations: int = 20) -> None:
+                 max_iterations: int = 20, permission_mode: str = "default",
+                 approval_responder=None) -> None:
         self.provider = provider
-        self.executor = executor or ToolExecutor(default_registry(), ToolContext(Path.cwd()))
+        from .permissions.runtime import PermissionManager
+        if executor is None:
+            context = ToolContext(Path.cwd())
+            permissions = PermissionManager(context.root, mode=permission_mode, responder=approval_responder)
+            executor = ToolExecutor(default_registry(), context, permissions=permissions)
+        self.executor = executor
+        self.permissions = getattr(executor, "permissions", None)
+        if self.permissions is None:
+            self.permissions = PermissionManager(executor.context.root, mode=permission_mode,
+                                                 responder=approval_responder)
         self.history: list[Message] = []
         self.mode: AgentMode = "execute"
         self._pending_plan: _PlanSnapshot | None = None
         self.prompt_state = PromptState(self.executor.context.root)
         self.agent = Agent(provider, self.executor, max_iterations=max_iterations, prompt_state=self.prompt_state)
+
+    def permission_command(self, question: str) -> str:
+        """只在空闲期执行的本地控制，不触碰历史或计划状态。"""
+        parts = question.split()
+        usage = "用法：/permissions；/permissions mode strict|default|bypass；/permissions revoke session|permanent"
+        if parts == ["/permissions"]:
+            snapshot = self.permissions.config.load()
+            root = str(self.executor.context.root)
+            permanent = [grant for grant in snapshot.approvals if str(grant.root) == root]
+            session = self.permissions.grants.session
+            return (f"权限模式> {self.permissions.mode} · 项目 {root}\n"
+                    f"会话授权> {len(session)} 项 · {session}\n永久授权> {len(permanent)} 项 · {permanent}")
+        if len(parts) == 3 and parts[1] == "mode" and parts[2] in {"strict", "default", "bypass"}:
+            self.permissions.mode = parts[2]
+            return f"权限模式> 已切换为 {parts[2]}"
+        if len(parts) == 3 and parts[1] == "revoke" and parts[2] in {"session", "permanent"}:
+            self.permissions.grants.revoke(parts[2])
+            return f"权限> 已撤销当前项目的{'会话' if parts[2] == 'session' else '永久'}授权"
+        raise ValueError(usage)
 
     def enter_plan(self) -> None:
         self.mode = "plan"

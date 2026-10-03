@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import AsyncIterator
 from uuid import uuid4
+from dataclasses import replace
 
 from .async_utils import protected
 from .collector import StreamCollector
@@ -80,6 +81,7 @@ class Agent:
 
         def event(kind, **fields):
             return AgentEvent(kind, run_id=run_id, iteration=iteration, mode=mode,
+                              permission_mode=getattr(getattr(self.executor, "permissions", None), "mode", "default"),
                               max_iterations=self.max_iterations, **fields)
 
         def commit(message, results=()):
@@ -96,6 +98,7 @@ class Agent:
         try:
             while iteration < self.max_iterations and not cancel.is_set():
                 yield AgentEvent("progress", run_id=run_id, iteration=iteration + 1, mode=mode,
+                                 permission_mode=getattr(getattr(self.executor, "permissions", None), "mode", "default"),
                                  phase="model", max_iterations=self.max_iterations)
                 if cancel.is_set():
                     break
@@ -128,7 +131,8 @@ class Agent:
                         except StopAsyncIteration:
                             break
                         displayed |= bool(fragment.text)
-                        yield fragment
+                        yield replace(fragment, permission_mode=getattr(
+                            getattr(self.executor, "permissions", None), "mode", "default"))
                 except asyncio.CancelledError:
                     cancel.set()
                 except ProviderError as error:

@@ -1,5 +1,5 @@
 import asyncio
-from conftest import async_test
+from conftest import async_test, permission_bypass
 """通过真实进程验证 shell、超时、取消和搜索，不只检查异常名称。"""
 import json
 import os
@@ -29,7 +29,7 @@ def runner(tmp_path):
     from mewcode.tools import default_registry
     from mewcode.tools.base import ToolContext
     from mewcode.tools.executor import ToolExecutor
-    return ToolExecutor(default_registry(), ToolContext(tmp_path))
+    return ToolExecutor(default_registry(), ToolContext(tmp_path), permissions=permission_bypass(tmp_path))
 
 @async_test
 async def test_shell_pipeline_redirection_exit_and_cwd(runner, tmp_path):
@@ -38,7 +38,7 @@ async def test_shell_pipeline_redirection_exit_and_cwd(runner, tmp_path):
     assert result.data == {'exit_code': 7, 'stdout': 'cot', 'stderr': 'err'}
     assert (tmp_path / 'out').read_text() == 'cot'
     await runner.execute('execute_command', '{"command":"cd /; export MEW_TMP=changed"}')
-    result = await runner.execute('execute_command', '{"command":"pwd; printf ${MEW_TMP-unset}"}')
+    result = await runner.execute('execute_command', '{"command":"pwd; printenv MEW_TMP || printf unset"}')
     assert result.data['stdout'] == str(tmp_path.resolve()) + '\nunset'
 
 @async_test
@@ -64,7 +64,8 @@ async def test_non_command_tool_timeout_and_exception_are_contained(tmp_path):
     from mewcode.tools.base import ToolContext
     from mewcode.tools.executor import ToolExecutor
     from mewcode.tools.registry import ToolRegistry
-    runner = ToolExecutor(ToolRegistry([BlockingTool(), FailingTool()]), ToolContext(tmp_path), timeout=1)
+    runner = ToolExecutor(ToolRegistry([BlockingTool(), FailingTool()]), ToolContext(tmp_path), timeout=1,
+                          permissions=permission_bypass(tmp_path))
     assert (await runner.execute('block', '{}')).error['code'] == 'timeout'
     result = await runner.execute('fail', '{}')
     assert result.error['code'] == 'execution_error'
@@ -230,7 +231,7 @@ async def test_timeout_does_not_cancel_another_active_tool(tmp_path):
     from mewcode.tools.executor import ToolExecutor
     registry = default_registry()
     registry.register(BlockingTool())
-    runner = ToolExecutor(registry, ToolContext(tmp_path), timeout=1)
+    runner = ToolExecutor(registry, ToolContext(tmp_path), timeout=1, permissions=permission_bypass(tmp_path))
     stuck = asyncio.create_task(runner.execute("block", "{}"))
     healthy = asyncio.create_task(runner.execute("execute_command", '{"command":"touch active; sleep 1.5; touch finished", "timeout_seconds":5}'))
     await wait_file(tmp_path / "active")

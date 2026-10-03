@@ -1,5 +1,7 @@
 """将 SDK 异常转换成不含凭据的终端提示。"""
 
+import ssl
+
 from .types import ContextLimitError, ProviderError
 
 
@@ -20,4 +22,17 @@ def safe_provider_error(provider: str, error: Exception, *, thinking: bool = Fal
         return ProviderError(f"{provider} 工具协议参数不兼容，请检查服务对工具调用的支持")
     if status == 400:
         return ProviderError(f"{provider} 请求参数被拒绝，请检查 model 与配置")
+    # SDK 往往包装传输异常；按类型检查因果链，不回显可能含凭据的原文。
+    pending, seen, tls = [error], set(), False
+    while pending:
+        current = pending.pop()
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        if isinstance(current, ssl.SSLCertVerificationError):
+            return ProviderError(f"{provider} TLS 证书校验失败，请检查系统证书、代理证书及服务地址")
+        tls |= isinstance(current, ssl.SSLError)
+        pending.extend(item for item in (current.__cause__, current.__context__) if item is not None)
+    if tls:
+        return ProviderError(f"{provider} TLS 连接失败，请检查网络、代理配置及服务端连接状态")
     return ProviderError(f"{provider} 请求失败，请检查网络与服务状态")

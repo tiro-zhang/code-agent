@@ -67,10 +67,14 @@ class CollectedResponse:
 @dataclass(frozen=True)
 class AgentEvent:
     kind: Literal["thinking_delta", "text_delta", "tool_call", "tool_started", "tool_result",
-                  "usage", "progress", "history_trimmed", "finished"]
+                  "permission_requested", "permission_resolved", "usage", "progress", "history_trimmed", "finished"]
     run_id: str = ""
     iteration: int = 0
     mode: AgentMode = "execute"
+    permission_mode: str = "default"
+    permission_request: object | None = None
+    permission_decision: str = ""
+    warning: str = ""
     text: str = ""
     message: Message | None = None
     call: ToolCall | None = None

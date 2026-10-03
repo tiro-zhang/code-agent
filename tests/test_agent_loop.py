@@ -3,7 +3,7 @@
 import asyncio
 from types import SimpleNamespace
 import pytest
-from conftest import ScriptedProvider, async_test, collect
+from conftest import ScriptedProvider, async_test, collect, permission_bypass
 from mewcode.config import ProviderConfig
 from mewcode.providers.openai import OpenAIProvider
 from mewcode.tools import default_registry
@@ -29,7 +29,7 @@ def tool(id="a", name="read_file", arguments="{"):
 def make_agent(root, responses, **options):
     from mewcode.agent import Agent
     provider = ScriptedProvider(responses)
-    agent = Agent(provider, ToolExecutor(default_registry(), ToolContext(root)), **options)
+    agent = Agent(provider, ToolExecutor(default_registry(), ToolContext(root), permissions=permission_bypass(root)), **options)
     return agent, provider
 
 

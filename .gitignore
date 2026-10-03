@@ -9,3 +9,6 @@ dist/
 .env
 .env.*
 !.env.*.example
+.mewcode/permissions.local.yaml
+.mewcode/.permissions.lock
+.mewcode/.permissions-*

@@ -61,6 +61,8 @@ class ToolContext:
     output_limit: int = OUTPUT_LIMIT
     file_limit: int = FILE_LIMIT
     emit: Callable[[dict[str, Any]], None] | None = None
+    authorized_paths: tuple[str, ...] | None = None
+    permission_skipped_files: int = 0
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "root", self.root.resolve())

@@ -55,7 +55,111 @@ mewcode --config .env
 
 计划和历史仅保存在当前进程内。活动任务中 Ctrl+C 会关闭模型流、终止活动工具及受控子进程，补齐取消结果后返回提示符；已经完成的真实操作仍保留，未启动调用会标明未启动，不声称回滚。空闲时 Ctrl+C 退出。
 
-终端显示模式、请求次数/上限及执行阶段，并用调用 ID 区分接收、开始和结果。Token 用量使用服务实际统计；缺失字段显示“未知”，累计更新不重复相加。任一请求缺少统计时，累计值只表示已知部分并标为不完整，不能当作完整用量或账单。
+终端分别显示规划／执行模式、权限模式、请求次数/上限及执行阶段，并用调用 ID 区分接收、等待授权、实际开始和结果。Token 用量使用服务实际统计；缺失字段显示“未知”，累计更新不重复相加。任一请求缺少统计时，累计值只表示已知部分并标为不完整，不能当作完整用量或账单。
+
+## 权限与人工授权
+
+默认使用 `default` 权限模式：没有适用 allow 规则或已有批准的操作先询问，包括只读文件和搜索。这改变了旧版默认直接执行工具的行为。六个工具名称与模型参数保持不变，权限判定在父进程完成，未批准的目标操作不启动，等待授权不消耗工具执行超时。普通权限拒绝作为工具结果交给模型，模型可以继续调整本轮任务；Ctrl+C 则取消整轮。
+
+```bash
+uv run mewcode --config .env --permission-mode strict
+```
+
+`--permission-mode` 支持 `strict`、`default`、`bypass`，省略时为 `default`。规则合并后再应用模式：
+
+| 规则结果 | strict | default | bypass |
+| --- | --- | --- | --- |
+| deny | 拒绝 | 拒绝 | 拒绝 |
+| ask | 需授权 | 需授权 | 放行 |
+| allow | 需授权 | 放行 | 放行 |
+| 未命中 | 需授权 | 需授权 | 放行 |
+
+“需授权”先检查已有会话／永久批准，未命中才询问。任何模式与批准都不能解除内置危险命令黑名单、文件／搜索路径越界限制或明确 deny。权限模式独立于规划／执行：`/plan` 始终禁止修改和 shell，即使使用 bypass；`/do` 保留权限状态，只代表开始执行最新计划，后续调用仍独立判断权限。
+
+### YAML 规则与来源
+
+启动时的真实工作根目录固定了项目范围，不跟随 `.env` 位置或 shell 的 `cd`。读取以下三个文件，将所有规则作为集合合并：
+
+| 来源 | 路径 | 用途 |
+| --- | --- | --- |
+| 用户 | `~/.mewcode/permissions.yaml` | 跨项目手工规则 |
+| 项目 | `<root>/.mewcode/permissions.yaml` | 可提交、共享的项目规则 |
+| 本地 | `<root>/.mewcode/permissions.local.yaml` | 本机项目规则和永久批准，Git 忽略 |
+
+任何来源的匹配结果都遵守 **deny > ask > allow**，不按来源或列表顺序覆盖；精确 allow 不能压过 glob ask／deny。缺失或空文件等于没有规则，`version` 缺省为 1，`rules` 缺省为空列表。重复键、未知字段、非法工具或规则、不安全 YAML 对象、无效批准均会报错：启动时停止启动，运行中拒绝相关调用。每次调用和审批结束后重新加载；等待时新增 deny 也能阻止原操作。
+
+以下可保存为项目级 `.mewcode/permissions.yaml`：
+
+```yaml
+version: 1
+rules:
+  - effect: allow
+    rule: "read_file(src/**)"
+    match: glob
+  - effect: allow
+    rule: "glob_files(**)"
+    match: glob
+  - effect: ask
+    rule: "edit_file(src/**)"
+    match: glob
+  - effect: deny
+    rule: "read_file(secrets/**)"
+    match: glob
+  - effect: deny
+    rule: "search_code(secrets/**)"
+    match: glob
+  - effect: allow
+    rule: "Bash(git *)"
+    match: glob
+  - effect: ask
+    rule: "Bash(git push*)"
+    match: glob
+  - effect: allow
+    rule: "Bash(python -m pytest)"
+    match: exact
+```
+
+规则格式是 `工具名(模式)`，`Bash` 是 `execute_command` 的规则别名。`exact` 匹配完整字面字符串；`glob` 匹配完整范围，文件路径的 `*` 不跨目录、`**` 可跨零层或多层，大小写敏感。文件规则使用 resolve 后的真实路径相对 root 的 POSIX 表达，链接别名不能绕开规则。工具间不继承权限，例如 `read_file` 的规则不能授权 `search_code` 或 `edit_file`；`search_code` 的权限模式匹配文件路径，内容正则 `pattern` 不用作权限路径。
+
+搜索先枚举项目内可见候选路径，再逐文件授权，随后仅把获准的显式文件列表交给搜索。deny 或被拒绝的文件会跳过，文件内容不会先读再过滤。结果中的 `permission_limited` 与 `skipped_files` 说明搜索范围受限；它独立于输出 `truncated`。所有候选被排除仍返回受限的成功空结果，不能据此断言完整项目没有匹配；没有候选则是普通空结果。受拒文件名和内容不会进入模型结果。
+
+### 审批范围与管理
+
+终端每次只展示一个授权请求，关联请求 ID 和工具调用。审批可查看完整参数、真实目标、写入内容或当前提供的编辑原文／新文差异；预览不会额外读取未授权文件。长详情可输入 `next`、`back` 翻页，或 `all` 查看全部，然后选择：
+
+| 输入 | 决定 | 有效范围 |
+| --- | --- | --- |
+| 回车或 `1` | 拒绝 | 当前请求，模型可以继续本轮 |
+| `2` | 本次 | 当前完整调用参数与展示的目标，一次使用 |
+| `3` | 会话 | 本次运行、工作根目录、具体工具与精确对象 |
+| `4` | 永久 | 同样的精确范围，保存至项目本地批准，重启可恢复 |
+
+会话／永久 shell 批准只记住完整精确 command，不从 `git status` 扩展到 `git *`。文件批准绑定具体工具与真实文件路径，允许未来同一工具在同一路径使用不同内容；搜索批准记住展示的每个真实候选文件，允许以后不同搜索表达式，新候选仍需重新判定。读取批准不会变成编辑批准，链接后来指向其他目标也不能复用原批准。新增 ask 不自动撤销已有有效批准；新 deny 始终优先。
+
+永久批准是本地 YAML 的 `approvals`，由可信终端管理入口原子保存并保留原有 rules；用户／项目级文件不接受此字段。自动保存的记录形如：
+
+```yaml
+version: 1
+approvals:
+  - id: "approval-id"
+    root: "/absolute/project"
+    tool: read_file
+    scope:
+      kind: path
+      value: "/absolute/project/src/main.py"
+```
+
+永久保存失败只按本次批准执行，并明确提示未记住。空闲提示符可输入 `/permissions` 查看当前模式、项目及授权记录，`/permissions mode strict|default|bypass` 切换模式，`/permissions revoke session` 或 `/permissions revoke permanent` 清除本项目对应批准。控制命令不请求模型、不改变历史或计划，不删除规则；撤销失败不会报告成功。
+
+非法审批选项保持未批准并重新询问。Ctrl+C 清理当前任务后返回提示符并丢弃未提交的授权输入；授权中遇到 EOF 则取消、清理后退出。非交互输入没有自动批准通道：需 ask 的单文件／shell 操作返回未启动的 `permission_denied`，搜索跳过需授权候选。程序调用可显式注入可信审批回调。
+
+### shell 检查的边界
+
+内置 regex 黑名单覆盖已知的根目录／主目录递归删除、磁盘格式化或擦除、原始设备写入、fork bomb 形式，不能通过 YAML 放开。黑名单先检查原文，再对 AST 中可见的静态命令复查；可能保守误拦引用文本，不保证发现编码或间接执行的危险行为。
+
+shell glob allow 只适用于单个简单静态命令，无重定向、连接、子 shell 或展开。因此 `Bash(git *)` 可放行 `git status`，不能据此放行 `git status && printf done`；复杂操作需完整 exact allow 或独立批准，且仍服从子命令 ask／deny。支持的管道、连接、重定向、子 shell、命令替换会检查可见子命令，任一 deny 拒绝整条，前缀也不会提前执行。不能完整分析的语法（例如 heredoc、控制结构、复杂参数或算术展开）在执行前返回 `permission_check_failed`。
+
+这些检查不构成操作系统文件系统沙箱。获准 shell 仍具有当前用户权限，可以访问项目外、网络，或间接执行脚本；解析器不执行展开来求值，也不审查脚本内部。专用文件写入／编辑会保护三份权限 YAML 及链接别名，但任意已获准 shell 仍可能间接改写配置。文件路径 resolve 检查也不承诺对抗恶意并发替换目录祖先或硬链接。
 
 ## 系统提示与缓存
 

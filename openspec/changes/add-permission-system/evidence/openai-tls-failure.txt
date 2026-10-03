@@ -1,0 +1,8 @@
+MewCode · openai-compatible-demo · 权限 default
+你> 请只用 read_file 读取 notes.txt，然后用 edit_file 把 cat 改成 mew，再用 read_file 验证结果。不使用 Bash。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+用量> 本次 Token · 总输入 未知（基础输入 未知），输出 未知 · 统计不完整 · 命中 未知，未命中 未知，写入 未知，命中率 未知 · 缓存统计不完整
+本轮未完成> stream_error · OpenAI 兼容服务 TLS 连接失败，请检查网络、代理配置及服务端连接状态 · 请求 1/20
+用量> 累计已知 Token · 总输入 未知（基础输入 未知），输出 未知 · 统计不完整 · 命中 未知，未命中 未知，写入 未知，命中率 未知 · 缓存统计不完
+整
+你>

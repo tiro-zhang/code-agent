@@ -1,0 +1,248 @@
+
+===== ctrl-c-delayed-before-fix =====
+MewCode · claude-demo · 权限 default
+你> 请调用 read_file 读取 cancel.txt，最后只回复文件内容。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+思考> The user wants me to read cancel.txt and only reply with the file content.
+用量> 本次 Token · 总输入 1902，输出 61 · 统计完整 · 命中 1664，未命中 238，写入 未知，命中率 87.5% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_4krgsnLDuWGA5BRy06M29642] read_file · 已接收 · cancel.txt
+权限> [00e2fbae32974f768bc40a914de034b0] read_file · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-permissions-e2e-cancel
+真实目标> /private/tmp/mewcode-permissions-e2e-cancel/cancel.txt
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定此根目录、工具与列出的真实文件；允许未来同一路径使用不同内容或搜索表达式，不扩展目录或其他工具。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "path": "cancel.txt"
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_00_4krgsnLDuWGA5BRy06M29642] read_file · 等待授权 · 请求 00e2fbae32974f768bc40a914de034b0
+^C不要调用工具，只回复：取消后正常。
+工具> [call_00_4krgsnLDuWGA5BRy06M29642] read_file · 取消 · cancelled：任务取消，工具未启动
+本轮未完成> cancelled · 用户取消任务；已完成的操作和结果保留，请按需检查实际状态 · 请求 1/20
+用量> 累计已知 Token · 总输入 1902，输出 61 · 统计完整 · 命中 1664，未命中 238，写入 未知，命中率 87.5% · 缓存统计完整
+你>
+
+===== approval-eof-exit =====
+MewCode · claude-demo · 权限 default
+你> 请只调用 read_file 读取 eof.txt，再回复正文。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+思考> The user asks me to only call read_file to read eof.txt, then reply with the content.
+用量> 本次 Token · 总输入 1902，输出 67 · 统计完整 · 命中 1664，未命中 238，写入 未知，命中率 87.5% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_zMI5VZESvWzTHiQMYsnQ8926] read_file · 已接收 · eof.txt
+权限> [e0cc59fb1ebb4cbb859e49d0c497058e] read_file · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-permissions-e2e-cancel
+真实目标> /private/tmp/mewcode-permissions-e2e-cancel/eof.txt
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定此根目录、工具与列出的真实文件；允许未来同一路径使用不同内容或搜索表达式，不扩展目录或其他工具。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "path": "eof.txt"
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_00_zMI5VZESvWzTHiQMYsnQ8926] read_file · 等待授权 · 请求 e0cc59fb1ebb4cbb859e49d0c497058e
+工具> [call_00_zMI5VZESvWzTHiQMYsnQ8926] read_file · 取消 · cancelled：任务取消，工具未启动
+本轮未完成> cancelled · 用户取消任务；已完成的操作和结果保留，请按需检查实际状态 · 请求 1/20
+用量> 累计已知 Token · 总输入 1902，输出 67 · 统计完整 · 命中 1664，未命中 238，写入 未知，命中率 87.5% · 缓存统计完整
+CLI_EXIT=0
+
+===== waiting-before-new-deny =====
+MewCode · claude-demo · 权限 default
+你> 请只调用 read_file 读取 changed.txt；如果权限拒绝，不要重试或换工具，只说明拒绝。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+思考> The user asks me to only call read_file to read changed.txt; if permission denied, don't retry or switch tools, just explain the denial.
+用量> 本次 Token · 总输入 1912，输出 76 · 统计完整 · 命中 1664，未命中 248，写入 未知，命中率 87.0% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_KX71xpQUxpF6Qcbqdhym0180] read_file · 已接收 · changed.txt
+权限> [841f202ec4b74c7781fa944c45af2738] read_file · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-permissions-e2e-cancel
+真实目标> /private/tmp/mewcode-permissions-e2e-cancel/changed.txt
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定此根目录、工具与列出的真实文件；允许未来同一路径使用不同内容或搜索表达式，不扩展目录或其他工具。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "path": "changed.txt"
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_00_KX71xpQUxpF6Qcbqdhym0180] read_file · 等待授权 · 请求 841f202ec4b74c7781fa944c45af2738
+
+===== ctrl-c-fixed-without-extra-input =====
+MewCode · claude-demo · 权限 default
+你> 请调用 read_file 读取 cancel.txt，最后只回复文件内容。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+思考> The user wants me to read cancel.txt and reply only with the file content.
+用量> 本次 Token · 总输入 1902，输出 61 · 统计完整 · 命中 1792，未命中 110，写入 未知，命中率 94.2% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_uy54oUkMNREqqrIv2qde6647] read_file · 已接收 · cancel.txt
+权限> [1b817c2ac9334bd0951c61260daeb948] read_file · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-permissions-e2e-cancel
+真实目标> /private/tmp/mewcode-permissions-e2e-cancel/cancel.txt
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定此根目录、工具与列出的真实文件；允许未来同一路径使用不同内容或搜索表达式，不扩展目录或其他工具。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "path": "cancel.txt"
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_00_uy54oUkMNREqqrIv2qde6647] read_file · 等待授权 · 请求 1b817c2ac9334bd0951c61260daeb948
+^C工具> [call_00_uy54oUkMNREqqrIv2qde6647] read_file · 取消 · cancelled：任务取消，工具未启动
+本轮未完成> cancelled · 用户取消任务；已完成的操作和结果保留，请按需检查实际状态 · 请求 1/20
+用量> 累计已知 Token · 总输入 1902，输出 61 · 统计完整 · 命中 1792，未命中 110，写入 未知，命中率 94.2% · 缓存统计完整
+你>
+
+===== new-deny-after-user-once-prevents-start =====
+MewCode · claude-demo · 权限 default
+你> 请只调用 read_file 读取 changed.txt；如果权限拒绝，不要重试或换工具，只说明拒绝。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+思考> The user asks me to only call read_file to read changed.txt; if permission denied, don't retry or switch tools, just explain the denial.
+用量> 本次 Token · 总输入 1912，输出 76 · 统计完整 · 命中 1664，未命中 248，写入 未知，命中率 87.0% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_KX71xpQUxpF6Qcbqdhym0180] read_file · 已接收 · changed.txt
+权限> [841f202ec4b74c7781fa944c45af2738] read_file · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-permissions-e2e-cancel
+真实目标> /private/tmp/mewcode-permissions-e2e-cancel/changed.txt
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定此根目录、工具与列出的真实文件；允许未来同一路径使用不同内容或搜索表达式，不扩展目录或其他工具。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "path": "changed.txt"
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_00_KX71xpQUxpF6Qcbqdhym0180] read_file · 等待授权 · 请求 841f202ec4b74c7781fa944c45af2738
+2
+工具> [call_00_KX71xpQUxpF6Qcbqdhym0180] read_file · 权限拒绝 · permission_denied：权限规则或用户决定禁止此操作
+进度> 执行 · 权限 default · 请求 2/20 · 请求模型
+MewCode> 读取 changed.txt 时被拒绝：权限规则或用户决定禁止此操作（permission_denied）。按要求不重试、不换工具。
+用量> 本次 Token · 总输入 2096，输出 33 · 统计完整 · 命中 1920，未命中 176，写入 未知，命中率 91.6% · 缓存统计完整
+结束> model_done · 模型已结束本次任务 · 请求 2/20
+用量> 累计已知 Token · 总输入 4008，输出 109 · 统计完整 · 命中 3584，未命中 424，写入 未知，命中率 89.4% · 缓存统计完整
+你>
+
+===== two-parallel-reads-serial-approval-success =====
+MewCode · claude-demo · 权限 default
+你> 请在同一次响应中并行调用两个 read_file，分别读取 one.txt 和 two.txt，最后简短回复两个文件内容。不要合并成 shell 命令。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+思考> The user wants me to read two files in parallel: one.txt and two.txt. Let me do that.
+用量> 本次 Token · 总输入 1921，输出 98 · 统计完整 · 命中 1664，未命中 257，写入 未知，命中率 86.6% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_g5Tf6eTKFzSPUlKO4qVm7015] read_file · 已接收 · one.txt
+工具> [call_01_lJ3fg1Nzs9Fgr2czpr106512] read_file · 已接收 · two.txt
+权限> [6e19f50fb1114bb5a431e41fe77d9ebf] read_file · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-permissions-e2e-cancel
+真实目标> /private/tmp/mewcode-permissions-e2e-cancel/one.txt
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定此根目录、工具与列出的真实文件；允许未来同一路径使用不同内容或搜索表达式，不扩展目录或其他工具。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "path": "one.txt"
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_00_g5Tf6eTKFzSPUlKO4qVm7015] read_file · 等待授权 · 请求 6e19f50fb1114bb5a431e41fe77d9ebf
+2
+权限> [call_00_g5Tf6eTKFzSPUlKO4qVm7015] 本次批准
+权限> [1c073c0e29dc45a7af6b7858024cd1ae] read_file · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-permissions-e2e-cancel
+真实目标> /private/tmp/mewcode-permissions-e2e-cancel/two.txt
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定此根目录、工具与列出的真实文件；允许未来同一路径使用不同内容或搜索表达式，不扩展目录或其他工具。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "path": "two.txt"
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_01_lJ3fg1Nzs9Fgr2czpr106512] read_file · 等待授权 · 请求 1c073c0e29dc45a7af6b7858024cd1ae
+工具> [call_00_g5Tf6eTKFzSPUlKO4qVm7015] read_file · 开始 · one.txt
+工具> [call_00_g5Tf6eTKFzSPUlKO4qVm7015] read_file · 成功
+2
+权限> [call_01_lJ3fg1Nzs9Fgr2czpr106512] 本次批准
+工具> [call_01_lJ3fg1Nzs9Fgr2czpr106512] read_file · 开始 · two.txt
+工具> [call_01_lJ3fg1Nzs9Fgr2czpr106512] read_file · 成功
+进度> 执行 · 权限 default · 请求 2/20 · 请求模型
+MewCode> one.txt 内容是「并行一号海棠」，two.txt 内容是「并行二号星河」。
+用量> 本次 Token · 总输入 2175，输出 19 · 统计完整 · 命中 1920，未命中 255，写入 未知，命中率 88.3% · 缓存统计完整
+结束> model_done · 模型已结束本次任务 · 请求 2/20
+用量> 累计已知 Token · 总输入 4096，输出 117 · 统计完整 · 命中 3584，未命中 512，写入 未知，命中率 87.5% · 缓存统计完整
+你>
+
+===== ctrl-c-next-question-and-empty-deny-success =====
+MewCode · claude-demo · 权限 default
+你> 请调用 read_file 读取 cancel.txt，最后只回复文件内容。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+思考> The user wants me to read cancel.txt and reply only with the file content.
+用量> 本次 Token · 总输入 1902，输出 61 · 统计完整 · 命中 1792，未命中 110，写入 未知，命中率 94.2% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_uy54oUkMNREqqrIv2qde6647] read_file · 已接收 · cancel.txt
+权限> [1b817c2ac9334bd0951c61260daeb948] read_file · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-permissions-e2e-cancel
+真实目标> /private/tmp/mewcode-permissions-e2e-cancel/cancel.txt
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定此根目录、工具与列出的真实文件；允许未来同一路径使用不同内容或搜索表达式，不扩展目录或其他工具。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "path": "cancel.txt"
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_00_uy54oUkMNREqqrIv2qde6647] read_file · 等待授权 · 请求 1b817c2ac9334bd0951c61260daeb948
+^C工具> [call_00_uy54oUkMNREqqrIv2qde6647] read_file · 取消 · cancelled：任务取消，工具未启动
+本轮未完成> cancelled · 用户取消任务；已完成的操作和结果保留，请按需检查实际状态 · 请求 1/20
+用量> 累计已知 Token · 总输入 1902，输出 61 · 统计完整 · 命中 1792，未命中 110，写入 未知，命中率 94.2% · 缓存统计完整
+你> 不要调用工具，只回复：取消后正常。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+MewCode> 取消后正常。
+用量> 本次 Token · 总输入 2072，输出 5 · 统计完整 · 命中 1920，未命中 152，写入 未知，命中率 92.7% · 缓存统计完整
+结束> model_done · 模型已结束本次任务 · 请求 1/20
+用量> 累计已知 Token · 总输入 2072，输出 5 · 统计完整 · 命中 1920，未命中 152，写入 未知，命中率 92.7% · 缓存统计完整
+你> 请只调用 read_file 读取 empty.txt；如果权限拒绝，不要重试或换工具，只说明拒绝。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+用量> 本次 Token · 总输入 2144，输出 45 · 统计完整 · 命中 2048，未命中 96，写入 未知，命中率 95.5% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_ET_Sv0VW0rXIHnqNiW0BwXi5338] read_file · 已接收 · empty.txt
+权限> [78b8fe19c3a1472391932443d164ec8f] read_file · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-permissions-e2e-cancel
+真实目标> /private/tmp/mewcode-permissions-e2e-cancel/empty.txt
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定此根目录、工具与列出的真实文件；允许未来同一路径使用不同内容或搜索表达式，不扩展目录或其他工具。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "path": "empty.txt"
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_00_ET_Sv0VW0rXIHnqNiW0BwXi5338] read_file · 等待授权 · 请求 78b8fe19c3a1472391932443d164ec8f
+
+权限> [call_00_ET_Sv0VW0rXIHnqNiW0BwXi5338] 拒绝
+工具> [call_00_ET_Sv0VW0rXIHnqNiW0BwXi5338] read_file · 权限拒绝 · permission_denied：权限规则或用户决定禁止此操作
+进度> 执行 · 权限 default · 请求 2/20 · 请求模型
+MewCode> 权限拒绝，未重试、未换工具。
+用量> 本次 Token · 总输入 2297，输出 12 · 统计完整 · 命中 2176，未命中 121，写入 未知，命中率 94.7% · 缓存统计完整
+结束> model_done · 模型已结束本次任务 · 请求 2/20
+用量> 累计已知 Token · 总输入 4441，输出 57 · 统计完整 · 命中 4224，未命中 217，写入 未知，命中率 95.1% · 缓存统计完整
+你>

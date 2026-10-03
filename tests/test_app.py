@@ -113,6 +113,7 @@ def test_tool_metadata_is_flushed_redacted_and_body_not_printed(tmp_path, monkey
     async def execute(self, *args, **options):
         assert "已接收" in output.flushed and "[已隐藏]" in output.flushed
         assert "\x1b" not in output.flushed and "正文不要打印" not in output.flushed
+        await options["on_event"]({"kind": "tool_started"})
         return ToolResult.success({"path":"x"}, truncated=True)
     monkeypatch.setattr("mewcode.tools.executor.ToolExecutor.execute", execute)
     _, shown = invoke(tmp_path, provider, "创建\n/exit\n", output)

@@ -1,7 +1,7 @@
 """只读规划、修订失效和最新计划的一次执行。"""
 import asyncio
 import pytest
-from conftest import ScriptedProvider, async_test, collect
+from conftest import ScriptedProvider, async_test, collect, permission_bypass
 from mewcode.session import ChatSession
 from mewcode.tools import default_registry
 from mewcode.tools.base import ToolContext
@@ -12,7 +12,7 @@ from test_agent_loop import answer, calls, tool
 
 def session(root, responses, **options):
     provider = ScriptedProvider(responses)
-    return ChatSession(provider, executor=ToolExecutor(default_registry(), ToolContext(root)), **options), provider
+    return ChatSession(provider, executor=ToolExecutor(default_registry(), ToolContext(root), permissions=permission_bypass(root)), **options), provider
 
 
 @async_test

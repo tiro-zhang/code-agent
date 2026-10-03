@@ -30,6 +30,7 @@ class ToolScheduler:
         def event(kind, index, **fields):
             call = calls[index]
             return AgentEvent(kind, run_id=run_id, iteration=iteration, mode=mode,
+                              permission_mode=getattr(getattr(self.executor, "permissions", None), "mode", "default"),
                               tool_call_id=call.id, tool_name=call.name, **fields)
 
         def unstarted():
@@ -38,6 +39,15 @@ class ToolScheduler:
         async def execute_one(index):
             call = calls[index]
             operation = None
+
+            async def notify(notification):
+                fields = {}
+                if notification["kind"].startswith("permission_"):
+                    fields = {"permission_request": notification.get("request"),
+                              "permission_decision": notification.get("decision", ""),
+                              "warning": notification.get("warning", "")}
+                await queue.put((index, event(notification["kind"], index, **fields)))
+
             if cancel.is_set():
                 result = unstarted()
             else:
@@ -47,16 +57,9 @@ class ToolScheduler:
                     result = error.result()
                 else:
                     operation = asyncio.create_task(self.executor.execute(
-                        call.name, call.arguments, allowed_tools=allowed_tools, cancel_event=cancel))
+                        call.name, call.arguments, allowed_tools=allowed_tools, cancel_event=cancel,
+                        on_event=notify))
                     try:
-                        # 让执行入口先运行，避免背压把尚未启动的调用显示为开始。
-                        await asyncio.sleep(0)
-                        not_started = (operation.done() and not operation.cancelled()
-                                       and operation.exception() is None
-                                       and operation.result().error is not None
-                                       and operation.result().error["details"].get("not_started"))
-                        if not not_started:
-                            await queue.put((index, event("tool_started", index)))
                         result = await operation
                     except asyncio.CancelledError:
                         cancel.set()
