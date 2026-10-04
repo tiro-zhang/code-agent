@@ -17,3 +17,5 @@ dist/
 .mewcode/context/
 .mewcode/sessions/
 .mewcode/memory/
+
+.codex/
