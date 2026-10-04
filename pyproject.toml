@@ -11,7 +11,9 @@ dependencies = [
     "anthropic>=1.8.0",
     "bashlex>=0.18",
     "jsonschema>=4.26.0",
+    "mcp==2.3.0",
     "openai>=3.19.2",
+    "prompt-toolkit>=3.0.52,<4",
     "python-dotenv>=1.2.3",
     "pyyaml>=6.0.2",
 ]

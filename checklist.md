@@ -199,3 +199,21 @@
 | 默认变化、配置示例与 Git 忽略 | 通过 | README 两个 YAML 经严格加载；本地批准／锁／临时文件匹配忽略规则 |
 
 本章首次 OpenAI 兼容服务真实请求出现 TLS 连接失败，保留于 `evidence/openai-tls-failure.txt`；完整真实验收使用已有 DeepSeek Anthropic 兼容配置。两种供应商的协议、工具序列与错误处理均通过自动化回归，不宣称本章已验证官方服务端。
+
+
+## MCP 客户端验收（add-mcp-client）
+
+本章依据本次自动化测试及真实 tmux 验收完成，未沿用历史勾选。最终全套 545 passed；构建及 OpenSpec 严格校验通过。详细证据位于 openspec/changes/archive/2026-10-04-add-mcp-client/evidence/verification.md 和 tmux-report.md。
+
+- [x] 官方 SDK 新旧协议 × stdio/HTTP 的真实合同、分页及请求 ID 配对通过。
+- [x] 新旧 HTTP 单请求取消／超时后不再恢复 GET，不重发 tools/call，原连接后续可用。
+- [x] 两层配置整项覆盖、环境展开、实际启动环境和身份指纹符合规范，秘密不进入诊断。
+- [x] 发现失败无半注册、零工具可就绪、单 Server 失效不影响其他 Server，别名不覆盖。
+- [x] Schema 与文本／结构化／非文本结果正确适配，所有远端内容共用 64 KiB 预算。
+- [x] MCP 与六个内置工具共存，统一参数、权限与模式检查，跨 Server 状态及工具调用可见。
+- [x] 真实 tmux：两种传输分别调用成功，两轮复用同一 stdio 进程，模型回复基于真实结果。
+- [x] 真实 tmux：拒绝后继续，会话批准复用，永久批准在重启后恢复且参数改变重新审批。
+- [x] 真实 tmux：plan 禁用 MCP，/do 恢复工具但独立审批，一个 Server 退出后另一个仍可调用。
+- [x] 真实 tmux：调用 Ctrl+C 后返回提示符并继续提问，初始化 Ctrl+C 和授权 EOF 完成清理。
+- [x] 真实 tmux：正常 /exit 与卡住关闭有界退出，进程记录确认已回收；未知远端副作用不声称回滚。
+- [x] 全套 pytest、构建和 OpenSpec 严格校验通过，最终复核及未验收事项如实记录。

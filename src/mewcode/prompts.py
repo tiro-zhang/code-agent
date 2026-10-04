@@ -68,7 +68,7 @@ class PromptState:
             if full:
                 mode += '先按需探索；用户修订时结合任务上下文输出完整新计划，等待 /do 后才能执行。'
         else:
-            mode = '当前模式：execute（执行）。允许使用当前提供的六个工具完成用户任务；历史规划限制只属于过去阶段。'
+            mode = '当前模式：execute（执行）。允许使用当前提供的全部已注册工具完成用户任务；历史规划限制只属于过去阶段。'
             if full:
                 mode += '按当前任务或最新计划执行，编辑前先读当前内容，读取工具结果并验证，按实际结果答复。'
         content = '\n\n'.join([self.environment, *self.supplements, mode] if full else [mode])

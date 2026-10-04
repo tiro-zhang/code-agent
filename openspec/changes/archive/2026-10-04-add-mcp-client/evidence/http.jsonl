@@ -1,0 +1,47 @@
+{"jsonrpc": "2.0", "id": 1, "method": "server/discover", "params": {"_meta": {"io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientInfo": {"name": "MewCode", "version": "0.1.0"}, "io.modelcontextprotocol/clientCapabilities": {}}}}
+{"jsonrpc": "2.0", "id": 2, "method": "initialize", "params": {"protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": {"name": "MewCode", "version": "0.1.0"}}}
+{"jsonrpc": "2.0", "method": "notifications/initialized"}
+{"method": "HTTP_GET", "token": null}
+{"jsonrpc": "2.0", "id": 3, "method": "tools/list"}
+{"jsonrpc": "2.0", "id": 4, "method": "tools/list", "params": {"cursor": "page2"}}
+{"method": "HTTP_GET", "token": null}
+{"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "echo", "arguments": {"text": "MCP-E2E-ONE"}}}
+{"jsonrpc": "2.0", "id": 6, "method": "tools/call", "params": {"name": "echo", "arguments": {"text": "MCP-E2E-ONE"}}}
+{"jsonrpc": "2.0", "id": 7, "method": "tools/call", "params": {"name": "echo", "arguments": {"text": "PLAN-ONE"}}}
+{"jsonrpc": "2.0", "id": 8, "method": "tools/call", "params": {"name": "echo", "arguments": {"text": "SLOW-CANCEL", "delay": 20}}}
+{"jsonrpc": "2.0", "method": "notifications/cancelled", "params": {"requestId": 8, "reason": "caller cancelled"}}
+{"jsonrpc": "2.0", "id": 9, "method": "tools/call", "params": {"name": "echo", "arguments": {"text": "MCP-E2E-ONE"}}}
+{"jsonrpc": "2.0", "id": 10, "method": "tools/call", "params": {"name": "echo", "arguments": {"text": "MCP-E2E-ONE"}}}
+{"method": "HTTP_DELETE"}
+{"jsonrpc": "2.0", "id": 1, "method": "server/discover", "params": {"_meta": {"io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientInfo": {"name": "MewCode", "version": "0.1.0"}, "io.modelcontextprotocol/clientCapabilities": {}}}}
+{"jsonrpc": "2.0", "id": 2, "method": "initialize", "params": {"protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": {"name": "MewCode", "version": "0.1.0"}}}
+{"jsonrpc": "2.0", "method": "notifications/initialized"}
+{"method": "HTTP_GET", "token": null}
+{"jsonrpc": "2.0", "id": 3, "method": "tools/list"}
+{"jsonrpc": "2.0", "id": 4, "method": "tools/list", "params": {"cursor": "page2"}}
+{"method": "HTTP_GET", "token": null}
+{"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "echo", "arguments": {"text": "MCP-E2E-ONE"}}}
+{"method": "HTTP_DELETE"}
+{"jsonrpc": "2.0", "id": 1, "method": "server/discover", "params": {"_meta": {"io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientInfo": {"name": "MewCode", "version": "0.1.0"}, "io.modelcontextprotocol/clientCapabilities": {}}}}
+{"jsonrpc": "2.0", "id": 2, "method": "initialize", "params": {"protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": {"name": "MewCode", "version": "0.1.0"}}}
+{"jsonrpc": "2.0", "method": "notifications/initialized"}
+{"method": "HTTP_GET", "token": null}
+{"jsonrpc": "2.0", "id": 3, "method": "tools/list"}
+{"jsonrpc": "2.0", "id": 4, "method": "tools/list", "params": {"cursor": "page2"}}
+{"method": "HTTP_DELETE"}
+{"jsonrpc": "2.0", "id": 1, "method": "server/discover", "params": {"_meta": {"io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientInfo": {"name": "MewCode", "version": "0.1.0"}, "io.modelcontextprotocol/clientCapabilities": {}}}}
+{"jsonrpc": "2.0", "id": 2, "method": "initialize", "params": {"protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": {"name": "MewCode", "version": "0.1.0"}}}
+{"jsonrpc": "2.0", "method": "notifications/initialized"}
+{"method": "HTTP_GET", "token": null}
+{"jsonrpc": "2.0", "id": 3, "method": "tools/list"}
+{"jsonrpc": "2.0", "id": 4, "method": "tools/list", "params": {"cursor": "page2"}}
+{"method": "HTTP_DELETE"}
+{"jsonrpc": "2.0", "id": 1, "method": "server/discover", "params": {"_meta": {"io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientInfo": {"name": "MewCode", "version": "0.1.0"}, "io.modelcontextprotocol/clientCapabilities": {}}}}
+{"jsonrpc": "2.0", "id": 2, "method": "initialize", "params": {"protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": {"name": "MewCode", "version": "0.1.0"}}}
+{"jsonrpc": "2.0", "method": "notifications/initialized"}
+{"method": "HTTP_GET", "token": null}
+{"jsonrpc": "2.0", "id": 3, "method": "tools/list"}
+{"jsonrpc": "2.0", "id": 4, "method": "tools/list", "params": {"cursor": "page2"}}
+{"method": "HTTP_GET", "token": null}
+{"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "echo", "arguments": {"text": "FINAL-HTTP"}}}
+{"method": "HTTP_DELETE"}

@@ -45,7 +45,11 @@ class ToolRegistry:
             raise ToolError("invalid_arguments", "参数必须是完整合法的 JSON 对象") from None
         if not isinstance(arguments, dict):
             raise ToolError("invalid_arguments", "工具参数必须是 JSON 对象")
-        error = next(Draft202012Validator(tool.input_schema).iter_errors(arguments), None)
+        try:
+            error = next(Draft202012Validator(tool.input_schema).iter_errors(arguments), None)
+        except Exception:
+            # 外部 Schema 的解析／递归错误也必须产生结果，不能悬空调度等待者。
+            raise ToolError("invalid_schema", "工具 Schema 无法安全校验参数") from None
         if error:
             # 校验器原文可能包含整个写入内容，只返回字段及约束名称。
             location = ".".join(str(x) for x in error.path) or "参数对象"

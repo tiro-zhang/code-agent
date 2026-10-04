@@ -1,0 +1,41 @@
+{
+  "methods": {
+    "stdio.jsonl": {
+      "PROCESS_START": 3,
+      "server/discover": 3,
+      "tools/list": 6,
+      "tools/call": 5
+    },
+    "http.jsonl": {
+      "server/discover": 5,
+      "initialize": 5,
+      "notifications/initialized": 5,
+      "HTTP_GET": 8,
+      "tools/list": 10,
+      "tools/call": 8,
+      "notifications/cancelled": 1,
+      "HTTP_DELETE": 5
+    },
+    "startup-cancel.jsonl": {
+      "PROCESS_START": 1,
+      "server/discover": 1,
+      "tools/list": 1
+    },
+    "hanging-close.jsonl": {
+      "PROCESS_START": 1,
+      "CHILD_START": 1,
+      "server/discover": 1,
+      "tools/list": 2
+    }
+  },
+  "all_stdio_pids_reaped": [
+    6394,
+    7852,
+    8700,
+    8416,
+    8436,
+    8437
+  ],
+  "calls_exactly_match_explicit_requests": true,
+  "denied_and_eof_requests_sent": false
+}

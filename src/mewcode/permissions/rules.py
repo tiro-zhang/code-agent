@@ -5,6 +5,7 @@ from functools import lru_cache
 from collections.abc import Iterable
 
 from .models import Evaluation, Rule
+from ..mcp.tools import is_mcp_alias
 
 
 def _path_glob(pattern: str, subject: str) -> bool:
@@ -24,7 +25,7 @@ def _path_glob(pattern: str, subject: str) -> bool:
 def _matches(rule: Rule, subject: str) -> bool:
     if rule.match == "exact":
         return rule.pattern == subject
-    if rule.tool == "execute_command":
+    if rule.tool == "execute_command" or is_mcp_alias(rule.tool):
         return fnmatchcase(subject, rule.pattern)
     return _path_glob(rule.pattern, subject)
 

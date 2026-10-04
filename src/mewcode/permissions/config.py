@@ -12,6 +12,10 @@ import tempfile
 import yaml
 
 from .models import Approval, PolicySnapshot, Rule
+from ..mcp.config import canonical
+from ..mcp.tools import is_mcp_alias
+from ..mcp.permissions import validate_grant
+from ..tools.base import strict_json
 
 
 TOOLS = frozenset(("read_file", "write_file", "edit_file", "execute_command", "glob_files", "search_code"))
@@ -59,9 +63,16 @@ def _approval(value, path: Path) -> Approval:
     if not _text(value["id"]) or not _absolute_normal(value["root"]):
         _fail(path, "批准标识或真实项目根无效")
     tool, kind, target = value["tool"], value["scope"]["kind"], value["scope"]["value"]
-    if not isinstance(tool, str) or tool not in TOOLS or not _text(target):
+    if not isinstance(tool, str) or (tool not in TOOLS and not is_mcp_alias(tool)) or not _text(target):
         _fail(path, "批准工具或范围无效")
-    if tool == "execute_command":
+    if is_mcp_alias(tool):
+        if kind != "mcp":
+            _fail(path, "外部工具批准必须使用 mcp 范围")
+        try:
+            target = validate_grant(tool, target)
+        except (ValueError, TypeError, RecursionError):
+            _fail(path, "外部工具批准身份或参数无效")
+    elif tool == "execute_command":
         if kind != "command":
             _fail(path, "命令工具批准必须使用精确 command 范围")
     elif kind != "path" or not _absolute_normal(target) or not Path(target).is_relative_to(Path(value["root"])):
@@ -102,9 +113,18 @@ def _document(raw: bytes | None, path: Path, local: bool):
         if match is None or not _text(match[2]):
             _fail(path, "rule 必须使用非空的工具名(模式)表达式")
         tool = "execute_command" if match[1] == "Bash" else match[1]
-        if tool not in TOOLS:
+        if tool not in TOOLS and not is_mcp_alias(tool):
             _fail(path, "规则引用未知工具")
-        rules.append(Rule(entry["effect"], tool, match[2], entry["match"], str(path)))
+        pattern = match[2]
+        if is_mcp_alias(tool) and entry["match"] == "exact":
+            try:
+                arguments = strict_json(pattern)
+                if not isinstance(arguments, dict):
+                    raise ValueError
+                pattern = canonical(arguments)
+            except (ValueError, TypeError, RecursionError):
+                _fail(path, "外部 exact 规则必须包含完整 JSON 对象参数")
+        rules.append(Rule(entry["effect"], tool, pattern, entry["match"], str(path)))
     entries = doc.get("approvals", [])
     if not isinstance(entries, list):
         _fail(path, "approvals 必须是列表")

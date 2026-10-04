@@ -1,0 +1,5 @@
+{"method": "PROCESS_START", "pid": 8436}
+{"method": "CHILD_START", "pid": 8437, "pgid": 8436}
+{"jsonrpc": "2.0", "id": 1, "method": "server/discover", "params": {"_meta": {"io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientInfo": {"name": "MewCode", "version": "0.1.0"}, "io.modelcontextprotocol/clientCapabilities": {}}}}
+{"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {"_meta": {"io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientInfo": {"name": "MewCode", "version": "0.1.0"}, "io.modelcontextprotocol/clientCapabilities": {}}}}
+{"jsonrpc": "2.0", "id": 3, "method": "tools/list", "params": {"cursor": "page2", "_meta": {"io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientInfo": {"name": "MewCode", "version": "0.1.0"}, "io.modelcontextprotocol/clientCapabilities": {}}}}

@@ -7,11 +7,11 @@
 ## Requirements
 
 ### Requirement: 统一工具契约与注册
-每个工具 SHALL 提供唯一名称、用途描述、JSON Schema 参数定义和执行入口，并在登记信息中声明是否只读。系统 SHALL 按名称登记和查找工具，从同一份登记信息按当前模式筛选并导出 Anthropic Messages 与 OpenAI Chat Completions 可接受的工具列表；本地只读元信息 SHALL NOT 作为未知字段发送给供应商。重复名称 SHALL 被明确拒绝，不得覆盖原工具。`read_file`、`glob_files`、`search_code` SHALL 标为只读，其余三个核心工具 SHALL 标为非只读；未声明只读性的工具 SHALL 按非只读处理。
+每个工具 SHALL 提供唯一名称、用途描述、JSON Schema 参数定义和可路由的执行入口，并在登记信息中声明是否只读。内置工具与成功发现的 MCP 工具 SHALL 使用同一注册和供应商导出契约；登记信息 SHALL 只包含可序列化的工具描述和执行标识，SHALL NOT 包含 MCP 活动连接、会话或异步上下文。系统 SHALL 按名称登记和查找工具，从同一份登记信息按当前模式筛选并导出 Anthropic Messages 与 OpenAI Chat Completions 可接受的工具列表；本地只读元信息 SHALL NOT 作为未知字段发送给供应商。重复名称 SHALL 被明确拒绝，不得覆盖原工具。`read_file`、`glob_files`、`search_code` SHALL 标为只读，其余三个核心工具 SHALL 标为非只读；未声明只读性的工具 SHALL 按非只读处理。所有 MCP 工具 SHALL 标为非只读，Server 提供的只读提示 SHALL NOT 改变该分类。
 
 #### Scenario: 枚举六个核心工具
 - **WHEN** 执行模式准备向模型提供工具
-- **THEN** 工具列表包含六个已注册工具的名称、描述与参数定义，两个协议中的名称和参数语义一致
+- **THEN** 工具列表包含六个核心工具及成功发现并注册的 MCP 工具的名称、描述与参数定义，两个协议中的名称和参数语义一致
 
 #### Scenario: 重复注册
 - **WHEN** 工具名称与已有登记重复
@@ -25,8 +25,16 @@
 - **WHEN** 后续登记一个没有明确只读声明的工具
 - **THEN** 工具按非只读处理，不能进入只读并发组或规划模式的允许列表
 
+#### Scenario: 没有 MCP 配置时保持核心工具集
+- **WHEN** 启动时没有配置 MCP Server
+- **THEN** 执行模式仍提供六个核心工具，工具名称、参数和只读分类保持原有行为
+
+#### Scenario: 外部只读提示不改变调度分类
+- **WHEN** MCP Server 的工具元数据声明只读
+- **THEN** 该工具仍按非只读登记，不进入只读并发组或规划模式工具列表
+
 ### Requirement: 执行前校验
-系统 SHALL 在执行前按名称查找工具、检查当前模式允许范围、解析完整 JSON 参数并依据对应 Schema 校验必填字段、类型、取值范围及未知字段；参数 SHALL 是对象。未注册名称 SHALL 返回 `unknown_tool`，已注册但模式禁止的名称 SHALL 返回 `tool_not_allowed`，非法参数 SHALL 返回 `invalid_arguments`；这些错误 SHALL 为结构化结果，且 SHALL NOT 启动工具或产生文件改动。通过这些校验的调用 SHALL 在实际启动前完成适用的黑名单、路径边界、权限规则、权限模式及授权检查。系统 SHALL 在执行前重新检查规则与目标真实路径；已有授权 SHALL NOT 绕过新的拒绝条件。整次调用的权限拒绝 SHALL 返回 `permission_denied` 并明确 `not_started=true`；搜索候选级权限拒绝 SHALL 排除对应候选并按部分成功合同报告受限范围，而非使整次搜索失败；shell 结构检查无法完成 SHALL 返回 `permission_check_failed`，权限配置无效 SHALL 返回 `permission_config_error`，二者均 SHALL 明确 `not_started=true`；系统 SHALL NOT 在未获准时启动目标工具工作进程、读取受限内容或产生副作用。搜索候选的路径元数据枚举 SHALL 允许先进行，内容读取与目标搜索执行 SHALL 在相应候选获准后进行。
+系统 SHALL 在执行前按名称查找工具、检查当前模式允许范围、解析完整 JSON 参数并依据对应 Schema 校验必填字段、类型、取值范围及未知字段；参数 SHALL 是对象。未注册名称 SHALL 返回 `unknown_tool`，已注册但模式禁止的名称 SHALL 返回 `tool_not_allowed`，非法参数 SHALL 返回 `invalid_arguments`；这些错误 SHALL 为结构化结果，且 SHALL NOT 启动工具或产生文件改动。通过这些校验的调用 SHALL 在实际启动前完成适用的黑名单、路径边界、权限规则、权限模式及授权检查。系统 SHALL 在执行前重新检查规则与目标真实路径；已有授权 SHALL NOT 绕过新的拒绝条件。整次调用的权限拒绝 SHALL 返回 `permission_denied` 并明确 `not_started=true`；搜索候选级权限拒绝 SHALL 排除对应候选并按部分成功合同报告受限范围，而非使整次搜索失败；shell 结构检查无法完成 SHALL 返回 `permission_check_failed`，权限配置无效 SHALL 返回 `permission_config_error`，二者均 SHALL 明确 `not_started=true`；系统 SHALL NOT 在未获准时启动目标工具工作进程、发送 MCP 工具执行请求、读取受限内容或产生副作用。搜索候选的路径元数据枚举 SHALL 允许先进行，内容读取与目标搜索执行 SHALL 在相应候选获准后进行。MCP 调用 SHALL 对稳定工具别名与完整有效参数执行外部工具权限判定，并在发送请求前重新核对 Server 有效配置身份和授权范围；本地路径边界与 shell 文本检查 SHALL NOT 被描述为约束外部 Server 内部执行。
 
 #### Scenario: 未知工具
 - **WHEN** 一个完整调用引用未注册名称
@@ -52,6 +60,14 @@
 - **WHEN** 文件调用等待批准时目标或祖先链接发生变化
 - **THEN** 系统以重新解析的真实路径复查边界、规则与授权范围，不按旧路径授权直接执行；检查失败时返回未启动的结构化错误
 
+#### Scenario: 外部调用批准前不发送请求
+- **WHEN** 一个 MCP 工具调用参数有效但仍等待人工授权
+- **THEN** 系统尚未发送该工具执行请求；普通拒绝返回 permission_denied 和 not_started=true，批准后仍重新检查规则与精确授权范围
+
+#### Scenario: 规划模式伪造外部调用
+- **WHEN** 模型在规划模式中返回已注册 MCP 工具的调用，即使该工具有 allow 规则、有效授权或处于 bypass
+- **THEN** 执行前返回 tool_not_allowed，不发起外部工具请求，也不提供解除模式限制的授权选项
+
 ### Requirement: 结构化执行结果
 每次调用 SHALL 返回包含 `ok`、`data`、`error` 和 `truncated` 的可序列化结果。成功时 `ok` SHALL 为 true 且 `error` SHALL 为 null；失败时 `ok` SHALL 为 false，`error` SHALL 包含稳定的 `code`、可修正的中文 `message` 和必要的 `details`，可保留已获取的部分数据。错误信息 SHALL 写入结果正文，不能仅依赖供应商的错误标记；预期工具错误和普通执行异常 SHALL NOT 导致会话退出。
 
@@ -64,10 +80,10 @@
 - **THEN** 返回对应错误代码或 `execution_error`，正文说明失败原因，不向终端或模型暴露堆栈及配置中的 API 密钥
 
 ### Requirement: 超时与取消
-每次工具执行 SHALL 受有限时间上限约束，默认 30 秒；命令工具可在其 Schema 范围内指定上限。超时 SHALL 终止该工具工作进程及同组子进程，返回 `timeout`，不取消同批其他工具。任务取消 SHALL 停止全部活动工具及后续调度、补齐每个调用结果，并在清理结束后恢复输入。系统 SHALL 回收进程资源，不把停止等待当成停止执行；对写入或命令已发生的影响 SHALL NOT 声称回滚，结果不确定时 SHALL 明确说明可能已有副作用。等待、期限观察与受控清理 SHALL 支持并发任务的及时观察及取消。等待授权 SHALL NOT 计入工具执行超时，执行期限 SHALL 自实际启动工具时开始。等待授权期间取消 SHALL 结束本轮任务，等待中的调用 SHALL 返回 `cancelled` 并明确 `not_started=true`；同批已启动工具 SHALL 按既有取消约束停止与清理。
+每次工具执行 SHALL 受有限时间上限约束，默认 30 秒；命令工具可在其 Schema 范围内指定上限，MCP 工具调用 SHALL 使用 30 秒执行上限。本地工具超时 SHALL 终止该工具工作进程及同组子进程；MCP 工具超时 SHALL 通过 SDK 取消该单次请求并结束本地等待。两类超时均 SHALL 返回 `timeout`，不取消同批其他工具。任务取消 SHALL 停止全部后续调度、终止活动本地工具及同组子进程、取消活动 MCP 单次请求并结束等待、补齐每个调用结果，并在受控清理结束后恢复输入。系统 SHALL 回收本地工具进程资源，不把本地停止等待当成进程已停止；对 MCP 远端执行 SHALL NOT 因发出取消而承诺已停止。任务取消或单次调用超时 SHALL NOT 主动重启或关闭整个 MCP Server，也 SHALL NOT 自动重发工具调用。对写入、命令或远端调用已发生的影响 SHALL NOT 声称回滚，结果不确定时 SHALL 明确说明可能已有副作用。等待、期限观察与受控清理 SHALL 支持并发任务的及时观察及取消。等待授权 SHALL NOT 计入工具执行超时，执行期限 SHALL 自实际启动工具时开始。等待授权期间取消 SHALL 结束本轮任务，等待中的调用 SHALL 返回 `cancelled` 并明确 `not_started=true`；同批已启动工具 SHALL 按各自本地终止或远端取消约束处理与清理。
 
 #### Scenario: 文件或搜索操作卡住
-- **WHEN** 任一工具超过执行上限仍未结束
+- **WHEN** 任一本地工具超过执行上限仍未结束
 - **THEN** 该工具被终止并返回 `timeout`，其余未取消的调用仍可继续
 
 #### Scenario: 命令及子进程超时
@@ -76,7 +92,7 @@
 
 #### Scenario: 用户取消执行
 - **WHEN** 用户在一个或多个工具执行期间按 Ctrl+C
-- **THEN** 全部活动工具被终止并回收，未完成调用得到 `cancelled`，已完成实际结果保留，会话返回提示符且不再发起本任务的模型请求
+- **THEN** 全部活动本地工具被终止并回收，活动 MCP 请求被取消并结束等待，未完成调用得到 `cancelled`，已完成实际结果保留，会话返回提示符且不再发起本任务的模型请求；远端执行状态未知时明确说明可能仍在执行或已产生副作用
 
 #### Scenario: 取消清理期间收到结果
 - **WHEN** 工具已返回真实结果，取消发生在资源清理边界
@@ -89,6 +105,14 @@
 #### Scenario: 等待授权时取消
 - **WHEN** 用户在授权等待期间按 Ctrl+C
 - **THEN** 等待中的调用返回未启动的 `cancelled`，其他活动工具被清理，本轮停止且不发起后续模型请求
+
+#### Scenario: 外部调用超过期限
+- **WHEN** MCP 工具执行请求发出后 30 秒仍未返回完整结果，期间不含授权等待
+- **THEN** 系统取消该单次请求并返回 timeout，说明远端操作可能已产生副作用；不自动重发请求、不重启 Server，后续获准调用仍可按 Server 当前状态处理
+
+#### Scenario: 取消外部调用时结果已完成
+- **WHEN** MCP 工具已返回完整真实结果，用户在本地收尾边界取消任务
+- **THEN** 系统保留该实际结果，不将已发生的远端操作改记为未启动或回滚，并停止任务后续调度
 
 ### Requirement: 有界结果
 返回模型的单次工具结果中，文本和匹配数据的 UTF-8 内容总量 SHALL 不超过 64 KiB，结构化信封字段除外。超过限制时 SHALL 保持结果为合法结构、设置 `truncated=true` 并说明截断；文件读取和搜索 SHALL 提供能够缩小范围的参数。写入内容和编辑输入 SHALL NOT 通过截断后继续执行的方式适配限制。

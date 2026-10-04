@@ -59,7 +59,7 @@ mewcode --config .env
 
 ## 权限与人工授权
 
-默认使用 `default` 权限模式：没有适用 allow 规则或已有批准的操作先询问，包括只读文件和搜索。这改变了旧版默认直接执行工具的行为。六个工具名称与模型参数保持不变，权限判定在父进程完成，未批准的目标操作不启动，等待授权不消耗工具执行超时。普通权限拒绝作为工具结果交给模型，模型可以继续调整本轮任务；Ctrl+C 则取消整轮。
+默认使用 `default` 权限模式：没有适用 allow 规则或已有批准的操作先询问，包括只读文件和搜索。这改变了旧版默认直接执行工具的行为。六个内置工具名称与模型参数保持不变；MCP 工具也经过相同的权限判定。权限判定在父进程完成，未批准的目标操作不启动，等待授权不消耗工具执行超时。普通权限拒绝作为工具结果交给模型，模型可以继续调整本轮任务；Ctrl+C 则取消整轮。
 
 ```bash
 uv run mewcode --config .env --permission-mode strict
@@ -186,14 +186,14 @@ DeepSeek 使用服务端自动缓存；官方 Claude 在固定系统内容末尾
 | `glob_files` | `pattern`；`max_results=100`（1–1000） | 按路径 glob 列出文件；支持 `*`、`?`、`[]` 与跨目录 `**`；无斜杠的模式匹配各层文件名 |
 | `search_code` | 正则 `pattern`；可选路径 `glob`；`max_results=100`（1–1000） | 用 rg 正则搜索，返回相对路径、行号和匹配行 |
 
-所有参数都先通过 JSON Schema 校验，不接受额外字段。工具统一返回 `ok`、`data`、`error`（含 `code`、`message`、`details`）和 `truncated`。
+所有参数都先通过各工具的 JSON Schema 校验；内置工具不接受额外字段。工具统一返回 `ok`、`data`、`error`（含 `code`、`message`、`details`）和 `truncated`。
 
 ### 工作目录与限制
 
 - 启动 MewCode 时的当前目录固定为工作根目录，与配置文件所在位置无关。三个文件工具和两个搜索工具限制在这个目录内，解析真实路径后拒绝越界和指向外部的链接。文件工具只操作普通 UTF-8 文本，跳过或拒绝不支持的编码与特殊文件。
 - 两个搜索工具跳过隐藏、忽略文件及符号链接，内容搜索跳过二进制内容；无匹配是成功的空结果。相对路径及匹配行保持有序，路径 glob 不覆盖 rg 的默认忽略规则。
 - shell 以工作根目录启动，具有当前操作系统用户的权限，**不是目录沙箱**，可以访问目录外或网络。每次命令使用独立 shell，`cd`、变量和环境变化不会延续到下一次调用；stdin 关闭，不支持交互程序。
-- 所有工具默认 30 秒超时，只有命令允许 1–120 秒覆盖。超时或 Ctrl+C 会终止工作进程及同组子进程；主动脱离进程组的后台程序不在这一清理保证内。
+- 所有工具默认 30 秒超时，只有命令允许 1–120 秒覆盖。本地工具超时或 Ctrl+C 会终止工作进程及同组子进程；主动脱离进程组的后台程序不在这一清理保证内。
 - 结果内容上限 64 KiB；命令 stdout、stderr 各最多 32 KiB。文件创建内容、编辑前后文件各不超过 1 MiB，工具参数流不超过 2 MiB。超出的输出会标明截断，输入超限则报错。
 - 创建文件以原子方式拒绝覆盖，编辑以原子替换提交并检查并发变化；不能保证对抗另一个恶意进程同时替换目录祖先。超时、取消和外部命令可能已产生副作用，继续前应先核查状态。
 
@@ -204,3 +204,44 @@ DeepSeek 使用服务端自动缓存；官方 Claude 在固定系统内容末尾
 从准备好的工作目录启动，配置路径可以是绝对路径。例如发送：“搜索 add 函数，读取实现，修复减法错误，然后执行 Python 断言检查。”
 
 先规划再执行的例子：输入 `/plan 检查 add 函数并提出修复计划`，再输入普通消息修订验证步骤，最后输入 `/do` 执行最新计划。
+
+
+## 外部 MCP 工具
+
+MewCode 使用官方 Python SDK `mcp==2.3.0`，在首次提示符之前自动连接配置的 Server 并发现全部工具。支持本地 stdio、远程 Streamable HTTP，自动兼容 `2025-11-25` 初始化握手和 `2026-07-28` 能力发现，无需手动选择版本。当前不接入 MCP resources、prompts、sampling、elicitation 或 task-only 工具。
+
+配置依次读取 `~/.mewcode/mcp.yaml` 和启动工作目录下的 `.mewcode/mcp.yaml`。后者按 Server 名**整项覆盖**前者，env、headers 不逐键继承。缺省或空文件表示没有配置；YAML 重复键、未知顶层字段或错误版本使本轮全部 MCP 配置不可用，单个 Server 字段错误只跳过该项。内置工具与聊天仍可使用。
+
+```yaml
+version: 1
+mcpServers:
+  local_demo:
+    transport: stdio
+    command: /absolute/path/to/python
+    args: [/absolute/path/to/server.py]
+    env:
+      SERVICE_TOKEN: ${SERVICE_TOKEN}
+  remote_demo:
+    transport: http
+    url: https://mcp.example.com/mcp
+    headers:
+      Authorization: Bearer ${SERVICE_TOKEN}
+```
+
+只展开 env、headers 的值中的 `${VAR}`，来源是 MewCode 启动时的进程环境，不是 `--config` 指定的模型 `.env`。缺少变量或使用 `${VAR:-default}` 等表达式会跳过该 Server；空值允许、替换结果不递归展开。command、args、url 保持字面值。HTTP URL 不允许 userinfo。配置只在启动读取，修改后需重启。
+
+stdio 直接执行 command 和 args，不经过 shell，cwd 固定为真实工作根目录。MewCode 固定绝对启动入口和 SDK 基础环境与显式 env 合成的环境，保留 venv 等符号链接入口的启动语义，真实目标另纳入指纹；内部启动器在同一进程中 exec 目标程序，并记录进程组供退出清理。声明本地 Server 就意味着启动时会执行该程序，工具的逐次审批发生在连接和发现之后。stderr 丢弃，不与协议 stdout 混用。
+
+每个 Server 的准备并行上限为 4，连接、协商及全部工具分页共用 15 秒期限。失败只影响所属 Server；已就绪连接跨对话、历史裁剪及模式切换复用。只在启动发现工具，不做健康检查、自动重连、进程重启或工具自动重发。已注册 Server 失效时，工具名称保留，调用返回 `mcp_unavailable`。
+
+外部工具别名为 `mcp__<Server片段>__<工具片段>__<16位摘要>`，最多 64 个 ASCII 字符；摘要来自原始 Server／工具名，不随连接地址变化。实际 RPC 始终使用原始工具名。外部工具默认非只读，按串行边界调度，即使声明 readOnlyHint 也不能进入 `/plan`；`/do` 恢复完整工具集，但不会自动批准调用。
+
+MCP 使用同一 strict/default/bypass 矩阵和 deny > ask > allow 优先级。规则的匹配对象是**完整规范 JSON 参数**：对象键递归排序、紧凑序列化、保留 Unicode、数组顺序与值类型。exact 规则中的 JSON 会规范化；glob 按整个规范字符串匹配，不把远端 path/command 当作本地文件路径或 Bash。规则中的工具名必须使用启动时显示的完整稳定别名；离线合法规则仍能加载，但不能据此注册工具。
+
+人工授权显示 Server、原名、别名、安全连接描述、完整参数和精确范围，长参数可以翻页或 all 查看。HTTP 连接只显示协议及主机／端口；stdio 显示启动入口，省略 args/env。会话／永久批准绑定真实项目根、Server 名、有效连接配置指纹、原始工具名和相同参数；改变端点、实际程序路径、args、有效环境或 headers 会使旧批准失效。指纹不是程序内容完整性校验或远端身份认证。永久批准会保存完整调用参数，但不保存连接 env/header 明文；使用既有 `permissions.local.yaml` 和 `/permissions revoke` 管理。
+
+MCP 单次调用上限为 30 秒，审批等待不计入，远端参数中的 timeout_seconds 不改变该上限。HTTP 可以使用 GET 恢复原响应流，但恢复受原期限和取消控制；新旧协议取消后均停止该请求的恢复，不关闭共享连接。不自动重发 tools/call，也不自动处理 HeaderMismatch 或输入续调要求。取消只表示本地等待结束，远端可能仍在执行或已有副作用。
+
+工具结果保留文本及 structuredContent，资源链接仅返回元信息，不抓取 URI。图像、音频、二进制内容标为未支持，不将 base64 当正文。全部远端结果内容共享 64 KiB UTF-8 预算，优先保留能完整容纳的结构化数据，其余按顺序截短或省略并说明。失败区分 `mcp_tool_error`、`mcp_request_error`、`mcp_protocol_error`、`mcp_unsupported_capability`、`mcp_unavailable` 和本地 timeout/cancelled。
+
+退出、EOF 或启动取消时分别清理每个 Server：总预算 5 秒，前 3 秒正常关闭，余下时间强制清理。无法确认回收时会明确报告失败；单个清理任务不能无限阻塞其他 Server 或模型客户端退出。HTTP 仅关闭客户端资源并按协议尝试结束会话，不停止远端服务或撤销已发生的操作。

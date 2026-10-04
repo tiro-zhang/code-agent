@@ -11,6 +11,8 @@ from typing import TextIO
 from .async_utils import protected
 from .config import ConfigError, ProviderConfig, load_config
 from .providers import make_provider
+from .mcp.config import load_config as load_mcp_config
+from .mcp.manager import MCPManager
 from .permissions.terminal import InputReader, TerminalApproval
 from .session import ChatSession, PlanStateError, operation_summary
 from .tools.base import ToolError
@@ -125,7 +127,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                permission_mode="default", approval_responder=None, input_reader=None):
     provider = factory(config)
     loop = asyncio.get_running_loop()
-    active_cancel = None
+    active_cancel = asyncio.Event()
     idle_cancel = asyncio.Event()
     previous_handler = None
     has_handler = threading.current_thread() is threading.main_thread()
@@ -140,6 +142,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
     if has_handler:
         previous_handler = signal.signal(signal.SIGINT, interrupt)
     renderer = _Renderer(output_stream, config.api_key)
+    mcp = None
     try:
         try:
             reader = input_reader or InputReader(input_stream)
@@ -150,6 +153,17 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
         except (ValueError, ToolError, OSError) as error:
             error_stream.write(f"启动失败：{renderer.safe(error)}\n")
             return 2
+        snapshot = load_mcp_config(session.executor.context.root)
+        def show_mcp(diagnostic):
+            server = renderer.safe(diagnostic.server, 100) or "全部 Server"
+            renderer.line(f"MCP> {server} · {renderer.safe(diagnostic.stage)} · {renderer.safe(diagnostic.message)}")
+        mcp = MCPManager(snapshot, session.executor.registry, notify=show_mcp)
+        session.executor.mcp = mcp
+        await mcp.start(cancel_event=active_cancel)
+        if active_cancel.is_set():
+            return 0
+        session.permissions.bind_mcp_tools(mcp.tools)
+        active_cancel = None
         output_stream.write(f"MewCode · {renderer.safe(config.name, 100)} · 权限 {session.permissions.mode}\n")
         while True:
             output_stream.write("你> ")
@@ -200,7 +214,11 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
     finally:
         active_cancel = asyncio.Event()
         try:
-            await protected(provider.aclose(), cancel_event=active_cancel)
+            try:
+                if mcp is not None:
+                    await protected(mcp.close(), cancel_event=active_cancel)
+            finally:
+                await protected(provider.aclose(), cancel_event=active_cancel)
         finally:
             if has_handler:
                 signal.signal(signal.SIGINT, previous_handler)

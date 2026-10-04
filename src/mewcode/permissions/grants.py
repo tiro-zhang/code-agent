@@ -6,6 +6,8 @@ from uuid import uuid4
 
 from .config import PermissionConfig, PermissionConfigError, TOOLS
 from .models import Approval, PolicySnapshot
+from ..mcp.tools import is_mcp_alias
+from ..mcp.permissions import validate_grant
 
 
 class GrantStore:
@@ -18,6 +20,10 @@ class GrantStore:
         return tuple(self._session.values())
 
     def _target(self, tool: str, kind: str, value: str) -> str:
+        if is_mcp_alias(tool):
+            if kind != "mcp":
+                raise ValueError("外部工具授权必须使用 mcp 范围")
+            return validate_grant(tool, value)
         if tool not in TOOLS or not isinstance(value, str) or not value.strip() or "\x00" in value:
             raise ValueError("授权工具或精确目标无效")
         if tool == "execute_command":

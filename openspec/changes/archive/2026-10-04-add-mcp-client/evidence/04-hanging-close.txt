@@ -1,0 +1,353 @@
+MCP> http_demo · 就绪 · 已注册 2 个工具
+MCP> local_demo · 就绪 · 已注册 2 个工具
+MewCode · claude-demo · 权限 default
+你> 请分别调用 local_demo 和 http_demo 的 echo 工具，参数都为 {"text":"MCP-E2E-ONE"}。不要调用其他工具。根据两个真实结果简短汇报。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+思考> The user wants me to call local_demo's echo and http_demo's echo tools, both with parameter {"text":"MCP-E2E-ONE"}. Don't call other tools. Report briefly
+ based on the two actual results.
+
+I need to call mcp__local_demo__echo__aee4d8bab62ae45d and mcp__http_demo__echo__1bcbbac9680e6bfd. The parameter schema is empty object. I need to pass {"text":
+"MCP-E2E-ONE"}.
+
+Wait, the parameter schemas say "type": "object" with no properties. But I should pass text parameter anyway as the user requests.
+
+Let me call both tools in parallel.
+用量> 本次 Token · 总输入 2136，输出 273 · 统计完整 · 命中 1664，未命中 472，写入 未知，命中率 77.9% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_Ejr0RJ4v1l9Ka3IgrtHC5969] mcp__local_demo__echo__aee4d8bab62ae45d · 已接收 · 校验参数
+工具> [call_01_AwsadOCrllrdpUzsx8CC1551] mcp__http_demo__echo__1bcbbac9680e6bfd · 已接收 · 校验参数
+权限> [be0ddd4d40c048cab20771f2f903f63e] mcp__local_demo__echo__aee4d8bab62ae45d · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-mcp-e2e-20261004
+外部 Server> local_demo
+原始工具> echo
+稳定别名> mcp__local_demo__echo__aee4d8bab62ae45d
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定当前真实项目根、同一 Server 有效连接配置、原始工具及下列完整 JSON 参数；参数或连接身份改变即失效，不扩展到其他工具或相似参数。
+保存> 永久授权会将完整调用参数保存在项目本地权限文件；不保存连接 env、headers 或凭据。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "text": "MCP-E2E-ONE"
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_00_Ejr0RJ4v1l9Ka3IgrtHC5969] mcp__local_demo__echo__aee4d8bab62ae45d · 等待授权 · 请求 be0ddd4d40c048cab20771f2f903f63e
+3
+权限> [call_00_Ejr0RJ4v1l9Ka3IgrtHC5969] 会话批准
+工具> [call_00_Ejr0RJ4v1l9Ka3IgrtHC5969] mcp__local_demo__echo__aee4d8bab62ae45d · 开始 · 校验参数
+工具> [call_00_Ejr0RJ4v1l9Ka3IgrtHC5969] mcp__local_demo__echo__aee4d8bab62ae45d · 成功
+权限> [4a6da15b78614e3d9cef14b4e0779b41] mcp__http_demo__echo__1bcbbac9680e6bfd · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-mcp-e2e-20261004
+外部 Server> http_demo
+原始工具> echo
+稳定别名> mcp__http_demo__echo__1bcbbac9680e6bfd
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定当前真实项目根、同一 Server 有效连接配置、原始工具及下列完整 JSON 参数；参数或连接身份改变即失效，不扩展到其他工具或相似参数。
+保存> 永久授权会将完整调用参数保存在项目本地权限文件；不保存连接 env、headers 或凭据。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "text": "MCP-E2E-ONE"
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_01_AwsadOCrllrdpUzsx8CC1551] mcp__http_demo__echo__1bcbbac9680e6bfd · 等待授权 · 请求 4a6da15b78614e3d9cef14b4e0779b41
+4
+权限> [call_01_AwsadOCrllrdpUzsx8CC1551] 永久批准
+工具> [call_01_AwsadOCrllrdpUzsx8CC1551] mcp__http_demo__echo__1bcbbac9680e6bfd · 开始 · 校验参数
+工具> [call_01_AwsadOCrllrdpUzsx8CC1551] mcp__http_demo__echo__1bcbbac9680e6bfd · 成功
+进度> 执行 · 权限 default · 请求 2/20 · 请求模型
+思考> Both tools returned results. Report briefly.
+MewCode> 已分别调用两个 echo 工具，参数均为 `{"text":"MCP-E2E-ONE"}`，结果如下：
+
+- **local_demo echo**：返回 `ok=true`，回显 `MCP-E2E-ONE`，进程 pid=6394，无错误。
+- **http_demo echo**：返回 `ok=true`，回显 `MCP-E2E-ONE`，进程 pid=6357，无错误。
+
+两者均成功回显目标文本，未调用其他工具。
+用量> 本次 Token · 总输入 2601，输出 119 · 统计完整 · 命中 2304，未命中 297，写入 未知，命中率 88.6% · 缓存统计完整
+结束> model_done · 模型已结束本次任务 · 请求 2/20
+用量> 累计已知 Token · 总输入 4737，输出 392 · 统计完整 · 命中 3968，未命中 769，写入 未知，命中率 83.8% · 缓存统计完整
+你> 再分别调用这两个 echo 工具，参数仍然完全是 {"text":"MCP-E2E-ONE"}，不要沿用上轮结果。报告真实回显和两个 pid。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+用量> 本次 Token · 总输入 2801，输出 120 · 统计完整 · 命中 2688，未命中 113，写入 未知，命中率 96.0% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_ET_DcN5NQXltVldEAes6T1T2534] mcp__local_demo__echo__aee4d8bab62ae45d · 已接收 · 校验参数
+工具> [call_01_ET_DOI6xG7NBrH0xuLozSuy6451] mcp__http_demo__echo__1bcbbac9680e6bfd · 已接收 · 校验参数
+工具> [call_00_ET_DcN5NQXltVldEAes6T1T2534] mcp__local_demo__echo__aee4d8bab62ae45d · 开始 · 校验参数
+工具> [call_00_ET_DcN5NQXltVldEAes6T1T2534] mcp__local_demo__echo__aee4d8bab62ae45d · 成功
+工具> [call_01_ET_DOI6xG7NBrH0xuLozSuy6451] mcp__http_demo__echo__1bcbbac9680e6bfd · 开始 · 校验参数
+工具> [call_01_ET_DOI6xG7NBrH0xuLozSuy6451] mcp__http_demo__echo__1bcbbac9680e6bfd · 成功
+进度> 执行 · 权限 default · 请求 2/20 · 请求模型
+MewCode> 已重新调用两个 echo 工具（参数均为 `{"text":"MCP-E2E-ONE"}`），本轮真实结果：
+
+- **local_demo echo**：回显 `MCP-E2E-ONE`，pid=**6394**
+- **http_demo echo**：回显 `MCP-E2E-ONE`，pid=**6357**
+
+两者均返回 `ok=true`，无错误。
+用量> 本次 Token · 总输入 3113，输出 92 · 统计完整 · 命中 2816，未命中 297，写入 未知，命中率 90.5% · 缓存统计完整
+结束> model_done · 模型已结束本次任务 · 请求 2/20
+用量> 累计已知 Token · 总输入 5914，输出 212 · 统计完整 · 命中 5504，未命中 410，写入 未知，命中率 93.1% · 缓存统计完整
+你> 仅调用 http_demo 的 echo，参数为 {"text":"MCP-DENY"}。如果权限被拒绝，请直接说明，不要重试或调用其他工具。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+用量> 本次 Token · 总输入 3287，输出 65 · 统计完整 · 命中 3200，未命中 87，写入 未知，命中率 97.4% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_ET_JFRptv7qtWh9zXvHrvSG7202] mcp__http_demo__echo__1bcbbac9680e6bfd · 已接收 · 校验参数
+权限> [7f86bb19d26a4c899bf38fae37d4276d] mcp__http_demo__echo__1bcbbac9680e6bfd · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-mcp-e2e-20261004
+外部 Server> http_demo
+原始工具> echo
+稳定别名> mcp__http_demo__echo__1bcbbac9680e6bfd
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定当前真实项目根、同一 Server 有效连接配置、原始工具及下列完整 JSON 参数；参数或连接身份改变即失效，不扩展到其他工具或相似参数。
+保存> 永久授权会将完整调用参数保存在项目本地权限文件；不保存连接 env、headers 或凭据。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "text": "MCP-DENY"
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_00_ET_JFRptv7qtWh9zXvHrvSG7202] mcp__http_demo__echo__1bcbbac9680e6bfd · 等待授权 · 请求 7f86bb19d26a4c899bf38fae37d4276d
+1
+权限> [call_00_ET_JFRptv7qtWh9zXvHrvSG7202] 拒绝
+工具> [call_00_ET_JFRptv7qtWh9zXvHrvSG7202] mcp__http_demo__echo__1bcbbac9680e6bfd · 权限拒绝 · permission_denied：权限规则或用户决定禁止此操作
+进度> 执行 · 权限 default · 请求 2/20 · 请求模型
+MewCode> 权限被拒绝。
+
+调用 http_demo echo（参数 `{"text":"MCP-DENY"}`）返回：
+
+- `ok=false`
+- 错误码：`permission_denied`
+- 信息：权限规则或用户决定禁止此操作（来源：user）
+
+按要求未重试、未调用其他工具。
+用量> 本次 Token · 总输入 3546，输出 70 · 统计完整 · 命中 3328，未命中 218，写入 未知，命中率 93.9% · 缓存统计完整
+结束> model_done · 模型已结束本次任务 · 请求 2/20
+用量> 累计已知 Token · 总输入 6833，输出 135 · 统计完整 · 命中 6528，未命中 305，写入 未知，命中率 95.5% · 缓存统计完整
+你> /plan 制定调用 http_demo echo 参数 {"text":"PLAN-ONE"} 的简单计划。只输出计划，不调用工具。
+进度> 规划 · 权限 default · 请求 1/20 · 请求模型
+思考> The user wants a plan for calling http_demo echo with parameter {"text":"PLAN-ONE"}. Current mode is plan (read-only). But wait — the task is about callin
+g an MCP tool, not a file operation. In plan mode I cannot execute the echo tool. I should only output a plan.
+
+The user says "只输出计划，不调用工具" (only output the plan, don't call tools). So I just output a simple plan with goal, steps, and verification.
+
+Note: In the current environment, MCP tools available include local_demo and http_demo. But in plan mode, the system constraints say only read_file, glob_files,
+ search_code are allowed. However, the MCP tools (echo) are also "registered tools" but plan mode restricts to read-only. The user explicitly asks to only outpu
+t plan, not call tools.
+
+Let me output a concise plan with complete goal, steps, verification.
+MewCode> ## 计划：调用 http_demo echo
+
+**目标**
+调用 `http_demo` 的 `echo` 工具，参数为 `{"text":"PLAN-ONE"}`，获取并核实真实回显结果。
+
+**实施步骤**
+1. 切换到 execute 模式（等待 `/do` 授权）。
+2. 仅调用 `mcp__http_demo__echo__1bcbbac9680e6bfd`，传入参数 `{"text":"PLAN-ONE"}`。
+3. 读取工具返回结果中的回显文本与 `ok` 状态，不调用其他工具。
+
+**验证方式**
+- 确认返回 `ok=true` 且回显内容为 `PLAN-ONE`；
+- 若返回 `permission_denied`，如实说明权限被拒，不重试、不调用其他工具。
+用量> 本次 Token · 总输入 3140，输出 377 · 统计完整 · 命中 1280，未命中 1860，写入 未知，命中率 40.8% · 缓存统计完整
+结束> model_done · 模型已结束本次任务 · 请求 1/20
+用量> 累计已知 Token · 总输入 3140，输出 377 · 统计完整 · 命中 1280，未命中 1860，写入 未知，命中率 40.8% · 缓存统计完整
+你> /do
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+用量> 本次 Token · 总输入 4523，输出 64 · 统计完整 · 命中 3584，未命中 939，写入 未知，命中率 79.2% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_ET_r6UNlLT63F85HP0YXhqb8441] mcp__http_demo__echo__1bcbbac9680e6bfd · 已接收 · 校验参数
+权限> [3b549b471d3d439088e5dd9f1de141d9] mcp__http_demo__echo__1bcbbac9680e6bfd · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-mcp-e2e-20261004
+外部 Server> http_demo
+原始工具> echo
+稳定别名> mcp__http_demo__echo__1bcbbac9680e6bfd
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定当前真实项目根、同一 Server 有效连接配置、原始工具及下列完整 JSON 参数；参数或连接身份改变即失效，不扩展到其他工具或相似参数。
+保存> 永久授权会将完整调用参数保存在项目本地权限文件；不保存连接 env、headers 或凭据。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "text": "PLAN-ONE"
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_00_ET_r6UNlLT63F85HP0YXhqb8441] mcp__http_demo__echo__1bcbbac9680e6bfd · 等待授权 · 请求 3b549b471d3d439088e5dd9f1de141d9
+2
+权限> [call_00_ET_r6UNlLT63F85HP0YXhqb8441] 本次批准
+工具> [call_00_ET_r6UNlLT63F85HP0YXhqb8441] mcp__http_demo__echo__1bcbbac9680e6bfd · 开始 · 校验参数
+工具> [call_00_ET_r6UNlLT63F85HP0YXhqb8441] mcp__http_demo__echo__1bcbbac9680e6bfd · 成功
+进度> 执行 · 权限 default · 请求 2/20 · 请求模型
+MewCode> 已按计划执行，仅调用 `mcp__http_demo__echo__1bcbbac9680e6bfd`，参数 `{"text":"PLAN-ONE"}`。
+
+**验证结果**
+- `ok=true`，回显内容为 `PLAN-ONE`，pid=6357，无错误，符合预期。
+- 未调用其他工具。
+用量> 本次 Token · 总输入 4699，输出 81 · 统计完整 · 命中 4480，未命中 219，写入 未知，命中率 95.3% · 缓存统计完整
+结束> model_done · 模型已结束本次任务 · 请求 2/20
+用量> 累计已知 Token · 总输入 9222，输出 145 · 统计完整 · 命中 8064，未命中 1158，写入 未知，命中率 87.4% · 缓存统计完整
+你> 请仅调用 http_demo echo，参数 {"text":"SLOW-CANCEL","delay":20}，等实际结果。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+思考> The user wants to call http_demo echo with parameters {"text":"SLOW-CANCEL","delay":20}. The tool schema shows type object with no properties, but I'll pa
+ss the parameters. Let me call it.
+用量> 本次 Token · 总输入 4851，输出 127 · 统计完整 · 命中 4736，未命中 115，写入 未知，命中率 97.6% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_olkXNFA0f6nKvNbG6vKO9101] mcp__http_demo__echo__1bcbbac9680e6bfd · 已接收 · 校验参数
+权限> [01d5781b485744d085a62d56899d41d6] mcp__http_demo__echo__1bcbbac9680e6bfd · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-mcp-e2e-20261004
+外部 Server> http_demo
+原始工具> echo
+稳定别名> mcp__http_demo__echo__1bcbbac9680e6bfd
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定当前真实项目根、同一 Server 有效连接配置、原始工具及下列完整 JSON 参数；参数或连接身份改变即失效，不扩展到其他工具或相似参数。
+保存> 永久授权会将完整调用参数保存在项目本地权限文件；不保存连接 env、headers 或凭据。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "text": "SLOW-CANCEL",
+  "delay": 20
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_00_olkXNFA0f6nKvNbG6vKO9101] mcp__http_demo__echo__1bcbbac9680e6bfd · 等待授权 · 请求 01d5781b485744d085a62d56899d41d6
+2
+权限> [call_00_olkXNFA0f6nKvNbG6vKO9101] 本次批准
+工具> [call_00_olkXNFA0f6nKvNbG6vKO9101] mcp__http_demo__echo__1bcbbac9680e6bfd · 开始 · 校验参数
+^C工具> [call_00_olkXNFA0f6nKvNbG6vKO9101] mcp__http_demo__echo__1bcbbac9680e6bfd · 取消 · cancelled：外部请求已取消；远端可能仍在执行或已有副作用
+本轮未完成> cancelled · 用户取消任务；已完成的操作和结果保留，请按需检查实际状态 · 请求 1/20
+用量> 累计已知 Token · 总输入 4851，输出 127 · 统计完整 · 命中 4736，未命中 115，写入 未知，命中率 97.6% · 缓存统计完整
+你> 只调用 http_demo echo，参数 {"text":"MCP-E2E-ONE"}，然后根据真实结果回答。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+用量> 本次 Token · 总输入 5124，输出 67 · 统计完整 · 命中 4864，未命中 260，写入 未知，命中率 94.9% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_ET_BRYqGB36AouxMLIHtOoP9557] mcp__http_demo__echo__1bcbbac9680e6bfd · 已接收 · 校验参数
+工具> [call_00_ET_BRYqGB36AouxMLIHtOoP9557] mcp__http_demo__echo__1bcbbac9680e6bfd · 开始 · 校验参数
+工具> [call_00_ET_BRYqGB36AouxMLIHtOoP9557] mcp__http_demo__echo__1bcbbac9680e6bfd · 成功
+进度> 执行 · 权限 default · 请求 2/20 · 请求模型
+MewCode> 已仅调用 http_demo echo，参数 `{"text":"MCP-E2E-ONE"}`，真实结果：
+
+- `ok=true`
+- 回显内容：`MCP-E2E-ONE`
+- pid：6357
+- 无错误
+用量> 本次 Token · 总输入 5309，输出 57 · 统计完整 · 命中 5120，未命中 189，写入 未知，命中率 96.4% · 缓存统计完整
+结束> model_done · 模型已结束本次任务 · 请求 2/20
+用量> 累计已知 Token · 总输入 10433，输出 124 · 统计完整 · 命中 9984，未命中 449，写入 未知，命中率 95.7% · 缓存统计完整
+你> 这是测试服务器的故障隔离验收：只调用 local_demo echo，参数 {"exit":true}，让这个临时测试子进程自行退出。报告真实失败，不要重试。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+用量> 本次 Token · 总输入 5532，输出 61 · 统计完整 · 命中 5248，未命中 284，写入 未知，命中率 94.9% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_ET_xNnsQSrUrgAeRn0mrULM9629] mcp__local_demo__echo__aee4d8bab62ae45d · 已接收 · 校验参数
+权限> [fc43ad7e41f44fd2999007aa6bbfeff5] mcp__local_demo__echo__aee4d8bab62ae45d · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-mcp-e2e-20261004
+外部 Server> local_demo
+原始工具> echo
+稳定别名> mcp__local_demo__echo__aee4d8bab62ae45d
+范围> 本次绑定当前完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定当前真实项目根、同一 Server 有效连接配置、原始工具及下列完整 JSON 参数；参数或连接身份改变即失效，不扩展到其他工具或相似参数。
+保存> 永久授权会将完整调用参数保存在项目本地权限文件；不保存连接 env、headers 或凭据。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> 第 1/1 页（next 下一页，back 上一页，all 查看全部）
+完整参数：
+{
+  "exit": true
+}
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情
+权限> [call_00_ET_xNnsQSrUrgAeRn0mrULM9629] mcp__local_demo__echo__aee4d8bab62ae45d · 等待授权 · 请求 fc43ad7e41f44fd2999007aa6bbfeff5
+2
+权限> [call_00_ET_xNnsQSrUrgAeRn0mrULM9629] 本次批准
+工具> [call_00_ET_xNnsQSrUrgAeRn0mrULM9629] mcp__local_demo__echo__aee4d8bab62ae45d · 开始 · 校验参数
+MCP> local_demo · 连接 · 连接已结束
+工具> [call_00_ET_xNnsQSrUrgAeRn0mrULM9629] mcp__local_demo__echo__aee4d8bab62ae45d · 失败 · mcp_unavailable：外部请求失败
+进度> 执行 · 权限 default · 请求 2/20 · 请求模型
+思考> The result shows a failure. Report it truthfully without retrying.
+MewCode> 已仅调用 local_demo echo，参数 `{"exit":true}`，真实结果：
+
+- `ok=false`
+- 错误码：`mcp_unavailable`
+- 信息：外部请求失败
+- 详情：`side_effects_may_have_occurred=true`（子进程可能已自行退出）
+
+按要求未重试。
+MCP> http_demo · 就绪 · 已注册 2 个工具
+MCP> local_demo · 就绪 · 已注册 2 个工具
+MewCode · claude-demo · 权限 default
+你> 只调用 http_demo echo，参数 {"text":"MCP-E2E-ONE"}。根据真实结果报告。
+进度> 执行 · 权限 default · 请求 1/20 · 请求模型
+思考> The user wants me to only call http_demo echo with parameter {"text":"MCP-E2E-ONE"}. Let me identify the tool. The tools available include:
+
+- mcp__http_demo__echo__1bcbbac9680e6bfd
+- mcp__http_demo__second__f94aaa2eb174bd9d
+- mcp__local_demo__echo__aee4d8bab62ae45d
+- mcp__local_demo__second__6024d422635c00d6
+
+The "http_demo echo" corresponds to mcp__http_demo__echo__1bcbbac9680e6bfd. I'll call it with the parameter. The parameter schema is type object with no defined
+ properties, but I'll pass {"text":"MCP-E2E-ONE"}.
+用量> 本次 Token · 总输入 2118，输出 249 · 统计完整 · 命中 1664，未命中 454，写入 未知，命中率 78.6% · 缓存统计完整
+进度> 执行 · 权限 default · 请求 1/20 · 权限检查／执行工具
+工具> [call_00_DQGDH3iMezZBhoZlBgak7837] mcp__http_demo__echo__1bcbbac9680e6bfd · 已接收 · 校验参数
+工具> [call_00_DQGDH3iMezZBhoZlBgak7837] mcp__http_demo__echo__1bcbbac9680e6bfd · 开始 · 校验参数
+工具> [call_00_DQGDH3iMezZBhoZlBgak7837] mcp__http_demo__echo__1bcbbac9680e6bfd · 成功
+进度> 执行 · 权限 default · 请求 2/20 · 请求模型
+MewCode> 已按要求仅调用 http_demo echo（`mcp__http_demo__echo__1bcbbac9680e6bfd`），参数为 `{"text":"MCP-E2E-ONE"}`。
+
+实际返回结果：
+- `ok: true`
+^C
+MCP> http_demo · 就绪 · 已注册 2 个工具
+MCP> local_demo · 就绪 · 已注册 2 个工具
+MewCode · claude-demo · 权限 default
+你> /exit
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Pane is dead (status 0, Sun Oct  4 00:49:19 2026)

@@ -15,6 +15,8 @@ from .config import PermissionConfig, PermissionConfigError
 from .grants import GrantStore
 from .rules import apply_mode, merge_rules
 from .shell import analyze_command
+from ..mcp.config import canonical
+from ..mcp.permissions import grant_value
 
 
 @dataclass(frozen=True)
@@ -25,6 +27,8 @@ class ApprovalRequest:
     targets: tuple[str, ...]
     reason: str
     mode: str
+    external: tuple[str, str] | None = None
+    connection_description: str = ""
 
 
 @dataclass(frozen=True)
@@ -67,6 +71,10 @@ class PermissionManager:
         self.mode = mode
         self.responder = responder
         self._prompt_lock = asyncio.Lock()
+        self.mcp_tools = {}
+
+    def bind_mcp_tools(self, tools):
+        self.mcp_tools = {tool.name: tool for tool in tools}
 
     @property
     def mode(self) -> str:
@@ -89,7 +97,10 @@ class PermissionManager:
         search = tool in {"glob_files", "search_code"}
         kind = "path"
         analysis = None
-        if tool == "execute_command":
+        if tool in self.mcp_tools:
+            values = (grant_value(self.mcp_tools[tool], arguments),)
+            kind = "mcp"
+        elif tool == "execute_command":
             analysis = analyze_command(arguments["command"])
             values = (arguments["command"],)
             kind = "command"
@@ -109,7 +120,8 @@ class PermissionManager:
         allowed, pending, denied = [], [], []
         reasons = []
         for value in dict.fromkeys(values):
-            subject = str(Path(value).relative_to(self.root)) if kind == "path" else value
+            subject = (canonical(arguments) if kind == "mcp" else
+                       str(Path(value).relative_to(self.root)) if kind == "path" else value)
             evaluation = merge_rules(snapshot.rules, tool,
                                      analysis.subjects if analysis else (subject,),
                                      allow_subject=subject,
@@ -160,7 +172,10 @@ class PermissionManager:
                                         source="no_approval_channel", not_started=True)
                     rejected.update(pending)
                     return
-                request = ApprovalRequest(uuid4().hex, tool, deepcopy(original), pending, reason, self.mode)
+                external = self.mcp_tools.get(tool)
+                request = ApprovalRequest(uuid4().hex, tool, deepcopy(original), pending, reason, self.mode,
+                                          (external.server_name, external.original_name) if external else None,
+                                          external.connection_description if external else "")
                 await emit({"kind": "permission_requested", "request": request})
                 choice = await self.responder(request, cancel)
                 if cancel.is_set():

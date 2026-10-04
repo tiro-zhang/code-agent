@@ -64,11 +64,12 @@ def _cleanup(process, grouped: bool) -> None:
 
 class ToolExecutor:
     def __init__(self, registry: ToolRegistry, context: ToolContext, *, timeout: float = 30,
-                 permissions: PermissionManager | None = None) -> None:
+                 permissions: PermissionManager | None = None, mcp=None) -> None:
         if os.name != "posix":
             raise ValueError("工具执行目前需要 macOS 或 Linux 等 POSIX 环境")
         self.registry, self.context, self.timeout = registry, context, timeout
         self.permissions = permissions if permissions is not None else PermissionManager(context.root)
+        self.mcp = mcp
 
     async def execute(self, name: str, raw: str, *, allowed_tools: frozenset[str] | None = None,
                       cancel_event: asyncio.Event | None = None, on_event=None) -> ToolResult:
@@ -95,6 +96,12 @@ class ToolExecutor:
             cancel_event.set()
             return ToolResult.failure("cancelled", "任务取消，工具未启动", details={"not_started": True})
         # 人工审批不消耗工具的执行时间预算。
+        from ..mcp.tools import MCPTool
+        if isinstance(tool, MCPTool):
+            if self.mcp is None:
+                return ToolResult.failure("mcp_unavailable", "外部连接未初始化", details={"not_started": True})
+            return await self.mcp.call(tool, authorization.arguments, cancel_event=cancel_event,
+                                       on_event=on_event, limit=context.output_limit)
         deadline = time.monotonic() + (arguments.get("timeout_seconds", self.timeout) if name == "execute_command" else self.timeout)
         mp = multiprocessing.get_context("spawn")
         receive, send = mp.Pipe(duplex=False)

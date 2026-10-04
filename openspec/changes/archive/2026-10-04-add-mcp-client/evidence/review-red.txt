@@ -1,0 +1,172 @@
+.......FFFF.............................FFF                              [100%]
+=================================== FAILURES ===================================
+_________________ test_bad_schema_skip_only_bad_tool[schema5] __________________
+
+schema = {'type': 'object', '$defs': {'cycle': {'$ref': '#/$defs/cycle'}}, '$ref': '#/$defs/cycle'}
+
+    @pytest.mark.parametrize("schema", [
+        {"type": "invalid"}, {"type": "array"}, {"type": "object", "$schema": "http://json-schema.org/draft-07/schema#"},
+        {"type": "object", "$ref": "https://example.test/schema"},
+        {"type": "object", "$ref": "#/missing"},
+        {"type": "object", "$defs": {"cycle": {"$ref": "#/$defs/cycle"}}, "$ref": "#/$defs/cycle"},
+        {"type": "object", "$defs": {"a": {"$ref": "#/$defs/b"}, "b": {"$ref": "#/$defs/a"}}},
+        {"type": "object", "description": "not a schema", "$ref": "#/description"},
+    ])
+    def test_bad_schema_skip_only_bad_tool(schema):
+        tools, errors = adapt_tools("s", "a" * 64, [descriptor("bad", inputSchema=schema), descriptor("good")], ())
+>       assert [t.original_name for t in tools] == ["good"]
+E       AssertionError: assert ['bad', 'good'] == ['good']
+E         
+E         At index 0 diff: 'bad' != 'good'
+E         Left contains one more item: 'good'
+E         Use -v to get more diff
+
+tests/test_mcp_tools.py:48: AssertionError
+_________________ test_bad_schema_skip_only_bad_tool[schema6] __________________
+
+schema = {'type': 'object', '$defs': {'a': {'$ref': '#/$defs/b'}, 'b': {'$ref': '#/$defs/a'}}}
+
+    @pytest.mark.parametrize("schema", [
+        {"type": "invalid"}, {"type": "array"}, {"type": "object", "$schema": "http://json-schema.org/draft-07/schema#"},
+        {"type": "object", "$ref": "https://example.test/schema"},
+        {"type": "object", "$ref": "#/missing"},
+        {"type": "object", "$defs": {"cycle": {"$ref": "#/$defs/cycle"}}, "$ref": "#/$defs/cycle"},
+        {"type": "object", "$defs": {"a": {"$ref": "#/$defs/b"}, "b": {"$ref": "#/$defs/a"}}},
+        {"type": "object", "description": "not a schema", "$ref": "#/description"},
+    ])
+    def test_bad_schema_skip_only_bad_tool(schema):
+        tools, errors = adapt_tools("s", "a" * 64, [descriptor("bad", inputSchema=schema), descriptor("good")], ())
+>       assert [t.original_name for t in tools] == ["good"]
+E       AssertionError: assert ['bad', 'good'] == ['good']
+E         
+E         At index 0 diff: 'bad' != 'good'
+E         Left contains one more item: 'good'
+E         Use -v to get more diff
+
+tests/test_mcp_tools.py:48: AssertionError
+_________________ test_bad_schema_skip_only_bad_tool[schema7] __________________
+
+schema = {'type': 'object', 'description': 'not a schema', '$ref': '#/description'}
+
+    @pytest.mark.parametrize("schema", [
+        {"type": "invalid"}, {"type": "array"}, {"type": "object", "$schema": "http://json-schema.org/draft-07/schema#"},
+        {"type": "object", "$ref": "https://example.test/schema"},
+        {"type": "object", "$ref": "#/missing"},
+        {"type": "object", "$defs": {"cycle": {"$ref": "#/$defs/cycle"}}, "$ref": "#/$defs/cycle"},
+        {"type": "object", "$defs": {"a": {"$ref": "#/$defs/b"}, "b": {"$ref": "#/$defs/a"}}},
+        {"type": "object", "description": "not a schema", "$ref": "#/description"},
+    ])
+    def test_bad_schema_skip_only_bad_tool(schema):
+        tools, errors = adapt_tools("s", "a" * 64, [descriptor("bad", inputSchema=schema), descriptor("good")], ())
+>       assert [t.original_name for t in tools] == ["good"]
+E       AssertionError: assert ['bad', 'good'] == ['good']
+E         
+E         At index 0 diff: 'bad' != 'good'
+E         Left contains one more item: 'good'
+E         Use -v to get more diff
+
+tests/test_mcp_tools.py:48: AssertionError
+________ test_schema_validation_failure_is_normalized_before_scheduler _________
+
+    def test_schema_validation_failure_is_normalized_before_scheduler():
+        from mewcode.mcp.tools import MCPTool
+        registry = default_registry()
+        schema = {"type": "object", "$defs": {"cycle": {"$ref": "#/$defs/cycle"}}, "$ref": "#/$defs/cycle"}
+        # 绕过发现过滤，验证统一参数校验仍可给调度器返回配对错误。
+        tool = MCPTool("test", "测试", schema, "s", "t", "a" * 64)
+        registry.register(tool)
+        with pytest.raises(ToolError, match="Schema"):
+>           registry.prepare("test", "{}")
+
+tests/test_mcp_tools.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/mewcode/tools/registry.py:48: in prepare
+    error = next(Draft202012Validator(tool.input_schema).iter_errors(arguments), None)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.venv/lib/python3.11/site-packages/jsonschema/validators.py:383: in iter_errors
+    for error in errors:
+.venv/lib/python3.11/site-packages/jsonschema/_keywords.py:275: in ref
+    yield from validator._validate_reference(ref=ref, instance=instance)
+.venv/lib/python3.11/site-packages/jsonschema/validators.py:431: in descend
+    for error in errors:
+.venv/lib/python3.11/site-packages/jsonschema/_keywords.py:275: in ref
+    yield from validator._validate_reference(ref=ref, instance=instance)
+.venv/lib/python3.11/site-packages/jsonschema/validators.py:431: in descend
+    for error in errors:
+.venv/lib/python3.11/site-packages/jsonschema/_keywords.py:275: in ref
+    yield from validator._validate_reference(ref=ref, instance=instance)
+E   RecursionError: maximum recursion depth exceeded while calling a Python object
+!!! Recursion detected (same locals & position)
+_____________ test_python_virtualenv_entry_keeps_import_semantics ______________
+
+tmp_path = PosixPath('/private/var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/pytest-of-tiro/pytest-201/test_python_virtualenv_entry_k0')
+
+    def test_python_virtualenv_entry_keeps_import_semantics(tmp_path):
+        import subprocess
+        # venv 的 python 通常是符号链接；入口目录决定 sys.prefix 与包搜索路径。
+        snapshot = load(tmp_path, project=doc(a={"transport": "stdio", "command": sys.executable}))
+        server = snapshot.servers[0]
+        result = subprocess.run([server.command, "-c", "import sys, mcp; print(sys.prefix)"],
+                                capture_output=True, text=True)
+>       assert result.returncode == 0, result.stderr
+E       AssertionError: Traceback (most recent call last):
+E           File "<string>", line 1, in <module>
+E         ModuleNotFoundError: No module named 'mcp'
+E         
+E       assert 1 == 0
+E        +  where 1 = CompletedProcess(args=['/Users/tiro/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/bin/python3.11', '-c', '...back (most recent call last):\n  File "<string>", line 1, in <module>\nModuleNotFoundError: No module named \'mcp\'\n').returncode
+
+tests/test_mcp_config.py:130: AssertionError
+_____________ test_symlink_target_change_also_changes_fingerprint ______________
+
+tmp_path = PosixPath('/private/var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/pytest-of-tiro/pytest-201/test_symlink_target_change_als0')
+
+    def test_symlink_target_change_also_changes_fingerprint(tmp_path):
+        for name in ("one", "two"):
+            program = tmp_path / name
+            program.write_text("#!/bin/sh\nexit 0\n")
+            program.chmod(0o755)
+        link = tmp_path / "entry"
+        link.symlink_to(tmp_path / "one")
+        entry = {"transport": "stdio", "command": str(link)}
+        before = load(tmp_path, project=doc(a=entry)).servers[0]
+        link.unlink()
+        link.symlink_to(tmp_path / "two")
+        after = load(tmp_path, project=doc(a=entry)).servers[0]
+>       assert before.command == after.command == str(link)
+E       AssertionError: assert '/private/var...ange_als0/one' == '/private/var...ange_als0/two'
+E         
+E         Skipping 105 identical leading characters in diff, use -v to show
+E         - ange_als0/two
+E         ?           --
+E         + ange_als0/one
+E         ?            ++
+
+tests/test_mcp_config.py:146: AssertionError
+_________ test_legacy_cancel_notification_cannot_stall_following_calls _________
+
+tmp_path = PosixPath('/private/var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/pytest-of-tiro/pytest-201/test_legacy_cancel_notificatio0')
+
+    @async_test
+    async def test_legacy_cancel_notification_cannot_stall_following_calls(tmp_path):
+        with http_peer("legacy", cancel_delay=1) as (peer, url):
+            manager = MCPManager(config(tmp_path, {"a": {"transport": "http", "url": url}}), default_registry(), call_timeout=.2)
+            try:
+                await manager.start()
+                tool = next(t for t in manager.tools if t.original_name == "echo")
+                assert (await manager.call(tool, {"delay": 2})).error["code"] == "timeout"
+                started = time.monotonic()
+>               assert (await manager.call(tool, {"text": "仍可继续"})).ok
+E               AssertionError: assert False
+E                +  where False = ToolResult(ok=False, data=None, error={'code': 'timeout', 'message': '外部请求等待超时', 'details': {'not_started': True, 'side_effects_may_have_occurred': False}}, truncated=False).ok
+
+tests/test_mcp_manager.py:91: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_mcp_tools.py::test_bad_schema_skip_only_bad_tool[schema5]
+FAILED tests/test_mcp_tools.py::test_bad_schema_skip_only_bad_tool[schema6]
+FAILED tests/test_mcp_tools.py::test_bad_schema_skip_only_bad_tool[schema7]
+FAILED tests/test_mcp_tools.py::test_schema_validation_failure_is_normalized_before_scheduler
+FAILED tests/test_mcp_config.py::test_python_virtualenv_entry_keeps_import_semantics
+FAILED tests/test_mcp_config.py::test_symlink_target_change_also_changes_fingerprint
+FAILED tests/test_mcp_manager.py::test_legacy_cancel_notification_cannot_stall_following_calls
+7 failed, 36 passed in 2.47s

@@ -2,13 +2,11 @@
 
 import asyncio
 import codecs
-import difflib
 from io import StringIO
-import json
 import os
 from pathlib import Path
 import termios
-import textwrap
+import shutil
 
 
 def _safe(text: str, secret: str = "") -> str:
@@ -30,6 +28,9 @@ class InputReader:
 
     def discard_pending(self):
         """丢弃上一输入阶段的残留，终端留给当前提示符的新输入。"""
+        # 非交互问题流预读的完整行是协议队列，不能在轮次切换时清空。
+        if not self.interactive:
+            return
         self._buffer = ""
         self._decoder.reset()
         try:
@@ -89,6 +90,8 @@ class InputReader:
 
 
 class TerminalApproval:
+    """兼容后端也消费同一审批快照；仅当前请求读取决定。"""
+
     def __init__(self, reader: InputReader, output, *, root: str | Path = "",
                  secret: str = "", page_lines: int = 24):
         self.reader, self.output = reader, output
@@ -100,49 +103,28 @@ class TerminalApproval:
         self.output.write(_safe(str(text), self.secret) + "\n")
         self.output.flush()
 
-    def _details(self, request):
-        lines = ["完整参数：", json.dumps(request.arguments, ensure_ascii=False, indent=2)]
-        arguments = request.arguments
-        if request.tool == "write_file":
-            lines += ["完整写入内容：", arguments.get("content", "")]
-        elif request.tool == "edit_file":
-            lines += ["编辑差异（仅当前调用提供的原文与新文）：", "\n".join(difflib.unified_diff(
-                arguments.get("old_text", "").splitlines(), arguments.get("new_text", "").splitlines(),
-                fromfile="old_text", tofile="new_text", lineterm=""))]
-        text = _safe("\n".join(lines), self.secret)
-        return [part for line in text.splitlines() for part in
-                (textwrap.wrap(line, width=100, replace_whitespace=False, drop_whitespace=False) or [""])]
-
     async def __call__(self, request, cancel_event: asyncio.Event) -> str:
+        from ..terminal.approval import ApprovalView
         if not self.reader.interactive:
             self._line("权限> 没有可用决策通道，拒绝未获授权操作")
             return "deny"
         async with self._lock:
             if cancel_event.is_set():
                 return "deny"
-            # 新请求不能消费上一阶段的提前输入；请求内翻页和重问不清输入。
             self.reader.discard_pending()
-            self._line(f"权限> [{request.id}] {request.tool} · 等待授权 · {request.mode}")
-            self._line(f"原因> {request.reason}")
-            self._line(f"工作根目录> {self.root}")
-            target_label = "精确命令授权对象" if request.tool == "execute_command" else "真实目标"
-            self._line(target_label + "> " + ("\n".join(request.targets) or "无文件目标"))
-            self._line("范围> 本次绑定当前完整参数及目标，仅使用一次。")
-            if request.tool == "execute_command":
-                self._line("范围> 会话／永久仅绑定此根目录、工具与以下完整精确命令：")
-                self._line(request.arguments.get("command", ""))
-            else:
-                self._line("范围> 会话／永久仅绑定此根目录、工具与列出的真实文件；允许未来同一路径使用不同内容或搜索表达式，不扩展目录或其他工具。")
-            self._line("期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。")
-            details = self._details(request)
-            page = 0
+            view = ApprovalView(request, root=self.root, secret=self.secret)
+            section, page = "summary", 0
             def show_page():
-                total = max(1, (len(details) + self.page_lines - 1) // self.page_lines)
-                self._line(f"详情> 第 {page + 1}/{total} 页（next 下一页，back 上一页，all 查看全部）")
-                self._line("\n".join(details[page * self.page_lines:(page + 1) * self.page_lines]))
+                nonlocal page
+                size = shutil.get_terminal_size(fallback=(100, self.page_lines + 8))
+                body, page, total = view.page(section, page, width=size.columns,
+                                              height=max(1, min(self.page_lines, size.lines - 6)))
+                self._line(f"权限> [{view.request_id}] · 等待授权")
+                self._line(f"详情> {section} 第 {page + 1}/{total} 页（next/back/all；targets/arguments/content）")
+                self._line(body)
             show_page()
             while not cancel_event.is_set():
-                self._line("授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；也可 next/back/all 查看详情")
+                self._line("授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久；回车拒绝，Ctrl+C 取消整轮")
                 try:
                     line = await self.reader.readline(cancel_event)
                 except asyncio.CancelledError:
@@ -155,15 +137,15 @@ class TerminalApproval:
                     cancel_event.set()
                     return "deny"
                 choice = line.strip().lower()
-                decisions = {"": "deny", "1": "deny", "deny": "deny", "2": "once", "once": "once",
-                             "3": "session", "session": "session", "4": "permanent", "permanent": "permanent"}
-                if choice in decisions:
-                    return decisions[choice]
+                if choice in view.decisions:
+                    return view.decisions[choice]
                 if choice == "all":
-                    self._line("\n".join(details))
+                    self._line(view.detail("all"))
                 elif choice in {"next", "n", "back", "b"}:
-                    last = max(0, (len(details) - 1) // self.page_lines)
-                    page = min(last, page + 1) if choice in {"next", "n"} else max(0, page - 1)
+                    page = max(0, page + (1 if choice in {"next", "n"} else -1))
+                    show_page()
+                elif choice in {"summary", "targets", "arguments", "content"}:
+                    section, page = choice, 0
                     show_page()
                 else:
                     self._line("提示> 无效选项，请选择 1/2/3/4 或查看详情；尚未批准")
