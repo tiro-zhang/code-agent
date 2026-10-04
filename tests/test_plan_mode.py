@@ -100,14 +100,18 @@ async def test_do_without_plan_is_safe_and_does_not_switch_mode(tmp_path, plan_m
 
 @async_test
 async def test_enter_plan_clears_pending_and_recovery_still_uses_read_tools(tmp_path):
-    chat, provider = session(tmp_path, [answer("旧计划"), [ContextLimitError("超限")], answer("新计划")])
+    from test_context_summary import response
+    from test_context_partition import history_for_task
+    chat, provider = session(tmp_path, [answer("旧计划"), [ContextLimitError("超限")], response(), answer("新计划")])
     chat.enter_plan()
     await collect(chat.ask("计划1"))
     chat.enter_plan()
     from mewcode.session import PlanStateError
     with pytest.raises(PlanStateError): await collect(chat.execute_plan())
+    _, earlier = history_for_task()
+    chat.history[:0] = earlier
     await collect(chat.ask("计划2"))
-    assert len(provider.requests) == 3 and all(len(o["tools"]) == 3 for _, o in provider.requests)
+    assert len(provider.requests) == 4 and [len(o["tools"]) for _, o in provider.requests] == [3, 3, 0, 3]
     fresh, _ = session(tmp_path, [])
     assert fresh.mode == "execute" and fresh.history == []
     with pytest.raises(PlanStateError): await collect(fresh.execute_plan())

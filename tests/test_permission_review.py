@@ -237,6 +237,8 @@ async def test_session_grant_survives_real_history_trim(tmp_path):
     from mewcode.tools.executor import ToolExecutor
     from mewcode.types import ContextLimitError, ToolCall
     from test_agent_loop import answer, calls
+    from test_context_summary import response
+    from test_context_partition import history_for_task
     (tmp_path / "a").write_text("内容")
     approvals = []
     async def remember(request, cancel):
@@ -245,14 +247,16 @@ async def test_session_grant_survives_real_history_trim(tmp_path):
     manager = PermissionManager(tmp_path, mode="strict", responder=remember, user_path=tmp_path / "user.yaml")
     provider = ScriptedProvider([
         calls(ToolCall("first", "read_file", '{"path":"a"}')), answer("旧任务完成"),
-        [ContextLimitError("超出窗口")], calls(ToolCall("second", "read_file", '{"path":"a"}')), answer("新任务完成"),
+        [ContextLimitError("超出窗口")], response(), calls(ToolCall("second", "read_file", '{"path":"a"}')), answer("新任务完成"),
     ])
     executor = ToolExecutor(default_registry(), ToolContext(tmp_path), permissions=manager)
     session = ChatSession(provider, executor=executor)
     await collect(session.ask("旧任务"))
     grants = manager.grants.session
+    _, earlier = history_for_task()
+    session.history[:0] = earlier
     events = await collect(session.ask("新任务"))
-    assert any(event.kind == "history_trimmed" for event in events)
-    assert [message.content for message in session.history if message.role == "user"] == ["新任务"]
+    assert any(event.kind == "context_compaction" and event.phase == "success" for event in events)
+    assert [message.content for message in session.history if message.role == "user"][-1] == "新任务"
     assert len(approvals) == 1 and manager.grants.session == grants
     assert session.history[-1].content == "新任务完成"

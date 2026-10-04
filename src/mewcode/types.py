@@ -1,13 +1,14 @@
 """与供应商协议无关的对话数据。"""
 
 from collections.abc import AsyncIterator, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from uuid import uuid4
 from typing import Literal, Protocol
 
 from .tools.base import ToolDefinition, ToolResult
 
 AgentMode = Literal["execute", "plan"]
-StopReason = Literal["model_done", "max_iterations", "cancelled", "unknown_tool_limit", "stream_error"]
+StopReason = Literal["model_done", "max_iterations", "cancelled", "unknown_tool_limit", "stream_error", "context_blocked"]
 
 
 @dataclass(frozen=True)
@@ -48,6 +49,10 @@ class Message:
     tool_call_id: str | None = None
     tool_result: ToolResult | None = None
     provider_content: tuple[dict, ...] = ()
+    # 本地身份和来源不进入协议字段，也不改变已有消息的值比较。
+    id: str = field(default_factory=lambda: uuid4().hex, compare=False, kw_only=True)
+    context_kind: str = field(default="", kw_only=True)
+    cache_path: str = field(default="", kw_only=True)
 
 
 @dataclass(frozen=True)
@@ -67,7 +72,7 @@ class CollectedResponse:
 @dataclass(frozen=True)
 class AgentEvent:
     kind: Literal["thinking_delta", "text_delta", "tool_call", "tool_started", "tool_result",
-                  "permission_requested", "permission_resolved", "usage", "progress", "history_trimmed", "finished"]
+                  "permission_requested", "permission_resolved", "usage", "progress", "history_trimmed", "context_compaction", "finished"]
     run_id: str = ""
     iteration: int = 0
     mode: AgentMode = "execute"
@@ -85,6 +90,12 @@ class AgentEvent:
     phase: str = ""
     max_iterations: int = 20
     reason: StopReason | None = None
+    purpose: Literal["work", "summary"] = "work"
+    estimated_before: int | None = None
+    estimated_after: int | None = None
+    spilled: int = 0
+    failures: int = 0
+    circuit_open: bool = False
 
 
 class Provider(Protocol):
@@ -100,4 +111,4 @@ class ProviderError(RuntimeError):
 
 
 class ContextLimitError(ProviderError):
-    """历史长度超出模型上下文窗口；丢弃较早轮次后可重试。"""
+    """服务报告上下文超限；仅允许有界摘要恢复。"""

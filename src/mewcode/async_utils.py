@@ -17,3 +17,23 @@ async def protected(awaitable: Awaitable[T], *, cancel_event: asyncio.Event | No
                 cancel_event.set()
             if task.done():
                 return task.result()
+
+
+async def next_event(stream, cancel: asyncio.Event):
+    """同时观察网络等待和取消；关闭正在等待的迭代后才返回。"""
+    pending = asyncio.create_task(anext(stream))
+    waiter = asyncio.create_task(cancel.wait())
+    try:
+        await asyncio.wait((pending, waiter), return_when=asyncio.FIRST_COMPLETED)
+    except asyncio.CancelledError:
+        cancel.set()
+    finally:
+        waiter.cancel()
+        await protected(asyncio.gather(waiter, return_exceptions=True), cancel_event=cancel)
+        if cancel.is_set():
+            # 只取消一次；再次取消会打断 Provider 的异步流关闭。
+            pending.cancel()
+            await protected(asyncio.gather(pending, return_exceptions=True), cancel_event=cancel)
+    if cancel.is_set():
+        raise asyncio.CancelledError
+    return pending.result()

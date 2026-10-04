@@ -1,0 +1,3 @@
+{"kind": "context_compaction", "purpose": "summary", "phase": "summary", "iteration": 0, "reason": null, "before": null, "after": null, "spilled": 0, "failures": 0, "tool": ""}
+{"kind": "usage", "purpose": "summary", "phase": "", "iteration": 1, "reason": null, "before": null, "after": null, "spilled": 0, "failures": 0, "tool": "", "usage": {"total_input_tokens": 20761, "output_tokens": 650}}
+{"kind": "context_compaction", "purpose": "summary", "phase": "success", "iteration": 1, "reason": null, "before": 48543, "after": 13335, "spilled": 0, "failures": 0, "tool": ""}

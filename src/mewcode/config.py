@@ -1,6 +1,6 @@
 """从单个 .env 文件读取供应商配置。"""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 import re
 from urllib.parse import urlsplit
@@ -21,6 +21,8 @@ class ProviderConfig:
     api_key: str
     thinking: bool
     max_iterations: int = 20
+    context_window: int = field(kw_only=True)
+    max_output_tokens: int = 8192
 
 
 def load_config(path: str | Path) -> ProviderConfig:
@@ -54,6 +56,15 @@ def load_config(path: str | Path) -> ProviderConfig:
     if budget is None or not re.fullmatch(r"[0-9]+", budget.strip()) or int(budget) <= 0:
         raise ConfigError("max_iterations 必须是十进制正整数")
 
+    limits = {}
+    for key, default in (("context_window", None), ("max_output_tokens", "8192")):
+        value = values.get(key, default)
+        if value is None or not re.fullmatch(r"[0-9]+", value.strip()) or int(value) <= 0:
+            raise ConfigError(f"{key} 必须配置为十进制正整数")
+        limits[key] = int(value)
+    if limits["context_window"] <= limits["max_output_tokens"] + 13000:
+        raise ConfigError("context_window 必须大于 max_output_tokens + 13000")
+
     return ProviderConfig(
         name=values["name"].strip(),
         protocol=protocol,
@@ -62,4 +73,5 @@ def load_config(path: str | Path) -> ProviderConfig:
         api_key=values["api_key"].strip(),
         thinking=thinking,
         max_iterations=int(budget),
+        **limits,
     )

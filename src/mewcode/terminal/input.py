@@ -177,7 +177,7 @@ class EnhancedTerminal:
 
     def _status_text(self):
         labels = {"starting": "启动中", "idle": "等待输入", "running": "运行中",
-                  "approval": "等待授权", "closing": "退出清理"}
+                  "approval": "等待授权", "summary": "压缩上下文", "closing": "退出清理"}
         text = self.status() or labels[self.phase]
         return text.splitlines()[0] if self.phase == "approval" else text
 
@@ -208,7 +208,7 @@ class EnhancedTerminal:
                     "targets/arguments/content/summary/results · next/back/all · PgUp/PgDn")
         if self.phase == "idle":
             return "Enter 发送 · Esc+Enter 换行 · /help 帮助 · Tab 补全 · Ctrl+C 退出"
-        return "Ctrl+C 取消启动" if self.phase == "starting" else "Ctrl+C 取消本轮" if self.phase == "running" else "正在清理资源"
+        return "Ctrl+C 取消启动" if self.phase == "starting" else "Ctrl+C 取消本轮" if self.phase in {"running", "summary"} else "正在清理资源"
 
     def _tiny(self):
         size = self.output.get_size()

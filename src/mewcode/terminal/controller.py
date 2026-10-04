@@ -211,7 +211,12 @@ class TerminalController:
                 self._release_output()
                 await self.drain()
 
-    def show(self, renderer, event, *, managed_approval=True):
+    def show(self, renderer, event, *, managed_approval=True, maintenance=False):
+        if maintenance:
+            renderer.show(event)
+            if self.backend:
+                self.backend.application.invalidate()
+            return
         lines = self.state.update(event)
         if self.backend:
             self.backend.application.invalidate()

@@ -12,3 +12,6 @@ dist/
 .mewcode/permissions.local.yaml
 .mewcode/.permissions.lock
 .mewcode/.permissions-*
+
+# 会话工具结果缓存（可能包含项目内容）
+.mewcode/context/

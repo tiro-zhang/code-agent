@@ -71,7 +71,7 @@ class AnthropicProvider:
         service = "deepseek" if deepseek_compatible else "claude" if official_claude else "compatible"
         provider_name = "DeepSeek" if deepseek_compatible else "Claude"
         request: dict[str, Any] = {
-            "model": self.config.model, "max_tokens": 8192, "stream": True,
+            "model": self.config.model, "max_tokens": self.config.max_output_tokens, "stream": True,
             "messages": anthropic_messages(messages),
         }
         if system_prompt:

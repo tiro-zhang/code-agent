@@ -5,42 +5,14 @@ from collections.abc import AsyncIterator
 from uuid import uuid4
 from dataclasses import replace
 
-from .async_utils import protected
+from .async_utils import protected, next_event as _next_event
 from .collector import StreamCollector
+from .context.manager import ContextManager
 from .prompts import PromptState, build_system_prompt
 from .tools.executor import ToolExecutor
 from .tools.scheduler import ToolScheduler
 from .types import AgentEvent, AgentMode, ContextLimitError, Message, Provider, ProviderError, StopReason, TokenUsage
 
-
-
-def _drop_oldest_turns(history: list[Message], count: int, *, keep_last_turn: bool) -> int:
-    starts = [index for index, message in enumerate(history) if message.role == "user"]
-    count = min(count, max(len(starts) - int(keep_last_turn), 0))
-    if count:
-        end = starts[count] if count < len(starts) else len(history)
-        del history[:end]
-    return count
-
-
-async def _next_event(stream, cancel: asyncio.Event):
-    """同时观察网络等待和取消；关闭正在等待的迭代后才返回。"""
-    pending = asyncio.create_task(anext(stream))
-    waiter = asyncio.create_task(cancel.wait())
-    try:
-        await asyncio.wait((pending, waiter), return_when=asyncio.FIRST_COMPLETED)
-    except asyncio.CancelledError:
-        cancel.set()
-    finally:
-        waiter.cancel()
-        await protected(asyncio.gather(waiter, return_exceptions=True), cancel_event=cancel)
-        if cancel.is_set():
-            # 只取消一次；再次取消会打断 Provider 的异步流关闭。
-            pending.cancel()
-            await protected(asyncio.gather(pending, return_exceptions=True), cancel_event=cancel)
-    if cancel.is_set():
-        raise asyncio.CancelledError
-    return pending.result()
 
 
 def _total_usage(records: list[TokenUsage]) -> TokenUsage:
@@ -58,11 +30,17 @@ def _total_usage(records: list[TokenUsage]) -> TokenUsage:
 
 class Agent:
     def __init__(self, provider: Provider, executor: ToolExecutor, *, max_iterations: int = 20,
-                 prompt_state: PromptState | None = None) -> None:
+                 prompt_state: PromptState | None = None, context_manager: ContextManager | None = None,
+                 config=None) -> None:
         if isinstance(max_iterations, bool) or not isinstance(max_iterations, int) or max_iterations <= 0:
             raise ValueError("max_iterations 必须是正整数")
         self.provider, self.executor, self.max_iterations = provider, executor, max_iterations
         self.prompt_state = prompt_state or PromptState(executor.context.root)
+        config = config or getattr(provider, 'config', None)
+        if context_manager is None and config is None:
+            raise ValueError('必须提供含 context_window 的配置或上下文管理器')
+        self.context = context_manager or ContextManager(executor.context.root,
+            context_window=config.context_window, max_output_tokens=config.max_output_tokens, protocol=config.protocol)
 
     async def run(self, question: str, *, history: list[Message], mode: AgentMode,
                   cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
@@ -72,7 +50,7 @@ class Agent:
             self.prompt_state.enter_mode(mode)
         context = None
         committed = False
-        drops = 1
+        force_compaction = recovered = False
         user = Message("user", question)
         usage_records: list[TokenUsage] = []
         reason: StopReason = "max_iterations"
@@ -83,6 +61,9 @@ class Agent:
             return AgentEvent(kind, run_id=run_id, iteration=iteration, mode=mode,
                               permission_mode=getattr(getattr(self.executor, "permissions", None), "mode", "default"),
                               max_iterations=self.max_iterations, **fields)
+
+        tools = self.executor.registry.definitions(allowed_tools=allowed)
+        system = build_system_prompt()
 
         def commit(message, results=()):
             nonlocal committed
@@ -97,21 +78,62 @@ class Agent:
 
         try:
             while iteration < self.max_iterations and not cancel.is_set():
+                spilled, warnings = self.context.spill(history)
+                for warning in warnings:
+                    yield event('context_compaction', phase='spill_failed', text=warning)
+                if spilled:
+                    yield event('context_compaction', phase='spill', spilled=spilled,
+                                text=f'已将 {spilled} 项工具结果落盘，原文可按路径读取')
+                estimate = self.context.estimate([*history, *(() if committed else (user,)),
+                                                  self.prompt_state.peek_request()], system, tools)
+                if force_compaction or not self.context.fits(estimate):
+                    if self.context.circuit_open:
+                        reason, detail = 'context_blocked', '自动摘要已熔断，请使用 /compact 单次尝试或新建会话'
+                        break
+                    yield event('context_compaction', phase='summary', purpose='summary',
+                                estimated_before=estimate, failures=self.context.failures, spilled=self.context.cache.count,
+                                text='正在准备结构化摘要')
+                    def started():
+                        nonlocal iteration
+                        iteration += 1
+                    result = await self.context.compact(self.provider, history, user, tools, system,
+                        self.prompt_state.peek_request(force_full=True), cancel, on_start=started)
+                    if result.called:
+                        usage_records.append(result.usage)
+                        yield event('usage', usage=result.usage, purpose='summary')
+                    yield event('context_compaction', phase='success' if result.success else 'cancelled' if result.cancelled else 'failed',
+                                purpose='summary', text=result.text, estimated_before=result.before,
+                                estimated_after=result.after, failures=self.context.failures,
+                                circuit_open=self.context.circuit_open, spilled=self.context.cache.count)
+                    if result.cancelled:
+                        break
+                    if result.success:
+                        self.prompt_state.history_trimmed()
+                        recovered |= force_compaction
+                        force_compaction = False
+                    elif iteration >= self.max_iterations:
+                        break
+                    elif not result.called or result.overflow or result.blocked or self.context.circuit_open:
+                        reason, detail = 'context_blocked', result.text + '；可使用 /compact 或核对窗口配置'
+                        break
+                    else:
+                        force_compaction = True
+                    continue
                 yield AgentEvent("progress", run_id=run_id, iteration=iteration + 1, mode=mode,
                                  permission_mode=getattr(getattr(self.executor, "permissions", None), "mode", "default"),
                                  phase="model", max_iterations=self.max_iterations)
                 if cancel.is_set():
                     break
                 iteration += 1
+                request_snapshot = None
                 async def request():
-                    nonlocal context
+                    nonlocal context, request_snapshot
                     if cancel.is_set():
                         return
                     context = self.prompt_state.begin_request()
-                    stream = self.provider.stream(
-                        [*history, *(() if committed else (user,)), context],
-                        tools=self.executor.registry.definitions(allowed_tools=allowed),
-                        tool_choice="auto", system_prompt=build_system_prompt())
+                    messages = [*history, *(() if committed else (user,)), context]
+                    request_snapshot = self.context.estimator.snapshot(messages, system, tools)
+                    stream = self.provider.stream(messages, tools=tools, tool_choice="auto", system_prompt=system)
                     try:
                         async for item in stream:
                             yield item
@@ -147,18 +169,16 @@ class Agent:
                     break
                 if failure is not None:
                     if isinstance(failure, ContextLimitError) and not displayed:
-                        older_turns = sum(message.role == "user" for message in history) - int(committed)
-                        if older_turns > 0:
-                            if iteration >= self.max_iterations:
-                                break
-                            dropped = _drop_oldest_turns(history, drops, keep_last_turn=committed)
-                            self.prompt_state.history_trimmed()
-                            yield event("history_trimmed", text=f"上下文超限，已丢弃 {dropped} 轮较早对话并重试")
-                            drops *= 2
-                            continue
+                        if iteration >= self.max_iterations:
+                            break
+                        if recovered:
+                            reason, detail = 'context_blocked', '摘要恢复后的工作请求仍超限，请核对 context_window 与 max_output_tokens'
+                            break
+                        force_compaction = True
+                        continue
                     reason, detail = "stream_error", str(failure)
                     break
-                drops = 1
+                self.context.estimator.observe(request_snapshot, collector.usage)
                 response = collector.response.message
                 if not response.tool_calls:
                     commit(response)

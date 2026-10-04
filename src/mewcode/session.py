@@ -4,10 +4,11 @@ import asyncio
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from pathlib import Path
+from uuid import uuid4
 
 from .agent import Agent
 from .async_utils import protected
-from .prompts import PromptState
+from .prompts import PromptState, build_system_prompt
 from .tools import default_registry
 from .tools.base import ToolContext, strict_json
 from .tools.executor import ToolExecutor
@@ -42,7 +43,7 @@ def operation_summary(call: ToolCall) -> str:
 class ChatSession:
     def __init__(self, provider: Provider, *, executor: ToolExecutor | None = None,
                  max_iterations: int = 20, permission_mode: str = "default",
-                 approval_responder=None) -> None:
+                 approval_responder=None, config=None) -> None:
         self.provider = provider
         from .permissions.runtime import PermissionManager
         if executor is None:
@@ -58,7 +59,8 @@ class ChatSession:
         self.mode: AgentMode = "execute"
         self._pending_plan: _PlanSnapshot | None = None
         self.prompt_state = PromptState(self.executor.context.root)
-        self.agent = Agent(provider, self.executor, max_iterations=max_iterations, prompt_state=self.prompt_state)
+        self.agent = Agent(provider, self.executor, max_iterations=max_iterations, prompt_state=self.prompt_state, config=config)
+        self.context = self.agent.context
 
     @property
     def has_pending_plan(self) -> bool:
@@ -118,3 +120,45 @@ class ChatSession:
                 yield event
         finally:
             await protected(source.aclose(), cancel_event=cancel_event)
+
+
+    def context_status(self) -> str:
+        allowed = self.executor.registry.names(read_only=True) if self.mode == 'plan' else self.executor.registry.names()
+        self.context.estimate([*self.history, self.prompt_state.peek_request()], build_system_prompt(),
+                              self.executor.registry.definitions(allowed_tools=allowed))
+        return self.context.status_text()
+
+    def close(self) -> None:
+        """退出仅回收本会话拥有的结果缓存；调用者负责显示 I/O 错误。"""
+        self.context.cache.close()
+
+    async def compact(self, *, cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
+        """独立维护操作，不消费待执行计划、不伪造用户任务。"""
+        cancel = cancel_event if cancel_event is not None else asyncio.Event()
+        run_id = uuid4().hex
+        iteration = 0
+        def event(kind, **fields):
+            return AgentEvent(kind, run_id=run_id, iteration=iteration, max_iterations=1,
+                              mode=self.mode, permission_mode=self.permissions.mode, purpose='summary', **fields)
+        if cancel.is_set():
+            yield event('context_compaction', phase='cancelled', text='摘要已取消，历史保留')
+            return
+        spilled, warnings = self.context.spill(self.history)
+        for warning in warnings:
+            yield event('context_compaction', phase='spill_failed', text=warning)
+        yield event('context_compaction', phase='summary', spilled=spilled, text='正在准备手动摘要（最多一次请求）')
+        user = next((m for m in reversed(self.history) if m.role == 'user'), None)
+        allowed = self.executor.registry.names(read_only=True) if self.mode == 'plan' else self.executor.registry.names()
+        def started():
+            nonlocal iteration
+            iteration = 1
+        result = await self.context.compact(self.provider, self.history, user,
+            self.executor.registry.definitions(allowed_tools=allowed), build_system_prompt(),
+            self.prompt_state.peek_request(force_full=True), cancel, manual=True, on_start=started)
+        if result.called:
+            yield event('usage', usage=result.usage)
+        if result.success:
+            self.prompt_state.history_trimmed()
+        yield event('context_compaction', phase='success' if result.success else 'cancelled' if result.cancelled else 'failed' if result.called else 'noop',
+                    text=result.text, estimated_before=result.before, estimated_after=result.after,
+                    spilled=self.context.cache.count, failures=self.context.failures, circuit_open=self.context.circuit_open)

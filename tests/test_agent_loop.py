@@ -167,7 +167,7 @@ async def test_network_cancel_waits_for_async_provider_close(tmp_path, cancellat
         return stream
 
     client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
-    config = ProviderConfig("测试", "openai", "test", "https://example.invalid", "dummy", False)
+    config = ProviderConfig("测试", "openai", "test", "https://example.invalid", "dummy", False, context_window=128000)
     provider = OpenAIProvider(config, client=client)
     agent = Agent(provider, ToolExecutor(default_registry(), ToolContext(tmp_path)))
     cancel = asyncio.Event()

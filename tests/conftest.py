@@ -2,6 +2,7 @@
 
 import asyncio
 from functools import wraps
+from types import SimpleNamespace
 
 
 async def collect(stream):
@@ -9,6 +10,7 @@ async def collect(stream):
 
 
 class ScriptedProvider:
+    config = SimpleNamespace(context_window=128000, max_output_tokens=8192, protocol="openai")
     def __init__(self, responses):
         self.responses = iter(responses)
         self.requests = []

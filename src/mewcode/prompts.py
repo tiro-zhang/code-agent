@@ -60,9 +60,9 @@ class PromptState:
     def history_trimmed(self) -> None:
         self.full_pending = True
 
-    def begin_request(self) -> Message:
-        self.request_sequence += 1
-        full = self.full_pending or (self.request_sequence - 1) % 5 == 0
+    def peek_request(self, *, force_full=False) -> Message:
+        """预算预览不消耗工作请求序号。"""
+        full = force_full or self.full_pending or self.request_sequence % 5 == 0
         if self.mode == 'plan':
             mode = '当前模式：plan（只读规划）。仅允许 read_file、glob_files、search_code；禁止写入、编辑和 shell。最终答复须包含完整目标、实施步骤和验证方式。'
             if full:
@@ -72,9 +72,13 @@ class PromptState:
             if full:
                 mode += '按当前任务或最新计划执行，编辑前先读当前内容，读取工具结果并验证，按实际结果答复。'
         content = '\n\n'.join([self.environment, *self.supplements, mode] if full else [mode])
-        self._candidate = Message('context', f'<mewcode-context>\n{content}\n</mewcode-context>')
-        self._candidate_full = full
-        if full:
+        return Message('context', f'<mewcode-context>\n{content}\n</mewcode-context>', context_kind='runtime')
+
+    def begin_request(self) -> Message:
+        self._candidate = self.peek_request()
+        self._candidate_full = self.full_pending or self.request_sequence % 5 == 0
+        self.request_sequence += 1
+        if self._candidate_full:
             self.full_pending = True
         return self._candidate
 

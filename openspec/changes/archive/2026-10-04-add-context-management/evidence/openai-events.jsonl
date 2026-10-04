@@ -1,0 +1,13 @@
+{"kind": "context_compaction", "purpose": "summary", "phase": "summary", "iteration": 0, "reason": null, "before": 48686, "after": null, "spilled": 0, "failures": 0, "tool": ""}
+{"kind": "usage", "purpose": "summary", "phase": "", "iteration": 1, "reason": null, "before": null, "after": null, "spilled": 0, "failures": 0, "tool": "", "usage": {"total_input_tokens": null, "output_tokens": null}}
+{"kind": "context_compaction", "purpose": "summary", "phase": "failed", "iteration": 1, "reason": null, "before": 48686, "after": null, "spilled": 0, "failures": 1, "tool": ""}
+{"kind": "context_compaction", "purpose": "summary", "phase": "summary", "iteration": 1, "reason": null, "before": 48686, "after": null, "spilled": 0, "failures": 0, "tool": ""}
+{"kind": "usage", "purpose": "summary", "phase": "", "iteration": 2, "reason": null, "before": null, "after": null, "spilled": 0, "failures": 0, "tool": "", "usage": {"total_input_tokens": null, "output_tokens": null}}
+{"kind": "context_compaction", "purpose": "summary", "phase": "failed", "iteration": 2, "reason": null, "before": 48686, "after": null, "spilled": 0, "failures": 2, "tool": ""}
+{"kind": "context_compaction", "purpose": "summary", "phase": "summary", "iteration": 2, "reason": null, "before": 48686, "after": null, "spilled": 0, "failures": 0, "tool": ""}
+{"kind": "usage", "purpose": "summary", "phase": "", "iteration": 3, "reason": null, "before": null, "after": null, "spilled": 0, "failures": 0, "tool": "", "usage": {"total_input_tokens": null, "output_tokens": null}}
+{"kind": "context_compaction", "purpose": "summary", "phase": "failed", "iteration": 3, "reason": null, "before": 48686, "after": null, "spilled": 0, "failures": 3, "tool": ""}
+{"kind": "finished", "purpose": "work", "phase": "", "iteration": 3, "reason": "context_blocked", "before": null, "after": null, "spilled": 0, "failures": 0, "tool": "", "usage": {"total_input_tokens": null, "output_tokens": null}}
+{"kind": "context_compaction", "purpose": "summary", "phase": "summary", "iteration": 0, "reason": null, "before": null, "after": null, "spilled": 0, "failures": 0, "tool": ""}
+{"kind": "usage", "purpose": "summary", "phase": "", "iteration": 1, "reason": null, "before": null, "after": null, "spilled": 0, "failures": 0, "tool": "", "usage": {"total_input_tokens": null, "output_tokens": null}}
+{"kind": "context_compaction", "purpose": "summary", "phase": "failed", "iteration": 1, "reason": null, "before": 48583, "after": null, "spilled": 0, "failures": 4, "tool": ""}

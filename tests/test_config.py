@@ -14,6 +14,7 @@ def write_config(path: Path, **overrides: str) -> Path:
         "model": "claude-sonnet-4-6",
         "base_url": "https://api.anthropic.com",
         "api_key": "secret-sentinel",
+        "context_window": "128000",
     }
     values.update(overrides)
     path.write_text("\n".join(f"{key}={value}" for key, value in values.items()))
@@ -87,3 +88,27 @@ def test_invalid_request_budget_is_rejected(tmp_path, value):
     with pytest.raises(ConfigError, match="max_iterations") as error:
         load_config(write_config(tmp_path / "bad", max_iterations=value))
     assert "secret-sentinel" not in str(error.value)
+
+
+def test_context_budget_requires_explicit_window_and_defaults_output(tmp_path):
+    path = write_config(tmp_path / "budget")
+    config = load_config(path)
+    assert config.context_window == 128000
+    assert config.max_output_tokens == 8192
+    path.write_text(path.read_text().replace("context_window=128000", ""))
+    with pytest.raises(ConfigError, match="context_window"):
+        load_config(path)
+
+
+@pytest.mark.parametrize("field", ["context_window", "max_output_tokens"])
+@pytest.mark.parametrize("value", ["0", "-1", "", "1.5", "abc", "1e5", "５"])
+def test_context_budget_rejects_invalid_integer(tmp_path, field, value):
+    with pytest.raises(ConfigError, match=field):
+        load_config(write_config(tmp_path / "bad", **{field: value}))
+
+
+def test_context_budget_reserves_output_and_auto_margin(tmp_path):
+    with pytest.raises(ConfigError, match="context_window"):
+        load_config(write_config(tmp_path / "bad", context_window="21192"))
+    config = load_config(write_config(tmp_path / "ok", context_window="15001", max_output_tokens="2000"))
+    assert config.max_output_tokens == 2000

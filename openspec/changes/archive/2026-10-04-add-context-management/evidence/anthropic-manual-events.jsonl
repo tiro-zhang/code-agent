@@ -1,0 +1,6 @@
+{"kind": "context_compaction", "purpose": "summary", "phase": "summary", "iteration": 0, "reason": null, "before": null, "after": null, "spilled": 0, "failures": 0, "tool": ""}
+{"kind": "usage", "purpose": "summary", "phase": "", "iteration": 1, "reason": null, "before": null, "after": null, "spilled": 0, "failures": 0, "tool": "", "usage": {"total_input_tokens": 20716, "output_tokens": 542}}
+{"kind": "context_compaction", "purpose": "summary", "phase": "failed", "iteration": 1, "reason": null, "before": 48542, "after": null, "spilled": 0, "failures": 1, "tool": ""}
+{"kind": "context_compaction", "purpose": "summary", "phase": "summary", "iteration": 0, "reason": null, "before": null, "after": null, "spilled": 0, "failures": 0, "tool": ""}
+{"kind": "usage", "purpose": "summary", "phase": "", "iteration": 1, "reason": null, "before": null, "after": null, "spilled": 0, "failures": 0, "tool": "", "usage": {"total_input_tokens": 20716, "output_tokens": 291}}
+{"kind": "context_compaction", "purpose": "summary", "phase": "failed", "iteration": 1, "reason": null, "before": 48542, "after": null, "spilled": 0, "failures": 2, "tool": ""}

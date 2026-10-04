@@ -11,7 +11,7 @@ class Command:
     text: str = ""
 
 
-_COMMANDS = ("/help", "/status", "/exit", "/plan", "/do", "/permissions")
+_COMMANDS = ("/help", "/status", "/compact", "/exit", "/plan", "/do", "/permissions")
 _PERMISSION_MODES = ("strict", "default", "bypass")
 _REVOKE_SCOPES = ("session", "permanent")
 _PERMISSION_USAGE = (
@@ -60,6 +60,7 @@ def help_text(*, enhanced: bool) -> str:
         "本地命令（仅单行草稿生效）\n"
         "  /help                       查看帮助\n"
         "  /status                     查看模式、待执行计划和最近任务详情\n"
+        "  /compact                    压缩较早历史，保留当前任务和近期原文\n"
         "  /exit                       退出会话\n"
         "  /plan [任务]                进入只读规划模式，可直接提供任务\n"
         "  /do                         执行最新有效计划，仅执行一次\n"

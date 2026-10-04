@@ -16,7 +16,7 @@ from .text import terminal_text, usage_text
 PHASE_LABELS = {
     "starting": "启动中", "idle": "空闲", "running": "任务运行中",
     "approval": "等待授权", "closing": "退出清理", "model": "请求模型",
-    "tools": "权限检查／执行工具", "permissions": "权限检查", "permission": "等待授权",
+    "summary": "压缩上下文", "tools": "权限检查／执行工具", "permissions": "权限检查", "permission": "等待授权",
 }
 
 
@@ -53,6 +53,7 @@ class TerminalState:
         self._tools: dict[str, _ToolState] = {}
         self._tool_identities: dict[str, tuple[str, str]] = {}
         self._usage: dict[int, TokenUsage] = {}
+        self._purposes: dict[int, str] = {}
         self._total_usage: TokenUsage | None = None
         self._started_at: float | None = None
         self._elapsed = 0.0
@@ -88,6 +89,7 @@ class TerminalState:
         self.max_iterations = max_iterations
         self._tools.clear()
         self._usage.clear()
+        self._purposes.clear()
         self._total_usage = None
         self._started_at = time.monotonic()
         self._elapsed = 0.0
@@ -170,9 +172,13 @@ class TerminalState:
             self._base_phase = event.phase or "running"
             self._refresh_phase()
             self._refresh_running_usage()
+        elif event.kind == 'context_compaction':
+            self._base_phase = 'summary' if event.phase == 'summary' else 'running'
+            self._refresh_phase()
         elif event.kind == "usage":
             if event.usage is not None:
                 self._usage[event.iteration] = event.usage
+                self._purposes[event.iteration] = event.purpose
             self.iteration = max(self.iteration, event.iteration)
             self._refresh_running_usage()
         elif event.kind == "finished":
@@ -324,7 +330,8 @@ class TerminalState:
             total += " · 请求用量缺失 " + "、".join(str(iteration) for iteration in missing)
         if self._finished:
             header += f" · 停止原因 {self.safe(self._reason)}"
-        return f"{header}\n最近请求 Token · {recent}\n累计已知 Token · {total}"
+        purpose = "（摘要）" if self._usage and self._purposes.get(max(self._usage)) == "summary" else ""
+        return f"{header}\n最近请求{purpose} Token · {recent}\n累计已知 Token · {total}"
 
     def status_text(self, *, root: object, model: str, mode: str, permission_mode: str,
                     has_pending_plan: bool) -> str:
@@ -349,7 +356,7 @@ class TerminalState:
         for iteration in sorted(requests):
             usage = self._usage.get(iteration)
             detail = usage_text(usage) if usage is not None else "用量缺失，未知"
-            lines.append(f"请求 {iteration} · {detail}")
+            lines.append(f"请求 {iteration} · {'摘要 · ' if self._purposes.get(iteration) == 'summary' else ''}{detail}")
         if not self._usage:
             lines.append("逐请求用量> 暂无用量记录")
         for tool in self._tools.values():

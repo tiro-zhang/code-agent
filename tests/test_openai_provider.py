@@ -39,7 +39,18 @@ def fake_client(chunks: list[SimpleNamespace]) -> SimpleNamespace:
     return SimpleNamespace(chat=SimpleNamespace(completions=FakeCompletions(chunks)))
 
 def config() -> ProviderConfig:
-    return ProviderConfig('兼容服务', 'openai', 'third-party-model', 'https://service.example/v1', 'test-key', False)
+    return ProviderConfig('兼容服务', 'openai', 'third-party-model', 'https://service.example/v1', 'test-key', False, context_window=128000)
+
+@async_test
+async def test_summary_request_enforces_output_cap_and_disables_tools():
+    from dataclasses import replace
+    client = fake_client([chunk('摘要'), chunk(finish_reason='stop')])
+    provider = OpenAIProvider(replace(config(), max_output_tokens=3000), client=client)
+    await collect(provider.stream([Message('user', '历史数据')], tool_choice='none', system_prompt='禁止工具'))
+    request = client.chat.completions.request
+    assert request['max_tokens'] == 3000
+    assert request['tool_choice'] == 'none'
+    assert 'tools' not in request
 
 @async_test
 async def test_openai_compatible_stream_uses_chat_completions_and_emits_text() -> None:
@@ -47,7 +58,7 @@ async def test_openai_compatible_stream_uses_chat_completions_and_emits_text() -
     provider = OpenAIProvider(config(), client=client)
     received = await collect(provider.stream([Message('user', '问候')]))
     assert [(e.kind, e.text) for e in received] == [(e.kind, e.text) for e in [StreamEvent('text_delta', '你'), StreamEvent('text_delta', '好'), StreamEvent('completed')]]
-    assert client.chat.completions.request == {'model': 'third-party-model', 'messages': [{'role': 'user', 'content': '问候'}], 'stream': True, 'stream_options': {'include_usage': True}}
+    assert client.chat.completions.request == {'model': 'third-party-model', 'messages': [{'role': 'user', 'content': '问候'}], 'stream': True, 'stream_options': {'include_usage': True}, 'max_tokens': 8192}
 
 @pytest.mark.parametrize('chunks', [[chunk('部分')], [chunk('部分'), chunk(finish_reason='length')]])
 @async_test

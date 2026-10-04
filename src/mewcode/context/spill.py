@@ -1,0 +1,226 @@
+"""仅在原子存储成功后替换工具结果；文件由本会话独占管理。"""
+from dataclasses import replace
+import json
+import os
+from pathlib import Path
+import stat
+from uuid import uuid4
+
+from ..tools.base import ToolResult
+from .estimate import dump, estimate_text
+
+SINGLE_LIMIT = 8000
+BATCH_LIMIT = 20000
+PREVIEW_LIMIT = 1000
+
+
+def preview(text: str, limit: int) -> str:
+    units, end = 0, 0
+    for char in text:
+        units += 1 if ord(char) < 128 else 4
+        if units > limit * 4:
+            break
+        end += 1
+    return text[:end]
+
+
+class ResultCache:
+    def __init__(self, root: Path):
+        self.root = root.resolve()
+        self.session_id = uuid4().hex
+        self.relative = Path('.mewcode/context') / self.session_id
+        self.directory = self.root / self.relative
+        self._fds: list[int] = []
+        self._files: set[str] = set()
+        self.failed = False
+        self.attempted: set[str] = set()
+
+    @property
+    def count(self):
+        return len(self._files - {"results-index.jsonl"})
+
+    def _open(self):
+        if self._fds:
+            self._check()
+            return
+        descriptors = []
+        try:
+            descriptors.append(os.open(self.root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW))
+            for name in ('.mewcode', 'context', self.session_id):
+                try:
+                    os.mkdir(name, mode=0o700, dir_fd=descriptors[-1])
+                except FileExistsError:
+                    if name == self.session_id:
+                        raise OSError('会话目录已存在')
+                descriptor = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                                     dir_fd=descriptors[-1])
+                descriptors.append(descriptor)
+                if os.fstat(descriptor).st_uid != os.getuid():
+                    raise OSError('缓存目录所有者不一致')
+                if name != '.mewcode':
+                    os.fchmod(descriptor, 0o700)
+                if name == 'context':
+                    # 缓存在任意用户项目中都必须排除，不能依赖 MewCode 仓库的规则。
+                    try:
+                        ignore_fd = os.open('.gitignore', os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                                            0o600, dir_fd=descriptor)
+                    except FileExistsError:
+                        ignore_fd = os.open('.gitignore', os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW,
+                                            dir_fd=descriptor)
+                        with os.fdopen(ignore_fd, 'r') as ignore:
+                            if not stat.S_ISREG(os.fstat(ignore.fileno()).st_mode) or ignore.read(16) != '*\n':
+                                raise OSError('缓存忽略规则不安全')
+                    else:
+                        with os.fdopen(ignore_fd, 'w') as ignore:
+                            ignore.write('*\n')
+            self._fds = descriptors
+            self._check()
+        except OSError:
+            for fd in descriptors:
+                os.close(fd)
+            self._fds = []
+            raise
+
+    def _check(self):
+        current = self.root
+        for name, fd in zip(('.mewcode', 'context', self.session_id), self._fds[1:]):
+            current /= name
+            actual, owned = current.lstat(), os.fstat(fd)
+            if not stat.S_ISDIR(actual.st_mode) or (actual.st_dev, actual.st_ino) != (owned.st_dev, owned.st_ino):
+                raise OSError('缓存目录真实路径发生变化')
+
+    @property
+    def index_path(self) -> str:
+        return str(self.relative / "results-index.jsonl")
+
+    def write_index(self, paths) -> str:
+        from ..types import Message
+        message = Message("tool", tool_result=ToolResult.success({"files": sorted(paths)}))
+        return self.save(message, "context_result_index", _index=True)
+
+    def save(self, message, tool_name: str, *, _index=False) -> str:
+        self._open()
+        name = 'results-index.jsonl' if _index else uuid4().hex + '.jsonl'
+        temporary = uuid4().hex + '.tmp'
+        raw = message.tool_result.to_json()
+        header = {'format': 'mewcode-result-v1', 'source': message.id,
+                  'tool_call_id': message.tool_call_id, 'tool_name': tool_name,
+                  'characters': len(raw), 'read': '用 read_file 的 start_line/max_lines 分页；依次拼接每行 chunk 后解析 JSON 可恢复完整结果。仅保存采集层实际返回内容。'}
+        try:
+            fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                         0o600, dir_fd=self._fds[-1])
+            with os.fdopen(fd, 'w', encoding='utf-8') as file:
+                file.write(dump(header) + '\n')
+                for offset in range(0, len(raw), 512):
+                    file.write(dump({'chunk': raw[offset:offset + 512]}) + '\n')
+                file.flush()
+                os.fsync(file.fileno())
+            self._check()
+            os.rename(temporary, name, src_dir_fd=self._fds[-1], dst_dir_fd=self._fds[-1])
+            self._files.add(name)
+            return str(self.relative / name)
+        finally:
+            try:
+                os.unlink(temporary, dir_fd=self._fds[-1])
+            except FileNotFoundError:
+                pass
+
+    def restore(self, path: str) -> ToolResult:
+        if not self._fds:
+            raise OSError("会话缓存不可用")
+        self._check()
+        relative = Path(path)
+        if relative.parent != self.relative or relative.name not in self._files:
+            raise OSError('非本会话缓存引用')
+        fd = os.open(relative.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=self._fds[-1])
+        with os.fdopen(fd, encoding='utf-8') as file:
+            if not stat.S_ISREG(os.fstat(file.fileno()).st_mode):
+                raise OSError('缓存不是普通文件')
+            json.loads(next(file))
+            return ToolResult.from_dict(json.loads(''.join(json.loads(line)['chunk'] for line in file)))
+
+    def close(self) -> None:
+        if not self._fds:
+            return
+        try:
+            # unlink 不跟随链接；仅删除应用成功创建并登记的文件。
+            for name in tuple(self._files):
+                try:
+                    os.unlink(name, dir_fd=self._fds[-1])
+                except FileNotFoundError:
+                    pass
+                self._files.remove(name)
+            self._check()
+            os.rmdir(self.session_id, dir_fd=self._fds[-2])
+        finally:
+            for fd in self._fds:
+                os.close(fd)
+            self._fds = []
+
+
+def _states(value):
+    """保留权限、启动及副作用等结构化状态，正文从引用文件读取。"""
+    if not isinstance(value, dict):
+        return {}
+    return {key: item for key, item in value.items()
+            if isinstance(item, (bool, int, float)) or item is None
+            or key in {'status', 'code', 'side_effects', 'side_effects_uncertain'}}
+
+
+def _reference(message, path, tool_name):
+    original = message.tool_result
+    raw = original.to_json()
+    return replace(message, cache_path=path, tool_result=ToolResult(
+        original.ok, {'stored_result': path, 'source': message.id, 'tool_name': tool_name,
+                      'characters': len(raw), 'state': _states(original.data),
+                      'read_hint': 'read_file 分页读取 JSONL；缓存是历史快照，编辑前重新读取当前文件。',
+                      'preview': preview(raw, PREVIEW_LIMIT)}, original.error, original.truncated))
+
+
+def spill_history(history, cache: ResultCache) -> tuple[int, list[str]]:
+    changed, warnings = 0, []
+    if cache.failed:
+        return changed, warnings
+    for index, assistant in enumerate(history):
+        if not assistant.tool_calls:
+            continue
+        positions = list(range(index + 1, min(len(history), index + 1 + len(assistant.tool_calls))))
+        if any(history[i].role != 'tool' for i in positions):
+            continue
+        names = {call.id: call.name for call in assistant.tool_calls}
+        def size(i):
+            return estimate_text(history[i].tool_result.to_json())
+        def spill(i):
+            nonlocal changed
+            message = history[i]
+            if message.id in cache.attempted:
+                return
+            cache.attempted.add(message.id)
+            name = names.get(message.tool_call_id, '')
+            path = cache.save(message, name)
+            replacement = _reference(message, path, name)
+            # 超长不可缩减状态保留原文，不能为落盘反而扩大上下文。
+            if estimate_text(replacement.tool_result.to_json()) < size(i):
+                history[i] = replacement
+                changed += 1
+        try:
+            for i in positions:
+                if not history[i].cache_path and size(i) > SINGLE_LIMIT:
+                    spill(i)
+            for i in sorted(positions, key=lambda i: -size(i)):
+                if sum(size(p) for p in positions) <= BATCH_LIMIT:
+                    break
+                if not history[i].cache_path:
+                    spill(i)
+            if sum(size(p) for p in positions) > BATCH_LIMIT:
+                for i in positions:
+                    message = history[i]
+                    if message.cache_path:
+                        data = dict(message.tool_result.data)
+                        data['preview'] = ''
+                        history[i] = replace(message, tool_result=replace(message.tool_result, data=data))
+        except (OSError, ValueError):
+            cache.failed = True
+            warnings.append('工具结果缓存写入失败，保留未落盘原文；请检查 .mewcode/context 路径和磁盘权限。')
+            break
+    return changed, warnings

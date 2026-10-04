@@ -49,10 +49,19 @@ def fake_client(events: list[SimpleNamespace]) -> SimpleNamespace:
     return SimpleNamespace(messages=FakeMessages(normalized))
 
 def config(*, thinking: bool=False, model: str='claude-sonnet-4-6') -> ProviderConfig:
-    return ProviderConfig('Claude', 'anthropic', model, 'https://api.anthropic.com', 'test-key', thinking)
+    return ProviderConfig('Claude', 'anthropic', model, 'https://api.anthropic.com', 'test-key', thinking, context_window=128000)
 
 def deepseek_config(*, thinking: bool) -> ProviderConfig:
-    return ProviderConfig('DeepSeek', 'anthropic', 'deepseek-v4-pro', 'https://api.deepseek.com/anthropic', 'test-key', thinking)
+    return ProviderConfig('DeepSeek', 'anthropic', 'deepseek-v4-pro', 'https://api.deepseek.com/anthropic', 'test-key', thinking, context_window=128000)
+
+@async_test
+async def test_summary_request_enforces_configured_output_cap_without_tools():
+    from dataclasses import replace
+    client = fake_client([event('content_block_delta', delta=event('text_delta', text='摘要')), event('message_delta', delta=SimpleNamespace(stop_reason='end_turn')), event('message_stop')])
+    provider = AnthropicProvider(replace(config(), max_output_tokens=3000), client=client)
+    await collect(provider.stream([Message('user', '历史数据')], tool_choice='none', system_prompt='禁止工具'))
+    assert client.messages.request['max_tokens'] == 3000
+    assert 'tools' not in client.messages.request
 
 @async_test
 async def test_claude_stream_yields_text_before_normal_completion() -> None:

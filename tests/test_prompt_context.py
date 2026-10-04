@@ -56,14 +56,18 @@ async def test_failed_full_is_resent_short_failure_does_not_restart(tmp_path):
 
 @async_test
 async def test_trim_drops_whole_real_task_and_forces_full_without_reset(tmp_path):
-    chat,p=session(tmp_path,[calls(tool()),answer(),[ContextLimitError('超限')],answer()])
+    from test_context_summary import response
+    from test_context_partition import history_for_task
+    chat,p=session(tmp_path,[calls(tool()),answer(),[ContextLimitError('超限')],response(),answer()])
     await collect(chat.ask('旧任务'))
+    _, earlier = history_for_task()
+    chat.history[:0] = earlier
     saved=deepcopy(chat.history)
     await collect(chat.ask('新任务'))
     assert p.requests[2][0][:len(saved)]==tuple(saved)
-    assert full(p.requests[3][0][-1]) and chat.prompt_state.request_sequence==4
-    assert [m.role for m in chat.history]==['user','context','assistant']
-    assert chat.history[0].content=='新任务'
+    assert full(p.requests[4][0][-1]) and chat.prompt_state.request_sequence==4
+    assert chat.history[0].context_kind == 'summary'
+    assert [m for m in chat.history if m.role == 'user'][-1].content == '新任务'
 
 
 @async_test
@@ -143,6 +147,8 @@ async def test_provider_may_return_plain_async_iterator_without_close(tmp_path):
                 raise StopAsyncIteration
 
     class Provider:
+        from conftest import ScriptedProvider
+        config = ScriptedProvider.config
         def stream(self, messages, **options):
             return Events()
 

@@ -28,9 +28,11 @@ class OpenAIProvider:
         if system_prompt:
             serialized.insert(0, {"role": "system", "content": system_prompt})
         request = {"model": self.config.model, "messages": serialized, "stream": True,
-                   "stream_options": {"include_usage": True}}
+                   "stream_options": {"include_usage": True}, "max_tokens": self.config.max_output_tokens}
         if tools:
             request.update(tools=openai_tools(tools), tool_choice=tool_choice, parallel_tool_calls=True)
+        elif tool_choice == "none":
+            request["tool_choice"] = "none"
         finish_reason = None
         calls: dict[int, dict[str, str]] = {}
         text, reasoning = [], []

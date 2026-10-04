@@ -18,7 +18,7 @@ class FakeProvider(ScriptedProvider):
 
 def config_file(tmp_path: Path) -> Path:
     path = tmp_path / ".env.test"
-    path.write_text("name=测试后端\nprotocol=openai\nmodel=test-model\nbase_url=https://example.com/v1\napi_key=dummy\nthinking=false\n")
+    path.write_text("name=测试后端\nprotocol=openai\nmodel=test-model\nbase_url=https://example.com/v1\napi_key=dummy\ncontext_window=128000\nthinking=false\n")
     return path
 
 
@@ -102,8 +102,8 @@ def test_plan_commands_and_do_without_pending_plan(tmp_path):
 def test_context_trim_notice_and_unknown_usage_are_visible(tmp_path):
     provider = ScriptedProvider([answer(), [ContextLimitError("超限")], answer()])
     _, shown = invoke(tmp_path, provider, "第一问\n第二问\n/exit\n")
-    assert "已丢弃 1 轮" in shown and "未知" in shown and "统计不完整" in shown
-    assert "输入 0" not in shown and "本轮未完成" not in shown
+    assert "context_blocked" in shown and "未知" in shown and "统计不完整" in shown
+    assert "输入 0" not in shown and "本轮未完成" in shown
 
 
 def test_tool_metadata_is_flushed_redacted_and_body_not_printed(tmp_path, monkeypatch):

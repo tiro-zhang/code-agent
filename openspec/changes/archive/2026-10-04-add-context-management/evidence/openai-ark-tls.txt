@@ -1,0 +1,3 @@
+本次原 .env 的 ark-code-latest 入口实际尝试：
+ProviderError OpenAI 兼容服务 TLS 连接失败，请检查网络、代理配置及服务端连接状态
+未关闭 TLS 验证；改用已授权同一 DeepSeek 服务的官方 OpenAI 兼容入口完成协议验收。

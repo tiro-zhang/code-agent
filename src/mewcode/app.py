@@ -68,10 +68,15 @@ class _Renderer:
             self.line(f"权限> [{self.safe(event.tool_call_id, 60)}] {labels.get(event.permission_decision, self.safe(event.permission_decision))}")
             if event.warning:
                 self.line(f"提示> {self.safe(event.warning, 400)}")
+        elif event.kind == 'context_compaction':
+            estimates = (f' · 输入估算 {event.estimated_before} → {event.estimated_after}'
+                         if event.estimated_after is not None else '')
+            self.line(f'压缩> {self.safe(event.text, 400)}{estimates} · 落盘 {event.spilled} · 连续失败 {event.failures}/3'
+                      + (' · 自动摘要已熔断' if event.circuit_open else ''))
         elif event.kind == "history_trimmed":
             self.line(f"提示> {self.safe(event.text)}")
         elif event.kind == "usage":
-            self.line(f"用量> 本次 Token · {self.usage_text(event.usage)}")
+            self.line(f"用量> {'摘要' if event.purpose == 'summary' else '本次'} Token · {self.usage_text(event.usage)}")
         elif event.kind in {"tool_call", "tool_started", "tool_result"}:
             name = self.safe(event.tool_name, 60)
             id = self.safe(event.tool_call_id, 60)
@@ -118,11 +123,11 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
     if has_handler:
         signal.signal(signal.SIGINT, interrupt)
     renderer = _Renderer(output_stream, config.api_key)
-    mcp, terminal = None, None
+    mcp, terminal, session = None, None, None
     try:
         try:
             reader = input_reader or InputReader(input_stream)
-            session = ChatSession(provider, max_iterations=config.max_iterations, permission_mode=permission_mode)
+            session = ChatSession(provider, max_iterations=config.max_iterations, permission_mode=permission_mode, config=config)
             session.permissions.config.load()
             terminal = TerminalController(reader, output_stream, secret=config.api_key,
                 root=session.executor.context.root, on_interrupt=interrupt, allow_enhanced=input_reader is None)
@@ -173,6 +178,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             if command.kind == "status":
                 renderer.line(terminal.state.status_text(root=session.executor.context.root, model=config.model,
                     mode=session.mode, permission_mode=session.permissions.mode, has_pending_plan=session.has_pending_plan))
+                renderer.line(session.context_status())
                 continue
             if command.kind == "permissions":
                 try:
@@ -190,14 +196,19 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                 continue
             if command.kind == "message":
                 terminal.remember(question)
-            terminal.begin_task()
+            maintenance = command.kind == 'compact'
+            if maintenance:
+                terminal.set_phase('summary')
+            else:
+                terminal.begin_task()
             terminal.sync_session(session)
             active_cancel = asyncio.Event()
-            source = (session.execute_plan(cancel_event=active_cancel) if command.kind == "do"
+            source = (session.compact(cancel_event=active_cancel) if maintenance else
+                      session.execute_plan(cancel_event=active_cancel) if command.kind == "do"
                       else session.ask(command.text, cancel_event=active_cancel))
             try:
                 async for event in source:
-                    terminal.show(renderer, event, managed_approval=approval_responder is None)
+                    terminal.show(renderer, event, managed_approval=approval_responder is None, maintenance=maintenance)
             except (PlanStateError, ProviderError) as error:
                 renderer.line(f"提示> {renderer.safe(error, 300)}")
             finally:
@@ -205,11 +216,18 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                 if active_cancel.is_set():
                     terminal.discard_pending()
                 active_cancel = None
+                if maintenance:
+                    terminal.set_phase("idle")
             if terminal.eof:
                 return 0
     finally:
         active_cancel = asyncio.Event()
         try:
+            if session is not None:
+                try:
+                    session.close()
+                except OSError:
+                    renderer.line('提示> 本会话缓存清理失败，请检查 .mewcode/context；其他会话缓存未清理')
             if terminal is not None:
                 terminal.set_phase("closing")
             try:
