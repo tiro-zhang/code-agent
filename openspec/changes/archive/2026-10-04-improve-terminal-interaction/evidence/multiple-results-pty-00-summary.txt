@@ -1,0 +1,16 @@
+执行 · 权限 default · 等待授权 · 请求 0/20 · 已用 0.3s
+旁路 19> 工具> [#1] 超时 · timeout：FIRST-TIMEOUT · SIDE-01
+异常／受限 1 条 · results 查看全部旁路
+工具> [#3] 等待授权 · write_file
+审阅 1/3 页 · summary · [review-third]
+操作> 写入文件 /var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/mewcode-multipl
+e-results-n6ynh3…
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久
+取消> 回车／1 拒绝本次操作，本轮可继续；Ctrl+C 取消整轮。
+关联标识> review-third
+工具> write_file · 等待授权 · default
+原因> 仅验证旁路结果展示，不执行写入
+工作根目录> /var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/mewcode-multiple-r
+授权>
+1/回车 拒绝 · 2 本次 · 3 会话 · 4 永久 · Ctrl+C 取消整轮
+targets/arguments/content/summary/results · next/back/all · PgUp/PgDn

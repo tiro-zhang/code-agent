@@ -11,20 +11,16 @@ from typing import TextIO
 from .async_utils import protected
 from .config import ConfigError, ProviderConfig, load_config
 from .providers import make_provider
-from .mcp.config import load_config as load_mcp_config
-from .mcp.manager import MCPManager
-from .permissions.terminal import InputReader, TerminalApproval
+from .permissions.terminal import InputReader
 from .session import ChatSession, PlanStateError, operation_summary
 from .tools.base import ToolError
 from .types import AgentEvent, Provider, ProviderError, TokenUsage
+from .mcp.config import load_config as load_mcp_config
+from .mcp.manager import MCPManager
+from .terminal.commands import parse_command, help_text
+from .terminal.controller import TerminalController
+from .terminal.text import terminal_text, usage_text
 
-
-def terminal_text(text: str, secret: str, *, limit: int | None = None, multiline: bool = False) -> str:
-    """先脱敏再转义控制字符；正文保留换行和制表符。"""
-    text = text.replace(secret, "[已隐藏]") if secret else text
-    escaped = "".join(char if char.isprintable() or (multiline and char in "\n\t")
-                      else repr(char)[1:-1] for char in text)
-    return escaped if limit is None or len(escaped) <= limit else escaped[:limit] + "…"
 
 
 class _Renderer:
@@ -43,24 +39,7 @@ class _Renderer:
         self.output.write(text + "\n")
         self.output.flush()
 
-    @staticmethod
-    def usage_text(usage: TokenUsage):
-        def count(field):
-            value = getattr(usage, field)
-            if value is None:
-                return "未知"
-            return str(value) + ("（部分）" if field in usage.incomplete_fields else "")
-
-        incoming = f"总输入 {count('total_input_tokens')}"
-        if usage.total_input_tokens is None:
-            incoming += f"（基础输入 {count('input_tokens')}）"
-        ratio = usage.cache_hit_rate
-        rate = "未知" if ratio is None else f"{ratio:.1%}"
-        base = "统计完整" if usage.complete else "统计不完整"
-        cache = "缓存统计完整" if usage.cache_complete else "缓存统计不完整"
-        return (f"{incoming}，输出 {count('output_tokens')} · {base} · "
-                f"命中 {count('cache_read_tokens')}，未命中 {count('cache_miss_tokens')}，"
-                f"写入 {count('cache_write_tokens')}，命中率 {rate} · {cache}")
+    usage_text = staticmethod(usage_text)
 
     def show(self, event: AgentEvent):
         if event.kind in {"text_delta", "thinking_delta"} and event.text:
@@ -129,27 +108,28 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
     loop = asyncio.get_running_loop()
     active_cancel = asyncio.Event()
     idle_cancel = asyncio.Event()
-    previous_handler = None
     has_handler = threading.current_thread() is threading.main_thread()
+    previous_handler = signal.getsignal(signal.SIGINT) if has_handler else None
 
-    def interrupt(signum, frame):
-        if active_cancel is not None:
-            # 信号处理器内仅置 Event 不会唤醒阻塞的 selector，显式写入循环唤醒通道。
-            loop.call_soon_threadsafe(active_cancel.set)
-        else:
-            loop.call_soon_threadsafe(idle_cancel.set)
+    def interrupt(signum=None, frame=None):
+        cancel = active_cancel if active_cancel is not None else idle_cancel
+        loop.call_soon_threadsafe(cancel.set)
 
     if has_handler:
-        previous_handler = signal.signal(signal.SIGINT, interrupt)
+        signal.signal(signal.SIGINT, interrupt)
     renderer = _Renderer(output_stream, config.api_key)
-    mcp = None
+    mcp, terminal = None, None
     try:
         try:
             reader = input_reader or InputReader(input_stream)
             session = ChatSession(provider, max_iterations=config.max_iterations, permission_mode=permission_mode)
-            session.permissions.responder = approval_responder or TerminalApproval(
-                reader, output_stream, root=session.executor.context.root, secret=config.api_key)
             session.permissions.config.load()
+            terminal = TerminalController(reader, output_stream, secret=config.api_key,
+                root=session.executor.context.root, on_interrupt=interrupt, allow_enhanced=input_reader is None)
+            terminal.sync_session(session)
+            renderer = _Renderer(terminal.stream, config.api_key)
+            session.permissions.responder = approval_responder or terminal.approve
+            await terminal.start()
         except (ValueError, ToolError, OSError) as error:
             error_stream.write(f"启动失败：{renderer.safe(error)}\n")
             return 2
@@ -163,65 +143,87 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
         if active_cancel.is_set():
             return 0
         session.permissions.bind_mcp_tools(mcp.tools)
+        terminal.state.bind_tools(mcp.tools)
         active_cancel = None
-        output_stream.write(f"MewCode · {renderer.safe(config.name, 100)} · 权限 {session.permissions.mode}\n")
+        renderer.line(f"MewCode · {renderer.safe(config.name, 100)} · 权限 {session.permissions.mode} · /help 查看帮助")
         while True:
-            output_stream.write("你> ")
-            output_stream.flush()
+            terminal.sync_session(session)
             try:
-                line = await reader.readline(idle_cancel)
+                question = await terminal.readline(idle_cancel)
             except (KeyboardInterrupt, asyncio.CancelledError):
-                output_stream.write("\n")
+                renderer.line("")
                 return 0
             except (OSError, ValueError, UnicodeError) as error:
                 error_stream.write(f"输入通道失效：{renderer.safe(error)}\n")
                 return 2
-            if not line:
-                output_stream.write("\n")
+            if question is None:
+                renderer.line("")
                 return 0
-            question = line.strip()
-            if question == "/exit":
+            command = parse_command(question)
+            if command.kind == "exit":
                 return 0
-            if not question:
+            if command.kind == "empty":
                 continue
-            parts = question.split(maxsplit=1)
-            if parts[0] == "/permissions":
+            if command.kind == "error":
+                renderer.line("提示> " + command.text)
+                continue
+            if command.kind == "help":
+                renderer.line(help_text(enhanced=terminal.enhanced))
+                continue
+            if command.kind == "status":
+                renderer.line(terminal.state.status_text(root=session.executor.context.root, model=config.model,
+                    mode=session.mode, permission_mode=session.permissions.mode, has_pending_plan=session.has_pending_plan))
+                continue
+            if command.kind == "permissions":
                 try:
-                    renderer.line(terminal_text(session.permission_command(question), config.api_key, multiline=True))
+                    renderer.line(terminal_text(session.permission_command(command.text), config.api_key, multiline=True))
                 except (ValueError, ToolError, OSError) as error:
                     renderer.line(f"提示> {renderer.safe(error, 400)}")
                 continue
-            if parts[0] == "/plan":
+            if command.kind == "plan":
                 session.enter_plan()
-                if len(parts) == 1:
+                if not command.text:
                     renderer.line("提示> 已进入只读规划模式，请输入任务；计划完成后输入 /do 直接执行")
                     continue
-                question = parts[1]
+            if command.kind == "do" and not session.has_pending_plan:
+                renderer.line("提示> 没有有效的待执行计划，请先使用 /plan 生成计划")
+                continue
+            if command.kind == "message":
+                terminal.remember(question)
+            terminal.begin_task()
+            terminal.sync_session(session)
             active_cancel = asyncio.Event()
-            source = session.execute_plan(cancel_event=active_cancel) if question == "/do" else session.ask(question, cancel_event=active_cancel)
+            source = (session.execute_plan(cancel_event=active_cancel) if command.kind == "do"
+                      else session.ask(command.text, cancel_event=active_cancel))
             try:
                 async for event in source:
-                    renderer.show(event)
+                    terminal.show(renderer, event, managed_approval=approval_responder is None)
             except (PlanStateError, ProviderError) as error:
                 renderer.line(f"提示> {renderer.safe(error, 300)}")
             finally:
                 await protected(source.aclose(), cancel_event=active_cancel)
                 if active_cancel.is_set():
-                    reader.discard_pending()
+                    terminal.discard_pending()
                 active_cancel = None
-            if reader.eof:
+            if terminal.eof:
                 return 0
     finally:
         active_cancel = asyncio.Event()
         try:
+            if terminal is not None:
+                terminal.set_phase("closing")
             try:
                 if mcp is not None:
                     await protected(mcp.close(), cancel_event=active_cancel)
             finally:
                 await protected(provider.aclose(), cancel_event=active_cancel)
         finally:
-            if has_handler:
-                signal.signal(signal.SIGINT, previous_handler)
+            try:
+                if terminal is not None:
+                    await terminal.close()
+            finally:
+                if has_handler:
+                    signal.signal(signal.SIGINT, previous_handler)
 
 
 def run(config_path: str | Path, *, stdin: TextIO | None = None, stdout: TextIO | None = None,

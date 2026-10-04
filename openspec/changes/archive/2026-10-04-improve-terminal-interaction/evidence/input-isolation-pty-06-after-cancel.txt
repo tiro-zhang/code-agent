@@ -1,0 +1,32 @@
+/Users/tiro/workspace/code/vibecoding/mewcode-demo/.venv/bin/python /Users/tiro/workspace/code/vibec
+oding/mewcode-demo/openspec/changes/improve-terminal-interaction/evidence/input-isolation-pty-driver
+.py --child /var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/mewcode-input-isolation-fuht5ytb
+ tiro@tirodeMacBook-Pro-2  ~/workspace/code/vibecoding/mewcode-demo   feat/improve-terminal-inter
+action ±  /Users/tiro/workspace/code/vibecoding/mewcode-demo/.venv/bin/python /Users/tiro/workspace
+/code/vibecoding/mewcode-demo/openspec/changes/improve-terminal-interaction/evidence/input-isolation
+-pty-driver.py --child /var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/mewcode-input-isolation-fuht
+5ytb
+等待输入
+
+
+你>
+
+
+
+
+
+
+
+Enter 发送 · Esc+Enter 换行 · /help 帮助 · Tab 补全 · Ctrl+C 退出
+
+
+
+
+
+
+
+
+
+
+
+

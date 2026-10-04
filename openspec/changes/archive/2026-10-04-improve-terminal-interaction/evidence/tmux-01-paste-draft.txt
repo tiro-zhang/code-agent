@@ -1,0 +1,38 @@
+执行 · 权限 default · 启动中 · 暂无任务记录
+Ctrl+C 取消启动
+MCP> http_demo · 就绪 · 已注册 2 个工具
+MCP> local_demo · 就绪 · 已注册 2 个工具
+MewCode · claude-demo · 权限 default · /help 查看帮助
+执行 · 权限 default · 空闲 · 暂无任务记录
+你>   请原样读懂以下文本，只回复“多行收到”，不要调用工具：
+…
+…     第一行保留缩进
+…     /exit
+…
+Enter 发送 · Esc+Enter 换行 · /help 帮助 · Tab 补全 · Ctrl+C 退出
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

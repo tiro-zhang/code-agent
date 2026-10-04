@@ -1,0 +1,47 @@
+执行 · 权限 default · 启动中 · 暂无任务记录
+Ctrl+C 取消启动
+MCP> lifecycle_demo · 就绪 · 已注册 2 个工具
+MewCode · claude-demo · 权限 default · /help 查看帮助
+思考> The user says "不要调用工具，只回复 LIFECYCLE-HANG-READY。" - don't call tools, just reply with LIFECYCLE-HANG-READY.
+MewCode> LIFECYCLE-HANG-READY
+结束> model_done · 模型已结束本次任务 · 请求 1/20
+执行 · 权限 default · 空闲 · 请求 1/20 · 已用 5.9s · 停止原因 model_done
+最近请求 Token · 入2011 出52 命中 1664 未命中 347 写入 未知 命中率82.7% 完整含缓存
+累计已知 Token · 入2011 出52 命中 1664 未命中 347 写入 未知 命中率82.7% 完整含缓存
+执行 · 权限 default · 退出清理 · 请求 1/20 · 已用 5.9s · 停止原因 model_done
+最近请求 Token · 入2011 出52 命中 1664 未命中 347 写入 未知 命中率82.7% 完整含缓存
+累计已知 Token · 入2011 出52 命中 1664 未命中 347 写入 未知 命中率82.7% 完整含缓存
+正在清理资源
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

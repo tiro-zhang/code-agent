@@ -1,0 +1,10 @@
+import json, os, subprocess, termios
+from pathlib import Path
+meta=json.loads(Path('/tmp/mewcode-ui-e2e.json').read_text())
+repo=Path(meta['repo']); root=Path(meta['root'])
+before=termios.tcgetattr(0)
+code=subprocess.call([str(repo/'.venv/bin/python'), '/tmp/mewcode-ui-real-app.py'], cwd=root)
+after=termios.tcgetattr(0)
+(root/'exit.json').write_text(json.dumps({'code':code,'echo_restored':bool(after[3]&termios.ECHO),'canonical_restored':bool(after[3]&termios.ICANON),'flags_equal':before==after,'before':repr(before),'after':repr(after)}))
+print('MewCode 已退出，终端状态已记录', flush=True)
+subprocess.call(['/bin/zsh','-f'], cwd=root)

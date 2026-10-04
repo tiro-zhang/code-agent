@@ -1,0 +1,160 @@
+import argparse, json, subprocess, time, shlex
+from pathlib import Path
+M=json.loads(Path('/tmp/mewcode-ui-e2e.json').read_text());ROOT=Path(M['root']);REPO=Path(M['repo'])
+BASE=['tmux','-L',M['socket']]
+def tmux(*args):
+    return subprocess.check_output(BASE+list(args),text=True)
+def send(text, submit=True):
+    tmux('send-keys','-t','ui','-l',text)
+    if submit: tmux('send-keys','-t','ui','Enter')
+def screen(): return tmux('capture-pane','-t','ui','-p')
+def capture(name):
+    text=tmux('capture-pane','-t','ui','-p','-S','-1500')
+    (ROOT/(name+'.txt')).write_text(text)
+    print(screen())
+def wait(marker, timeout=45):
+    end=time.monotonic()+timeout
+    while time.monotonic()<end:
+        text=screen()
+        if marker in text: return text
+        time.sleep(.25)
+    raise RuntimeError('未等到:'+marker+'\n'+screen())
+def finished():
+    p=ROOT/'events.jsonl'
+    return sum(json.loads(line)['kind']=='finished' for line in p.read_text().splitlines()) if p.exists() else 0
+def count():
+    p=ROOT/'model-requests.jsonl'
+    return len(p.read_text().splitlines()) if p.exists() else 0
+parser=argparse.ArgumentParser();parser.add_argument('action');args=parser.parse_args()
+if args.action=='restart':
+    previous=(ROOT/'exit.json').stat().st_mtime_ns
+    send('/exit')
+    end=time.monotonic()+15
+    while (ROOT/'exit.json').stat().st_mtime_ns==previous:
+        assert time.monotonic()<end,'应用未完成退出'
+        time.sleep(.1)
+    print((ROOT/'exit.json').read_text())
+    tmux('kill-session','-t','ui')
+    tmux('new-session','-d','-s','ui','-x','110','-y','36','-c',str(ROOT),shlex.join([str(REPO/'.venv/bin/python'),'/tmp/mewcode-ui-launch.py']))
+    wait('Enter 发送');capture('00-ready')
+elif args.action=='paste':
+    before=count()
+    draft='  请原样读懂以下文本，只回复“多行收到”，不要调用工具：\n\n    第一行保留缩进\n    /exit\n'
+    send('\x1b[200~'+draft+'\x1b[201~',False)
+    time.sleep(1)
+    assert count()==before,'粘贴不应调用模型'
+    capture('01-paste-draft')
+    (ROOT/'expected-draft.txt').write_text(draft)
+    tmux('send-keys','-t','ui','Enter')
+    wait('停止原因 model_done');wait('空闲')
+    records=[json.loads(x) for x in (ROOT/'model-requests.jsonl').read_text().splitlines()]
+    assert count()==before+1 and records[-1]['user']==draft
+    capture('01-paste-result')
+elif args.action=='help':
+    before=count()
+    send('/help');wait('本地命令')
+    send('/hepl');wait('未知命令')
+    send('/do extra');wait('此命令不接受参数')
+    send('/permissions mode invalid');wait('用法：/permissions')
+    send('/status');wait('待执行计划 暂无')
+    assert count()==before
+    capture('02-help-status-errors')
+elif args.action=='capture': capture('current')
+elif args.action=='plan':
+    def idle_after(before):
+        end_before=finished()
+        end=time.monotonic()+60
+        busy=False
+        while time.monotonic()<end:
+            lines=[x for x in screen().splitlines() if x.strip()]
+            busy = busy or (lines and lines[-1].startswith('Ctrl+C 取消本轮'))
+            if finished()>end_before and lines and lines[-1].startswith('Enter 发送'): return
+            time.sleep(.25)
+        raise RuntimeError(screen())
+    before=count();send('/plan 请制定读取 notes.txt，将第一行“旧内容”改为“新内容”并验证结果的计划。现在只输出完整计划，不调用工具。');idle_after(before)
+    before=count();send('修订计划：第二行“第二行保持”必须原样保留，最后用 Python 断言两行准确内容。仍只输出完整计划，不调用工具。');idle_after(before)
+    before=count();send('/status');wait('待执行计划 可用');send('/do extra');time.sleep(.5);assert count()==before
+    capture('03-plan-revision')
+elif args.action in {'execute','continue'}:
+    import re
+    before=count();end_before=finished();seen=[];busy=False;idle_since=None;end=time.monotonic()+110
+    if args.action=='execute': send('/do')
+    else: before-=1
+    while time.monotonic()<end:
+        shown=screen();ids=re.findall(r'审阅[^\n]*\[([^\]]+)\]',shown)
+        if ids and ids[-1] not in seen:
+            identity=ids[-1];seen.append(identity)
+            if '编辑文件' in shown:
+                choice='3'
+                tmux('resize-window','-t','ui','-x','60','-y','12')
+                send('content');time.sleep(.3);capture('04-edit-narrow-content')
+                send('next');time.sleep(.2);send('back');time.sleep(.2);send('all');time.sleep(.3);capture('04-edit-narrow-all')
+                tmux('resize-window','-t','ui','-x','110','-y','36')
+            elif '执行命令' in shown: choice='4'
+            else: choice='2'
+            capture('04-approval-'+str(len(seen)))
+            send(choice)
+        lines=[x for x in shown.splitlines() if x.strip()]
+        busy = busy or (lines and lines[-1].startswith('Ctrl+C 取消本轮')) or bool(ids)
+        if finished()>end_before and lines and lines[-1].startswith('Enter 发送'):
+            if idle_since is None: idle_since=time.monotonic()
+            if time.monotonic()-idle_since>1: break
+        else: idle_since=None
+        time.sleep(.25)
+    else: raise RuntimeError('执行未完成\n'+screen())
+    assert (ROOT/'notes.txt').read_text()=='新内容\n第二行保持\n'
+    (ROOT/'file-verification.json').write_text(json.dumps({'content':(ROOT/'notes.txt').read_text(),'approvals':len(seen)},ensure_ascii=False))
+    send('/status');wait('完整调用标识');capture('04-execution-result')
+elif args.action in {'mcp','verify','deny'}:
+    import re
+    before=count()
+    prompt = {'mcp':'请依次调用 local_demo 的 echo 和 http_demo 的 echo，参数都严格为 {"text":"UI-MCP-ONE"}，根据两个真实返回结果回答。不要调用本地工具。',
+              'verify':'继续核验上一轮已经修改的 notes.txt。只调用 shell，用 python3 读取文件并断言全文准确为“新内容\\n第二行保持\\n”，断言通过打印 UI-VERIFY-PASS，再根据命令实际结果回复。不要再修改文件。',
+              'deny':'请调用 local_demo 的 echo，参数严格为 {"text":"UI-MCP-DENIED"}。若用户拒绝，不重试、不使用其他工具，直接说明本次未执行。'}[args.action]
+    send(prompt)
+    end_before=finished();seen=[];busy=False;idle_since=None;end=time.monotonic()+90
+    while time.monotonic()<end:
+        shown=screen();ids=re.findall(r'审阅[^\n]*\[([^\]]+)\]',shown)
+        if ids and ids[-1] not in seen:
+            seen.append(ids[-1]);choice='1' if args.action=='deny' else '4'
+            send('targets');time.sleep(.25);capture('05-'+args.action+'-review-'+str(len(seen)))
+            send(choice)
+        lines=[x for x in shown.splitlines() if x.strip()]
+        busy = busy or (lines and lines[-1].startswith('Ctrl+C 取消本轮')) or bool(ids)
+        if finished()>end_before and lines and lines[-1].startswith('Enter 发送'):
+            if idle_since is None: idle_since=time.monotonic()
+            if time.monotonic()-idle_since>1: break
+        else: idle_since=None
+        time.sleep(.25)
+    else: raise RuntimeError(screen())
+    for file in (['http.jsonl','stdio.jsonl'] if args.action=='mcp' else []):
+        records=[json.loads(x) for x in (ROOT/file).read_text().splitlines()]
+        assert any(x.get('method')=='tools/call' and x.get('params',{}).get('arguments')=={'text':'UI-MCP-ONE'} for x in records)
+    if args.action=='verify': assert 'UI-VERIFY-PASS' in tmux('capture-pane','-t','ui','-p','-S','-1500')
+    if args.action=='deny': assert not any(json.loads(x).get('params',{}).get('arguments')=={'text':'UI-MCP-DENIED'} for x in (ROOT/'stdio.jsonl').read_text().splitlines())
+    capture('05-'+args.action+'-result')
+
+elif args.action=='completion':
+    before=count()
+    send('/sta',False);tmux('send-keys','-t','ui','Tab');time.sleep(.25)
+    assert '你> /status' in screen() and count()==before
+    capture('06-completion-draft')
+    tmux('send-keys','-t','ui','Enter');wait('最近任务>');time.sleep(.3)
+    assert count()==before
+    capture('06-completion-status')
+elif args.action=='planpaste':
+    before=count();send('/plan');time.sleep(.4);assert count()==before
+    end_before=finished()
+    draft='请只输出一句完整计划，不调用工具：\n\n    解释下列字符串，保留为普通文本：\n    /exit\n'
+    send('\x1b[200~'+draft+'\x1b[201~',False);time.sleep(.4)
+    assert count()==before
+    capture('07-plan-multiline-draft')
+    tmux('send-keys','-t','ui','Enter')
+    end=time.monotonic()+60
+    while finished()==end_before:
+        assert time.monotonic()<end
+        time.sleep(.2)
+    time.sleep(.5)
+    records=[json.loads(x) for x in (ROOT/'model-requests.jsonl').read_text().splitlines()]
+    assert count()==before+1 and records[-1]['user']==draft
+    send('/status');wait('待执行计划 可用');capture('07-plan-multiline-result')

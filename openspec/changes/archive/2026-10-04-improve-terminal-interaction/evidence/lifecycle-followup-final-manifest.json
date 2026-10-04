@@ -1,0 +1,37 @@
+{
+  "verified_at": "2026-10-04T00:51:30.652542+00:00",
+  "socket": "mewcode-ui-lifecycle",
+  "final_scenario": "concurrentfinal",
+  "code_sha256": {
+    "src/mewcode/app.py": "9f76b8a37d2c867822856fabd4b7bfe181621c1453a27fe463df2c65bb03178f",
+    "src/mewcode/terminal/__init__.py": "9eb6b6078e279425b2cf2c585f3c6cbb1c0757cb89c7f16ce0fa0c1fa82a22c8",
+    "src/mewcode/terminal/approval.py": "fa1b697a5f7582e082c7414f0b6287eae25f7de398a38abc1352ced6923d3bf0",
+    "src/mewcode/terminal/commands.py": "a9d0cb4e50ae16e511d661eede1be6060848b1aefb3736a65f11d1bfc0b44804",
+    "src/mewcode/terminal/controller.py": "097a47dc876013ceebb13e704fc3934fdd997fab958d19d8d6cdedb869fe19ce",
+    "src/mewcode/terminal/input.py": "6bb31c492b0746ba63c31faf7a0af6c53811734da1cb61e0c8a1f213ad41a918",
+    "src/mewcode/terminal/state.py": "28d24d3a7a39caf5e19df78059b0c65041db391044ab5eeda07c939142597f01",
+    "src/mewcode/terminal/text.py": "0bdb8a81c42fedceecf06b71a07fc043f5fe1dd83fde5fc22265e0860f63e48a",
+    "tests/mcp_fixture.py": "4bbe14ec9fb2d8e69d727a15d52e4791e8b509c56fdc213b47304a2a9ac2edf6"
+  },
+  "results": {
+    "real_model": true,
+    "same_batch_two_read_tools": true,
+    "approval_serialized": true,
+    "first_completed_while_second_pending": true,
+    "deferred_result_visible_immediately_wide_and_45_columns": true,
+    "pending_second_tool_visible_wide_and_45_columns": true,
+    "result_log_not_inserted_into_approval_options": true,
+    "both_complete_logs_and_model_results_preserved": true,
+    "narrow_page_numbers_visible": true,
+    "narrow_complete_paths_and_arguments_accessible": true,
+    "next_back_all_passed": true,
+    "fresh_model_done_observed": true,
+    "terminal_echo_icanon_restored": true,
+    "all_processes_cleaned": true
+  },
+  "previous_rounds_preserved": [
+    "lifecycle-pre-fix-concurrent-*",
+    "lifecycle-concurrentfixed-*"
+  ],
+  "cancel_reuse_evidence": "lifecycle-cancelreuse.json"
+}

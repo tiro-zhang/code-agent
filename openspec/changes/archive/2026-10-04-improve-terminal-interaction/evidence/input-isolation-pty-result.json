@@ -1,0 +1,90 @@
+{
+  "scope": "单个 EnhancedTerminal 的真实 tmux PTY 输入边界；没有模型请求、工具执行或持久授权",
+  "checks": [
+    {
+      "case": "跨阶段部分 opener 的数字和换行",
+      "result": "pass",
+      "pending": true,
+      "answer": ""
+    },
+    {
+      "case": "运行期普通提前输入",
+      "result": "pass",
+      "answer": ""
+    },
+    {
+      "case": "本阶段数字粘贴只编辑草稿",
+      "result": "pass",
+      "pending": true,
+      "answer": "2\n3\n"
+    },
+    {
+      "case": "多行数字草稿按 Enter 不构成批准",
+      "result": "pass",
+      "pending": true
+    },
+    {
+      "case": "明确输入 2 和 Enter",
+      "result": "pass",
+      "decision": "once"
+    },
+    {
+      "case": "同批残留 3 和 Enter 不批准下一请求",
+      "result": "pass",
+      "pending": true,
+      "answer": ""
+    },
+    {
+      "case": "Ctrl+C 取消审批",
+      "result": "pass",
+      "decision": "deny",
+      "eof": false
+    },
+    {
+      "case": "取消后的下一条普通消息",
+      "result": "pass",
+      "question": "取消后仍可输入"
+    }
+  ],
+  "terminal_restoration": {
+    "echo_before": true,
+    "echo_after": true,
+    "canonical_before": true,
+    "canonical_after": true
+  },
+  "verified_at": "2026-10-04T00:50:18.743734+00:00",
+  "driver_events": [
+    {
+      "stage": "running_ready"
+    },
+    {
+      "stage": "partial_opener_received",
+      "phase": "running",
+      "ordinary_typeahead": "discarded"
+    },
+    {
+      "stage": "approval_first_ready"
+    },
+    {
+      "stage": "stale_paste_discarded"
+    },
+    {
+      "stage": "fresh_paste_is_draft"
+    },
+    {
+      "stage": "multiline_enter_rejected"
+    },
+    {
+      "stage": "approval_second_pending"
+    },
+    {
+      "stage": "next_chat_ready"
+    },
+    {
+      "stage": "done"
+    }
+  ],
+  "socket": "mewcode-ui-isolation",
+  "runtime_directory": "/var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/mewcode-input-isolation-fuht5ytb",
+  "result": "pass"
+}

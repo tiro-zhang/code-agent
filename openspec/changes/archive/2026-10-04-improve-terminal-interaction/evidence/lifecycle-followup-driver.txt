@@ -1,0 +1,66 @@
+import argparse, json, os, subprocess, termios, time
+from pathlib import Path
+base = Path('/private/tmp/mewcode-ui-lifecycle-20261004')
+repo = Path('/Users/tiro/workspace/code/vibecoding/mewcode-demo')
+evidence = repo / 'openspec/changes/improve-terminal-interaction/evidence'
+socket = 'mewcode-ui-lifecycle'
+def tmux(*args):
+    r = subprocess.run(['tmux', '-L', socket, *args], text=True, capture_output=True)
+    if r.returncode: raise RuntimeError(r.stderr)
+    return r.stdout
+def screen(name): return tmux('capture-pane', '-p', '-S', '-2000', '-t', name)
+def capture(name, label):
+    out = screen(name)
+    (evidence / f'lifecycle-{name}-{label}.txt').write_text(out)
+    return out
+parser = argparse.ArgumentParser(); parser.add_argument('action'); parser.add_argument('name'); parser.add_argument('value', nargs='?', default=''); args = parser.parse_args()
+root = base / args.name
+if args.action == 'start':
+    root.mkdir(exist_ok=True); (root / '.mewcode').mkdir(exist_ok=True)
+    for filename in ['wire.jsonl', 'actions.jsonl', 'result.json', 'process.json']:
+        (root / filename).unlink(missing_ok=True)
+    behavior = {'startup': {'list_delay': 10}, 'hang': {'hang_exit': True, 'child': True}, 'eof': {}, 'cancelreuse': {}, 'concurrent': {}, 'concurrentfixed': {}, 'concurrentfinal': {}, 'isolation': {}}[args.name]
+    config = {'version': 1, 'mcpServers': {'lifecycle_demo': {'transport': 'stdio', 'command': str(repo / '.venv/bin/python'), 'args': [str(repo / 'tests/mcp_fixture.py'), '--log', str(root / 'wire.jsonl'), '--behavior', json.dumps(behavior)]}}}
+    if args.name == 'isolation':
+        config['mcpServers']['broken_demo'] = {'transport': 'stdio', 'command': '/private/tmp/mewcode-ui-lifecycle-command-does-not-exist-20261004'}
+    (root / '.mewcode/mcp.yaml').write_text(json.dumps(config))
+    command = f"{repo}/.venv/bin/python {base}/runner.py {args.name}"
+    tmux('new-session', '-d', '-s', args.name, '-x', '140', '-y', '45', '-c', str(root), command)
+    print('started', args.name)
+elif args.action == 'wait':
+    deadline = time.monotonic() + 50
+    while time.monotonic() < deadline:
+        if args.value in screen(args.name):
+            print(capture(args.name, 'wait')); break
+        time.sleep(.2)
+    else:
+        print(capture(args.name, 'timeout')); raise SystemExit(1)
+elif args.action == 'key':
+    info = json.loads((root / 'process.json').read_text()); fd = os.open(info['tty'], os.O_RDONLY | os.O_NOCTTY)
+    attrs = termios.tcgetattr(fd); os.close(fd)
+    event = {'key': args.value, 'monotonic': time.monotonic(), 'terminal_echo_before_key': bool(attrs[3] & termios.ECHO), 'terminal_icanon_before_key': bool(attrs[3] & termios.ICANON)}
+    with (root / 'actions.jsonl').open('a') as f: f.write(json.dumps(event) + '\n')
+    tmux('send-keys', '-t', args.name, args.value)
+    print(event)
+elif args.action == 'text':
+    tmux('send-keys', '-l', '-t', args.name, args.value); tmux('send-keys', '-t', args.name, 'Enter'); print('sent text')
+elif args.action == 'capture': print(capture(args.name, args.value or 'screen'))
+elif args.action == 'result':
+    deadline = time.monotonic() + 12
+    while not (root / 'result.json').exists() and time.monotonic() < deadline: time.sleep(.1)
+    capture(args.name, 'after-exit')
+    result = json.loads((root / 'result.json').read_text())
+    messages = [json.loads(line) for line in (root / 'wire.jsonl').read_text().splitlines()]
+    pids = [m['pid'] for m in messages if m.get('method') in {'PROCESS_START', 'CHILD_START'}]
+    proc = json.loads((root / 'process.json').read_text()); pids += [proc['app_pid']]
+    alive = {}
+    for pid in pids:
+        try: os.kill(pid, 0); alive[str(pid)] = True
+        except ProcessLookupError: alive[str(pid)] = False
+    actions = [json.loads(line) for line in (root / 'actions.jsonl').read_text().splitlines()] if (root / 'actions.jsonl').exists() else []
+    if actions: result['exit_after_last_key_seconds'] = result['finished_monotonic'] - actions[-1]['monotonic']
+    result.update(processes=proc, alive_after_exit=alive, actions=actions, wire=messages)
+    (evidence / f'lifecycle-{args.name}.json').write_text(json.dumps(result, indent=2, ensure_ascii=False))
+    print(json.dumps({k:v for k,v in result.items() if k not in {'terminal_before','terminal_after','wire'}}, ensure_ascii=False, indent=2))
+elif args.action == 'cleanup':
+    tmux('kill-session', '-t', args.name); print('cleaned', args.name)

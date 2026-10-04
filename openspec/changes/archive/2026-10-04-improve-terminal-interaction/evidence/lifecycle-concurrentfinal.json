@@ -1,0 +1,154 @@
+{
+  "exit_code": 0,
+  "finished_monotonic": 169742.372442583,
+  "terminal_before": [
+    27394,
+    3,
+    19200,
+    1483,
+    9600,
+    9600,
+    [
+      "04",
+      "ff",
+      "ff",
+      "7f",
+      "17",
+      "15",
+      "12",
+      "ff",
+      "03",
+      "1c",
+      "1a",
+      "19",
+      "11",
+      "13",
+      "16",
+      "0f",
+      "01",
+      "00",
+      "14",
+      "ff"
+    ]
+  ],
+  "terminal_after": [
+    27394,
+    3,
+    19200,
+    536872395,
+    9600,
+    9600,
+    [
+      "04",
+      "ff",
+      "ff",
+      "7f",
+      "17",
+      "15",
+      "12",
+      "ff",
+      "03",
+      "1c",
+      "1a",
+      "19",
+      "11",
+      "13",
+      "16",
+      "0f",
+      "01",
+      "00",
+      "14",
+      "ff"
+    ]
+  ],
+  "before_echo": true,
+  "before_icanon": true,
+  "after_echo": true,
+  "after_icanon": true,
+  "terminal_flags_equal": false,
+  "exit_after_last_key_seconds": 0.17515141700278036,
+  "processes": {
+    "app_pid": 21840,
+    "runner_pid": 21838,
+    "tty": "/dev/ttys012",
+    "started_monotonic": 169680.671650333
+  },
+  "alive_after_exit": {
+    "21846": false,
+    "21840": false
+  },
+  "actions": [
+    {
+      "key": "/exit + Enter",
+      "monotonic": 169742.197291166
+    }
+  ],
+  "wire": [
+    {
+      "method": "PROCESS_START",
+      "pid": 21846
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "server/discover",
+      "params": {
+        "_meta": {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientInfo": {
+            "name": "MewCode",
+            "version": "0.1.0"
+          },
+          "io.modelcontextprotocol/clientCapabilities": {}
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "tools/list",
+      "params": {
+        "_meta": {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientInfo": {
+            "name": "MewCode",
+            "version": "0.1.0"
+          },
+          "io.modelcontextprotocol/clientCapabilities": {}
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "method": "tools/list",
+      "params": {
+        "cursor": "page2",
+        "_meta": {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientInfo": {
+            "name": "MewCode",
+            "version": "0.1.0"
+          },
+          "io.modelcontextprotocol/clientCapabilities": {}
+        }
+      }
+    }
+  ],
+  "checks": {
+    "real_model": true,
+    "same_batch_two_read_tools": true,
+    "approval_serialized": true,
+    "first_completed_while_second_pending": true,
+    "deferred_result_visible_immediately_wide_and_45_columns": true,
+    "pending_second_tool_visible_wide_and_45_columns": true,
+    "result_log_not_inserted_into_approval_options": true,
+    "both_complete_logs_and_model_results_preserved": true,
+    "narrow_page_numbers_visible": true,
+    "narrow_complete_paths_and_arguments_accessible": true,
+    "next_back_all_passed": true,
+    "fresh_model_done_observed": true,
+    "terminal_echo_icanon_restored": true,
+    "all_processes_cleaned": true
+  }
+}

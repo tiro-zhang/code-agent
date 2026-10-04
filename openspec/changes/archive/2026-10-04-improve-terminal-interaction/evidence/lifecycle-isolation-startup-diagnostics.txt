@@ -1,0 +1,47 @@
+执行 · 权限 default · 启动中 · 暂无任务记录
+Ctrl+C 取消启动
+MCP> broken_demo · 配置 · 无法解析可执行程序
+MCP> lifecycle_demo · 就绪 · 已注册 2 个工具
+MewCode · claude-demo · 权限 default · /help 查看帮助
+执行 · 权限 default · 空闲 · 暂无任务记录
+你>
+Enter 发送 · Esc+Enter 换行 · /help 帮助 · Tab 补全 · Ctrl+C 退出
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

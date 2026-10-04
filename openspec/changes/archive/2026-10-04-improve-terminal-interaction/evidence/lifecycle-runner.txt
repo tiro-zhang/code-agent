@@ -1,0 +1,16 @@
+import json, os, subprocess, sys, termios, time
+from pathlib import Path
+base = Path('/private/tmp/mewcode-ui-lifecycle-20261004')
+repo = Path('/Users/tiro/workspace/code/vibecoding/mewcode-demo')
+name = sys.argv[1]
+root = base / name
+before = termios.tcgetattr(0)
+start = time.monotonic()
+process = subprocess.Popen([str(repo / '.venv/bin/mewcode'), '--config', str(repo / '.env.claude')])
+(root / 'process.json').write_text(json.dumps({'app_pid': process.pid, 'runner_pid': os.getpid(), 'tty': os.ttyname(0), 'started_monotonic': start}))
+rc = process.wait()
+after = termios.tcgetattr(0)
+result = {'exit_code': rc, 'finished_monotonic': time.monotonic(), 'terminal_before': [*before[:6], [x.hex() if isinstance(x, bytes) else x for x in before[6]]], 'terminal_after': [*after[:6], [x.hex() if isinstance(x, bytes) else x for x in after[6]]], 'before_echo': bool(before[3] & termios.ECHO), 'before_icanon': bool(before[3] & termios.ICANON), 'after_echo': bool(after[3] & termios.ECHO), 'after_icanon': bool(after[3] & termios.ICANON), 'terminal_flags_equal': before == after}
+(root / 'result.json').write_text(json.dumps(result))
+print('\nLIFECYCLE_EXIT ' + json.dumps({k: v for k, v in result.items() if k not in {'terminal_before', 'terminal_after'}}), flush=True)
+time.sleep(600)

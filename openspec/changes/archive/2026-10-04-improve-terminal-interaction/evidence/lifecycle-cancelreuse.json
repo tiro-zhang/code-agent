@@ -1,0 +1,208 @@
+{
+  "exit_code": 0,
+  "finished_monotonic": 168771.973169375,
+  "terminal_before": [
+    27394,
+    3,
+    19200,
+    1483,
+    9600,
+    9600,
+    [
+      "04",
+      "ff",
+      "ff",
+      "7f",
+      "17",
+      "15",
+      "12",
+      "ff",
+      "03",
+      "1c",
+      "1a",
+      "19",
+      "11",
+      "13",
+      "16",
+      "0f",
+      "01",
+      "00",
+      "14",
+      "ff"
+    ]
+  ],
+  "terminal_after": [
+    27394,
+    3,
+    19200,
+    536872395,
+    9600,
+    9600,
+    [
+      "04",
+      "ff",
+      "ff",
+      "7f",
+      "17",
+      "15",
+      "12",
+      "ff",
+      "03",
+      "1c",
+      "1a",
+      "19",
+      "11",
+      "13",
+      "16",
+      "0f",
+      "01",
+      "00",
+      "14",
+      "ff"
+    ]
+  ],
+  "before_echo": true,
+  "before_icanon": true,
+  "after_echo": true,
+  "after_icanon": true,
+  "terminal_flags_equal": false,
+  "exit_after_last_key_seconds": 0.19809091699426062,
+  "processes": {
+    "app_pid": 18273,
+    "runner_pid": 18272,
+    "tty": "/dev/ttys012",
+    "started_monotonic": 168645.227783041
+  },
+  "alive_after_exit": {
+    "18285": false,
+    "18273": false
+  },
+  "actions": [
+    {
+      "key": "C-c",
+      "monotonic": 168675.878155833,
+      "terminal_echo_before_key": false,
+      "terminal_icanon_before_key": false
+    },
+    {
+      "key": "/exit + Enter",
+      "monotonic": 168771.775078458
+    }
+  ],
+  "wire": [
+    {
+      "method": "PROCESS_START",
+      "pid": 18285
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "server/discover",
+      "params": {
+        "_meta": {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientInfo": {
+            "name": "MewCode",
+            "version": "0.1.0"
+          },
+          "io.modelcontextprotocol/clientCapabilities": {}
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 2,
+      "method": "tools/list",
+      "params": {
+        "_meta": {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientInfo": {
+            "name": "MewCode",
+            "version": "0.1.0"
+          },
+          "io.modelcontextprotocol/clientCapabilities": {}
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 3,
+      "method": "tools/list",
+      "params": {
+        "cursor": "page2",
+        "_meta": {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientInfo": {
+            "name": "MewCode",
+            "version": "0.1.0"
+          },
+          "io.modelcontextprotocol/clientCapabilities": {}
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 4,
+      "method": "tools/call",
+      "params": {
+        "name": "echo",
+        "arguments": {
+          "text": "LIFECYCLE-SENT-CANCEL-20261004",
+          "delay": 20
+        },
+        "_meta": {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientInfo": {
+            "name": "MewCode",
+            "version": "0.1.0"
+          },
+          "io.modelcontextprotocol/clientCapabilities": {}
+        }
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "method": "notifications/cancelled",
+      "params": {
+        "requestId": 4,
+        "reason": "caller cancelled"
+      }
+    },
+    {
+      "jsonrpc": "2.0",
+      "id": 5,
+      "method": "tools/call",
+      "params": {
+        "name": "echo",
+        "arguments": {
+          "text": "LIFECYCLE-AFTER-CANCEL-REUSE-20261004"
+        },
+        "_meta": {
+          "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+          "io.modelcontextprotocol/clientInfo": {
+            "name": "MewCode",
+            "version": "0.1.0"
+          },
+          "io.modelcontextprotocol/clientCapabilities": {}
+        }
+      }
+    }
+  ],
+  "wire_method_counts": {
+    "PROCESS_START": 1,
+    "notifications/cancelled": 1,
+    "server/discover": 1,
+    "tools/call": 2,
+    "tools/list": 2
+  },
+  "checks": {
+    "real_model": true,
+    "raw_cancel_after_tools_call_sent": true,
+    "slow_call_sent_exactly_once": true,
+    "cancellation_matches_slow_request": true,
+    "same_fixture_pid_after_cancel": 18285,
+    "initialization_sequence_count": 1,
+    "next_round_echo_success": true,
+    "cleanup_success": true
+  }
+}

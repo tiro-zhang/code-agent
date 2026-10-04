@@ -1,0 +1,32 @@
+/Users/tiro/workspace/code/vibecoding/mewcode-demo/.venv/bin/python /Users/tiro/workspace/code/vibec
+oding/mewcode-demo/openspec/changes/improve-terminal-interaction/evidence/input-isolation-pty-driver
+.py --child /var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/mewcode-input-isolation-fuht5ytb
+ tiro@tirodeMacBook-Pro-2  ~/workspace/code/vibecoding/mewcode-demo   feat/improve-terminal-inter
+action ±  /Users/tiro/workspace/code/vibecoding/mewcode-demo/.venv/bin/python /Users/tiro/workspace
+/code/vibecoding/mewcode-demo/openspec/changes/improve-terminal-interaction/evidence/input-isolation
+-pty-driver.py --child /var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/mewcode-input-isolation-fuht
+5ytb
+等待授权
+审阅 1/1 页 · summary · [isolation-second]
+操作> 写入文件 /var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/mewcode-input-isolation-fuht5yt…
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久
+取消> 回车／1 拒绝本次操作，本轮可继续；Ctrl+C 取消整轮。
+关联标识> isolation-second
+工具> write_file · 等待授权 · default
+原因> 仅验证输入；不会调用任何工具
+工作根目录> /var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/mewcode-input-isolation-fuht5ytb
+真实目标数量> 1（完整列表见目标详情）
+范围> 本次绑定当前调用、完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定此根目录、工具与列出的真实文件；允许未来同一路径使用不同内容或搜索表达式，不
+扩展目录或其他工具。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> targets 查看全部目标／命令／外部身份；arguments 查看完整参数；content 查看完整写入内容／编辑
+差异。next／back 翻页，all 查看全部；查看详情不批准。
+
+
+
+
+授权>
+1/回车 拒绝 · 2 本次 · 3 会话 · 4 永久 · Ctrl+C 取消整轮
+summary/targets/arguments/content · next/back/all · PgUp/PgDn 浏览
+

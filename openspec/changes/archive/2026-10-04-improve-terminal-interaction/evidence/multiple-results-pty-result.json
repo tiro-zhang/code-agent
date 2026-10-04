@@ -1,0 +1,83 @@
+{
+  "checks": [
+    {
+      "case": "先超时后成功并继续到达 17 条结果",
+      "result": "pass",
+      "deferred_records": 19,
+      "priority": "旁路 19> 工具> [#1] 超时 · timeout：FIRST-TIMEOUT · SIDE-01"
+    },
+    {
+      "case": "浏览过程不批准；明确 1 后拒绝第三请求",
+      "result": "pass",
+      "decision": "deny",
+      "browsing_commands": 4
+    }
+  ],
+  "scope": "真实 TerminalController + EnhancedTerminal + tmux PTY，受控 AgentEvent；无模型请求或工具执行",
+  "verified_at": "2026-10-04T05:32:13.742034+00:00",
+  "result": "pass",
+  "terminal": "80x16",
+  "pages": [
+    {
+      "stage": "command-1",
+      "pending": true,
+      "section": "results",
+      "page": 0,
+      "total": 3,
+      "body": "工具> [#1] 超时 · timeout：FIRST-TIMEOUT · SIDE-01\n工具> [#2] 成功 · SIDE-02\n工具> [#4] 成功 · SIDE-04\n工具> [#5] 成功 · SIDE-05\n工具> [#6] 成功 · SIDE-06\n工具> [#7] 成功 · SIDE-07\n工具> [#8] 成功 · SIDE-08\n工具> [#9] 成功 · SIDE-09",
+      "visible": "执行 · 权限 default · 等待授权 · 请求 0/20 · 已用 0.5s\n旁路 19> 工具> [#1] 超时 · timeout：FIRST-TIMEOUT · SIDE-01\n异常／受限 1 条 · results 查看全部旁路\n工具> [#3] 等待授权 · write_file\n审阅 1/3 页 · results · [review-third]\n工具> [#1] 超时 · timeout：FIRST-TIMEOUT · SIDE-01\n工具> [#2] 成功 · SIDE-02\n工具> [#4] 成功 · SIDE-04\n工具> [#5] 成功 · SIDE-05\n工具> [#6] 成功 · SIDE-06\n工具> [#7] 成功 · SIDE-07\n工具> [#8] 成功 · SIDE-08\n工具> [#9] 成功 · SIDE-09\n授权>\n1/回车 拒绝 · 2 本次 · 3 会话 · 4 永久 · Ctrl+C 取消整轮\ntargets/arguments/content/summary/results · next/back/all · PgUp/PgDn\n"
+    },
+    {
+      "stage": "command-2",
+      "pending": true,
+      "section": "results",
+      "page": 1,
+      "total": 3,
+      "body": "工具> [#10] 成功 · SIDE-10\n工具> [#11] 成功 · SIDE-11\n工具> [#12] 成功 · SIDE-12\n工具> [#13] 成功 · SIDE-13\n工具> [#14] 成功 · SIDE-14\n工具> [#15] 成功 · SIDE-15\n工具> [#16] 成功 · SIDE-16\n工具> [#17] 成功 · SIDE-17",
+      "visible": "执行 · 权限 default · 等待授权 · 请求 0/20 · 已用 0.8s\n旁路 19> 工具> [#1] 超时 · timeout：FIRST-TIMEOUT · SIDE-01\n异常／受限 1 条 · results 查看全部旁路\n工具> [#3] 等待授权 · write_file\n审阅 2/3 页 · results · [review-third]\n工具> [#10] 成功 · SIDE-10\n工具> [#11] 成功 · SIDE-11\n工具> [#12] 成功 · SIDE-12\n工具> [#13] 成功 · SIDE-13\n工具> [#14] 成功 · SIDE-14\n工具> [#15] 成功 · SIDE-15\n工具> [#16] 成功 · SIDE-16\n工具> [#17] 成功 · SIDE-17\n授权>\n1/回车 拒绝 · 2 本次 · 3 会话 · 4 永久 · Ctrl+C 取消整轮\ntargets/arguments/content/summary/results · next/back/all · PgUp/PgDn\n"
+    },
+    {
+      "stage": "command-3",
+      "pending": true,
+      "section": "results",
+      "page": 2,
+      "total": 3,
+      "body": "工具> [#18] 成功 · SIDE-18\n工具> [#19] 成功 · SIDE-19\n工具> [#20] 成功 · SIDE-20\n",
+      "visible": "执行 · 权限 default · 等待授权 · 请求 0/20 · 已用 1.3s\n旁路 19> 工具> [#1] 超时 · timeout：FIRST-TIMEOUT · SIDE-01\n异常／受限 1 条 · results 查看全部旁路\n工具> [#3] 等待授权 · write_file\n审阅 3/3 页 · results · [review-third]\n工具> [#18] 成功 · SIDE-18\n工具> [#19] 成功 · SIDE-19\n工具> [#20] 成功 · SIDE-20\n\n\n\n\n\n授权>\n1/回车 拒绝 · 2 本次 · 3 会话 · 4 永久 · Ctrl+C 取消整轮\ntargets/arguments/content/summary/results · next/back/all · PgUp/PgDn\n"
+    },
+    {
+      "stage": "command-4",
+      "pending": true,
+      "section": "results",
+      "page": 1,
+      "total": 3,
+      "body": "工具> [#10] 成功 · SIDE-10\n工具> [#11] 成功 · SIDE-11\n工具> [#12] 成功 · SIDE-12\n工具> [#13] 成功 · SIDE-13\n工具> [#14] 成功 · SIDE-14\n工具> [#15] 成功 · SIDE-15\n工具> [#16] 成功 · SIDE-16\n工具> [#17] 成功 · SIDE-17",
+      "visible": "执行 · 权限 default · 等待授权 · 请求 0/20 · 已用 1.5s\n旁路 19> 工具> [#1] 超时 · timeout：FIRST-TIMEOUT · SIDE-01\n异常／受限 1 条 · results 查看全部旁路\n工具> [#3] 等待授权 · write_file\n审阅 2/3 页 · results · [review-third]\n工具> [#10] 成功 · SIDE-10\n工具> [#11] 成功 · SIDE-11\n工具> [#12] 成功 · SIDE-12\n工具> [#13] 成功 · SIDE-13\n工具> [#14] 成功 · SIDE-14\n工具> [#15] 成功 · SIDE-15\n工具> [#16] 成功 · SIDE-16\n工具> [#17] 成功 · SIDE-17\n授权>\n1/回车 拒绝 · 2 本次 · 3 会话 · 4 永久 · Ctrl+C 取消整轮\ntargets/arguments/content/summary/results · next/back/all · PgUp/PgDn\n"
+    }
+  ],
+  "final_log_counts": {
+    "SIDE-01": 1,
+    "SIDE-02": 1,
+    "SIDE-04": 1,
+    "SIDE-05": 1,
+    "SIDE-06": 1,
+    "SIDE-07": 1,
+    "SIDE-08": 1,
+    "SIDE-09": 1,
+    "SIDE-10": 1,
+    "SIDE-11": 1,
+    "SIDE-12": 1,
+    "SIDE-13": 1,
+    "SIDE-14": 1,
+    "SIDE-15": 1,
+    "SIDE-16": 1,
+    "SIDE-17": 1,
+    "SIDE-18": 1,
+    "SIDE-19": 1,
+    "SIDE-20": 1,
+    "THIRD-DENIED": 1,
+    "FIRST-TIMEOUT": 1
+  },
+  "socket": "mewcode-ui-results-26072",
+  "runtime_directory": "/var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/mewcode-multiple-results-n6ynh3lh"
+}

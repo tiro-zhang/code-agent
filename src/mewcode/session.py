@@ -60,6 +60,11 @@ class ChatSession:
         self.prompt_state = PromptState(self.executor.context.root)
         self.agent = Agent(provider, self.executor, max_iterations=max_iterations, prompt_state=self.prompt_state)
 
+    @property
+    def has_pending_plan(self) -> bool:
+        """当前是否有有效待执行计划；读取不消费计划或改变会话状态。"""
+        return self._pending_plan is not None
+
     def permission_command(self, question: str) -> str:
         """只在空闲期执行的本地控制，不触碰历史或计划状态。"""
         parts = question.split()

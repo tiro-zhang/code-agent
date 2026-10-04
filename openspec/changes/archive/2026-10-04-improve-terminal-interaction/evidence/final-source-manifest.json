@@ -1,0 +1,25 @@
+{
+  "files": {
+    "src/mewcode/app.py": "9f76b8a37d2c867822856fabd4b7bfe181621c1453a27fe463df2c65bb03178f",
+    "src/mewcode/session.py": "39f5752bfd6b7e2512963a12aa635ff8ce31e43fdeb617f0283f1d9f9cad38a0",
+    "src/mewcode/permissions/terminal.py": "f7fbf0a7d0da17cd4e20037dae69c4e76786ad72318cc3585e83a945f95e6cb7",
+    "pyproject.toml": "b838298b05f89656264030821b823205e43538aeaf3edb3b3d720b60165a4248",
+    "uv.lock": "53db399acca328e381db60bba69ff7bbd13e6a2a0ef95396e6d95285622a2c69",
+    "src/mewcode/terminal/controller.py": "eb4180763698e1fb6b98d267d538b2abe4bc2d67f838a21dd0836ff5a3124944",
+    "src/mewcode/terminal/__init__.py": "9eb6b6078e279425b2cf2c585f3c6cbb1c0757cb89c7f16ce0fa0c1fa82a22c8",
+    "src/mewcode/terminal/input.py": "1ad3b20929db62fe264c9e77e415b59f91ed86c649716579bb099131808c5f87",
+    "src/mewcode/terminal/text.py": "0bdb8a81c42fedceecf06b71a07fc043f5fe1dd83fde5fc22265e0860f63e48a",
+    "src/mewcode/terminal/approval.py": "ba2b1b55202d6bb333dc3ccf5cd6bc955a60c57eedb1cc8f5d006fcbf5393f7a",
+    "src/mewcode/terminal/commands.py": "78056ac2e7b5317af9d6b2ff4bfcc9ffe9b0dec2fd64215bceae31e274bdd8c1",
+    "src/mewcode/terminal/state.py": "28d24d3a7a39caf5e19df78059b0c65041db391044ab5eeda07c939142597f01",
+    "tests/test_terminal_approval.py": "b00075da7390296c23adde9b385c7ae4f39b43685ac1f08087cb24fc5878ede5",
+    "tests/test_terminal_controller.py": "698477b6f0f8b81e409d11d3098b2e1ce87f8034c05e2490be60b9c07d07a114",
+    "tests/test_terminal_commands.py": "2ccfe80d55b5a10aa937fbbc9bb2db74ad77275c0df77cf97c22d02a66332434",
+    "tests/test_terminal_state.py": "54cdfc89a5e97025099b938711656f58fd3dc82cde77b3b18e79409ab4bb57c4",
+    "tests/test_terminal_app.py": "59186ae226957f97ce2b228049db314e89612ee947745dbf549cb108ee512868",
+    "tests/test_terminal_input.py": "f69f2558f40f7ddef0bafc14d02470731df17474d5d90600708618d87949bfdd"
+  },
+  "secret_scan": "passed; actual configured API key values absent from evidence",
+  "pytest": "691 passed in 82.99s",
+  "build": "sdist and wheel passed"
+}

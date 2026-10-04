@@ -1,0 +1,10 @@
+{
+  "wide_deferred_success_visible": true,
+  "narrow_page_number_visible": true,
+  "narrow_deferred_call_id_and_success_visible": false,
+  "code_sha256": {
+    "src/mewcode/terminal/controller.py": "100bd520975cbdaac155580fc33e06ecb5f469348626ef74bd85f74c46aa0c68",
+    "src/mewcode/terminal/input.py": "6bb31c492b0746ba63c31faf7a0af6c53811734da1cb61e0c8a1f213ad41a918"
+  },
+  "evidence": "lifecycle-concurrentfixed-narrow-targets-1.txt"
+}

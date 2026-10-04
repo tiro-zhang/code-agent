@@ -1,0 +1,16 @@
+执行 · 权限 default · 等待授权 · 请求 0/20 · 已用 1.3s
+旁路 19> 工具> [#1] 超时 · timeout：FIRST-TIMEOUT · SIDE-01
+异常／受限 1 条 · results 查看全部旁路
+工具> [#3] 等待授权 · write_file
+审阅 3/3 页 · results · [review-third]
+工具> [#18] 成功 · SIDE-18
+工具> [#19] 成功 · SIDE-19
+工具> [#20] 成功 · SIDE-20
+
+
+
+
+
+授权>
+1/回车 拒绝 · 2 本次 · 3 会话 · 4 永久 · Ctrl+C 取消整轮
+targets/arguments/content/summary/results · next/back/all · PgUp/PgDn

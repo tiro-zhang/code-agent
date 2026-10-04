@@ -1,0 +1,24 @@
+{
+  "verified_at": "2026-10-03T17:59:53.296394+00:00",
+  "socket": "mewcode-ui-lifecycle",
+  "code_sha256": {
+    "src/mewcode/app.py": "9f76b8a37d2c867822856fabd4b7bfe181621c1453a27fe463df2c65bb03178f",
+    "src/mewcode/terminal/__init__.py": "9eb6b6078e279425b2cf2c585f3c6cbb1c0757cb89c7f16ce0fa0c1fa82a22c8",
+    "src/mewcode/terminal/approval.py": "fa1b697a5f7582e082c7414f0b6287eae25f7de398a38abc1352ced6923d3bf0",
+    "src/mewcode/terminal/commands.py": "a9d0cb4e50ae16e511d661eede1be6060848b1aefb3736a65f11d1bfc0b44804",
+    "src/mewcode/terminal/controller.py": "a38741aeddec3be4c28410ee910b95ab75a4860d3d7794fca3330f222be386e1",
+    "src/mewcode/terminal/input.py": "896a74898675f38d4909ee0b82f48912121b751d99091089d62dc8765642aed9",
+    "src/mewcode/terminal/state.py": "671eb86f9b1042ccab50b66f0a5e89236483e94e990dd8b8268ff5c933163714",
+    "src/mewcode/terminal/text.py": "0bdb8a81c42fedceecf06b71a07fc043f5fe1dd83fde5fc22265e0860f63e48a",
+    "tests/mcp_fixture.py": "4bbe14ec9fb2d8e69d727a15d52e4791e8b509c56fdc213b47304a2a9ac2edf6"
+  },
+  "final_cleanup": {
+    "tmux_list_sessions": "no server running",
+    "recorded_app_fixture_child_pids_present": false
+  },
+  "scenarios": {
+    "startup": "passed",
+    "hang": "passed",
+    "eof": "passed"
+  }
+}

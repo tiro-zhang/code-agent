@@ -42,9 +42,11 @@ def test_broken_idle_input_closes_provider_and_reports_failure(tmp_path):
     assert provider.closed and "启动失败" in error.getvalue()
 
 
-def test_external_sigint_wakes_idle_child_event_loop_at_approval(tmp_path):
+@pytest.mark.parametrize("term", ["dumb", "xterm-256color"])
+def test_external_sigint_wakes_idle_child_event_loop_at_approval(tmp_path, term):
     """外部信号必须唤醒无定时器的子进程，不靠下一次键盘输入解锁。"""
     import pty
+    import re
     import select
     import subprocess
     import sys
@@ -64,12 +66,13 @@ run(sys.argv[1], provider_factory=lambda config: Provider())
 '''
     master, slave = pty.openpty()
     child = subprocess.Popen([sys.executable, "-c", script, str(config)], cwd=tmp_path,
-        stdin=slave, stdout=slave, stderr=slave)
+        stdin=slave, stdout=slave, stderr=slave, env={**os.environ, "TERM": term})
     os.close(slave)
     transcript = bytearray()
     def read_until(marker, timeout=2):
         deadline = time.monotonic() + timeout
-        while marker not in transcript:
+        # 增强后端重绘会省略行尾空格，按实际可见文字匹配。
+        while marker.strip() not in re.sub(rb"\x1b\[[0-?]*[ -/]*[@-~]", b"", transcript):
             remaining = deadline - time.monotonic()
             assert remaining > 0, transcript.decode(errors="replace")
             readable, _, _ = select.select([master], [], [], remaining)
@@ -77,7 +80,7 @@ run(sys.argv[1], provider_factory=lambda config: Provider())
             transcript.extend(os.read(master, 65536))
     try:
         read_until("你> ".encode())
-        os.write(master, "读取 a\n".encode())
+        os.write(master, "读取 a\r".encode())
         read_until("授权> 1".encode())
         # 仅父进程等待；子进程没有网络、定时器或额外输入可唤醒 selector。
         time.sleep(0.05)
@@ -86,7 +89,7 @@ run(sys.argv[1], provider_factory=lambda config: Provider())
         read_until("本轮未完成> cancelled".encode())
         read_until("你> ".encode())
         assert "开始" not in transcript.decode(errors="replace")
-        os.write(master, b"/exit\n")
+        os.write(master, b"/exit\r")
         assert child.wait(timeout=2) == 0
     finally:
         if child.poll() is None:

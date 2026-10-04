@@ -1,0 +1,33 @@
+"""真实 Provider 的透明验收计数；不记录配置或模型凭据。"""
+import json
+from pathlib import Path
+from mewcode.app import run
+from mewcode.providers import make_provider
+meta=json.loads(Path('/tmp/mewcode-ui-e2e.json').read_text())
+root=Path(meta['root']); repo=Path(meta['repo'])
+class LoggedProvider:
+    def __init__(self, config):
+        self.inner=make_provider(config)
+    async def stream(self, messages, **options):
+        users=[m.content for m in messages if m.role=='user']
+        with (root/'model-requests.jsonl').open('a') as f:
+            f.write(json.dumps({'user':users[-1] if users else '', 'message_count':len(messages)},ensure_ascii=False)+'\n')
+        source=self.inner.stream(messages, **options)
+        try:
+            async for event in source:
+                yield event
+        finally:
+            await source.aclose()
+    async def aclose(self):
+        await self.inner.aclose()
+if __name__ == "__main__":
+    from mewcode.terminal.controller import TerminalController
+    original_show = TerminalController.show
+    def record_event(self, renderer, event, **kwargs):
+        if event.kind in {"progress", "tool_call", "tool_started", "tool_result", "finished"}:
+            with (root/'events.jsonl').open('a') as f:
+                f.write(json.dumps({'kind':event.kind,'run_id':event.run_id,'tool_call_id':event.tool_call_id,
+                                    'reason':event.reason,'phase':event.phase})+'\n')
+        return original_show(self, renderer, event, **kwargs)
+    TerminalController.show = record_event
+    raise SystemExit(run(repo/'.env.claude', provider_factory=LoggedProvider))
