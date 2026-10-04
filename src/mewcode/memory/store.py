@@ -1,6 +1,6 @@
 """私有 Markdown 笔记是事实源，索引是可重建的有界视图。"""
 
-from contextlib import contextmanager
+from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass
 from datetime import datetime
 import fcntl
@@ -134,6 +134,24 @@ def sorted_notes(notes):
     return sorted(notes, key=lambda note: (PRIORITY[note.category], -timestamp(note.updated_at), note.id, note.scope))
 
 
+def decode_note(raw, name, scope):
+    """维护和只读查询共用笔记格式校验。"""
+    if len(raw) > NOTE_BYTES:
+        raise ValueError("笔记超过大小限制")
+    text = raw.decode("utf-8")
+    if not text.startswith("---\n") or "\n---\n" not in text[4:]:
+        raise ValueError("笔记缺少 frontmatter")
+    frontmatter, content = text[4:].split("\n---\n", 1)
+    value = yaml.safe_load(frontmatter)
+    if not isinstance(value, dict):
+        raise ValueError("frontmatter 不是对象")
+    value["content"] = content
+    note = Note.from_dict(value, scope=scope)
+    if name != note.id + ".md":
+        raise ValueError("笔记身份与文件名不匹配")
+    return note
+
+
 def render_index(notes, *, combined=False):
     """先按价值整项选择，再按项目／用户段呈现；所有标题也占额度。"""
     selected = []
@@ -169,6 +187,40 @@ class MemoryStore:
         self.scope = scope
         self.root = self.base / ".mewcode" / "memory" if scope == "project" else self.base / "memory"
         self.diagnostics = []
+
+    def query(self):
+        """仅从普通笔记读取，不创建目录、锁、索引或修复权限。"""
+        self.diagnostics.clear()
+        notes, digest = [], hashlib.sha256()
+        anchor = self.base if self.scope == "project" else self.base.parent
+        parts = (".mewcode", "memory") if self.scope == "project" else (self.base.name, "memory")
+        with ExitStack() as stack:
+            try:
+                descriptor = os.open(anchor.resolve(strict=True), os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+                stack.callback(os.close, descriptor)
+                for part in parts:
+                    descriptor = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=descriptor)
+                    stack.callback(os.close, descriptor)
+                    if os.fstat(descriptor).st_uid != os.getuid():
+                        raise ValueError("笔记目录不属于当前用户")
+            except FileNotFoundError:
+                return MemorySnapshot((), digest.hexdigest())
+            for name in sorted(os.listdir(descriptor)):
+                if not name.endswith('.md') or name == 'MEMORY.md':
+                    continue
+                try:
+                    handle = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=descriptor)
+                    with os.fdopen(handle, 'rb') as stream:
+                        info = os.fstat(stream.fileno())
+                        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_uid != os.getuid():
+                            raise ValueError("笔记不是当前用户的安全普通文件")
+                        raw = stream.read(NOTE_BYTES + 1)
+                    note = decode_note(raw, name, self.scope)
+                    notes.append(note)
+                    digest.update(name.encode() + raw)
+                except (OSError, ValueError, UnicodeError, yaml.YAMLError, TypeError):
+                    self.diagnostics.append(f"跳过损坏或不安全笔记：{name}")
+        return MemorySnapshot(tuple(sorted_notes(notes)), digest.hexdigest())
 
     def _ensure(self):
         # 拒绝专用目录自身的链接；项目工作根允许调用方先解析真实路径。
@@ -261,19 +313,7 @@ class MemoryStore:
                 digest.update(raw)
                 info = path.stat()
                 digest.update(f"{info.st_size}:{info.st_mtime_ns}:{info.st_ctime_ns}".encode())
-                if len(raw) > NOTE_BYTES:
-                    raise ValueError("笔记超过大小限制")
-                text = raw.decode("utf-8")
-                if not text.startswith("---\n") or "\n---\n" not in text[4:]:
-                    raise ValueError("笔记缺少 frontmatter")
-                frontmatter, content = text[4:].split("\n---\n", 1)
-                value = yaml.safe_load(frontmatter)
-                if not isinstance(value, dict):
-                    raise ValueError("frontmatter 不是对象")
-                value["content"] = content
-                note = Note.from_dict(value, scope=self.scope)
-                if path.name != note.id + ".md":
-                    raise ValueError("笔记身份与文件名不匹配")
+                note = decode_note(raw, path.name, self.scope)
                 notes.append(note)
             except (OSError, ValueError, UnicodeError, yaml.YAMLError, TypeError):
                 digest.update(b"invalid")

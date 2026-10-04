@@ -313,7 +313,7 @@ class TerminalState:
 
     def summary(self) -> str:
         """最近请求和累计摘要都保留缓存与不完整标记。"""
-        mode = "规划" if self.mode == "plan" else "执行"
+        mode = "[PLAN] 规划" if self.mode == "plan" else "[DEFAULT] 执行"
         phase = self.safe(PHASE_LABELS.get(self.phase, self.phase))
         header = f"{mode} · 权限 {self.safe(self.permission_mode)} · {phase}"
         if self._started_at is None:
@@ -333,13 +333,11 @@ class TerminalState:
         purpose = "（摘要）" if self._usage and self._purposes.get(max(self._usage)) == "summary" else ""
         return f"{header}\n最近请求{purpose} Token · {recent}\n累计已知 Token · {total}"
 
-    def status_text(self, *, root: object, model: str, mode: str, permission_mode: str,
-                    has_pending_plan: bool) -> str:
+    def status_text(self, *, root: object, model: str, mode: str, permission_mode: str) -> str:
         """只读展示当前配置和最近任务的逐请求、工具与停止详情。"""
-        mode_label = "规划" if mode == "plan" else "执行"
-        plan_label = "可用" if has_pending_plan else "暂无"
+        mode_label = "[PLAN] 规划" if mode == "plan" else "[DEFAULT] 执行"
         lines = [f"项目> {self.safe(root)}", f"模型> {self.safe(model)}",
-                 f"模式> {mode_label} · 权限 {self.safe(permission_mode)} · 待执行计划 {plan_label}"]
+                 f"模式> {mode_label} · 权限 {self.safe(permission_mode)}"]
         if self._started_at is None:
             lines.append("暂无任务记录")
             return "\n".join(lines)

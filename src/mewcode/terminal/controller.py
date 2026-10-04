@@ -31,7 +31,9 @@ class _Output:
 
 
 class TerminalController:
-    def __init__(self, reader, output, *, secret, root, on_interrupt, allow_enhanced=True):
+    def __init__(self, reader, output, *, secret, root, on_interrupt, allow_enhanced=True, registry=None):
+        from ..commands.builtins import build_registry
+        self.registry = registry if registry is not None else build_registry()
         self.reader, self.output = reader, output
         self.secret, self.root, self.on_interrupt = secret, root, on_interrupt
         self.state = TerminalState(secret)
@@ -73,7 +75,7 @@ class TerminalController:
             backend = EnhancedTerminal(create_input(self.reader.stream, always_prefer_tty=False),
                 create_output(self.output, always_prefer_tty=False), on_interrupt=self.on_interrupt,
                 status=self.state.summary, active=self._active_lines, secret=self.secret,
-                results=lambda: "".join(self._deferred))
+                results=lambda: "".join(self._deferred), registry=self.registry)
             await backend.start()
             self.backend = backend
             self.set_phase("starting")
@@ -159,6 +161,22 @@ class TerminalController:
             text = "".join(self._deferred)
             self._deferred.clear()
             self.write(text)
+
+    async def clear_screen(self):
+        """清除终端显示并重绘；保留输入历史、任务状态及会话。"""
+        if not self.backend:
+            self.write("提示> 当前纯文本输出清屏不可用；会话上下文保持。\n")
+            return
+        self.finish_line()
+        await self.drain()
+        with set_app(self.backend.application):
+            def clear():
+                output = self.backend.application.output
+                output.erase_screen()
+                output.cursor_goto(0, 0)
+                output.flush()
+            await run_in_terminal(clear)
+        self.backend.application.invalidate()
 
     async def readline(self, cancel):
         # 等输出恢复后再开放草稿，保证提示符出现时已有等待者接收提交。

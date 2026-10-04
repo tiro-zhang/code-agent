@@ -141,7 +141,7 @@ async def test_summary_checkpoint_failure_preserves_history_and_failure_counter(
 
 
 @async_test
-async def test_session_restore_has_history_mode_but_requires_new_plan(tmp_path):
+async def test_session_restore_has_history_and_do_requires_explicit_task(tmp_path):
     from mewcode.session import ChatSession
     from types import SimpleNamespace
     config = SimpleNamespace(context_window=128000, max_output_tokens=8192, protocol='openai', model='test')
@@ -150,17 +150,22 @@ async def test_session_restore_has_history_mode_but_requires_new_plan(tmp_path):
                         config=config, persistent=True, memory_enabled=False, user_root=tmp_path/'user')
     first.enter_plan()
     events = [e async for e in first.ask('读取方案')]
-    assert events[-1].reason == 'model_done' and first.has_pending_plan
+    assert events[-1].reason == 'model_done' and first.mode == 'plan'
     identity = first.session_id
     old = tuple(first.history)
     await first.aclose()
     provider = ScriptedProvider([answer('新计划')])
     second = ChatSession(provider, executor=executor, config=config, resume=identity,
                          memory_enabled=False, user_root=tmp_path/'user')
-    assert second.mode == 'plan' and not second.has_pending_plan
+    assert second.mode == 'plan'
     assert tuple(second.history) == old
     await second.prepare_restore()
     assert provider.requests == []
+    second.enter_execute()
+    assert provider.requests == [] and tuple(second.history) == old
+    assert second.mode == 'execute'
+    _ = [event async for event in second.ask('明确的新任务')]
+    assert len(provider.requests) == 1
     await second.aclose()
 
 

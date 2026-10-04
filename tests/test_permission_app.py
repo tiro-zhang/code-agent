@@ -122,7 +122,7 @@ def test_permission_commands_do_not_request_model_or_change_plan_history(tmp_pat
     monkeypatch.chdir(tmp_path)
     provider = ScriptedProvider([answer("计划"), answer("完成")])
     output = StringIO()
-    text = "/plan 任务\n/permissions\n/permissions mode strict\n/permissions revoke session\n/permissions revoke permanent\n/permissions mode unknown\n/do\n/exit\n"
+    text = "/plan 任务\n/permissions\n/permissions mode strict\n/permissions revoke session\n/permissions revoke permanent\n/permissions mode unknown\n/do\n执行任务\n/exit\n"
     code = run(config_file(tmp_path), stdin=StringIO(text), stdout=output,
         provider_factory=lambda config: provider)
     assert code == 0 and len(provider.requests) == 2
@@ -250,7 +250,8 @@ async def test_permission_state_survives_plan_and_do(tmp_path):
     session = ChatSession(provider, executor=executor, permission_mode="bypass")
     session.enter_plan()
     await collect(session.ask("任务"))
-    await collect(session.execute_plan())
+    session.enter_execute()
+    await collect(session.ask("执行任务"))
     assert session.executor.permissions is manager and manager.mode == "strict"
     assert manager.grants.session == grants and (tmp_path / "a").read_text() == "旧文"
     results = [message.tool_result for message in session.history if message.role == "tool"]

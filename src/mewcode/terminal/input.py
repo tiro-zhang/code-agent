@@ -8,7 +8,7 @@ import termios
 
 from prompt_toolkit.application import Application
 from prompt_toolkit.buffer import Buffer
-from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.completion import Completer, Completion, CompleteEvent
 from prompt_toolkit.document import Document
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.key_binding import KeyBindings
@@ -16,9 +16,10 @@ from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout import HSplit, Layout, Window, ConditionalContainer
 from prompt_toolkit.layout.controls import BufferControl, FormattedTextControl
 from prompt_toolkit.layout.dimension import Dimension
+from prompt_toolkit.layout.menus import CompletionsMenu
 from prompt_toolkit.utils import get_cwidth
 
-from .commands import command_completions
+from ..commands.builtins import build_registry
 from .approval import ApprovalView
 from .text import terminal_text
 
@@ -39,10 +40,13 @@ def _fit_width(text, width):
 
 
 class CommandCompleter(Completer):
+    def __init__(self, registry):
+        self.registry = registry
+
     def get_completions(self, document, complete_event):
         if document.cursor_position != len(document.text):
             return
-        for value in command_completions(document.text):
+        for value in self.registry.completions(document.text):
             yield Completion(value, start_position=-len(document.text))
 
 
@@ -112,7 +116,7 @@ class EnhancedTerminal:
     """Application 从启动存活至资源收尾，不另开 stdin 或全屏缓冲。"""
 
     def __init__(self, input, output, *, on_interrupt, status=lambda: "", active=lambda: [], secret="",
-                 results=lambda: ""):
+                 results=lambda: "", registry=None):
         self.input, self.output = input, output
         self.secret = secret
         self._closing = False
@@ -123,7 +127,8 @@ class EnhancedTerminal:
         self.phase = "starting"
         self.eof = False
         self.generation = 0
-        self.chat = Buffer(multiline=True, completer=CommandCompleter(), complete_while_typing=False,
+        self.registry = registry if registry is not None else build_registry()
+        self.chat = Buffer(multiline=True, completer=CommandCompleter(self.registry), complete_while_typing=False,
                            read_only=Condition(lambda: self.phase != "idle"))
         self.answer = Buffer(multiline=True, read_only=Condition(lambda: self.phase != "approval"))
         self.live = Buffer(read_only=True)
@@ -164,6 +169,7 @@ class EnhancedTerminal:
             ConditionalContainer(Window(self._chat_control, wrap_lines=True,
                 height=Dimension(min=1, max=8),
                 get_line_prefix=lambda line, wrap: "你> " if line == 0 else "… "), idle),
+            ConditionalContainer(CompletionsMenu(max_height=6, scroll_offset=1), idle),
             ConditionalContainer(Window(FormattedTextControl(self._hint),
                 height=lambda: 2 if self.phase == "approval" else Dimension(min=1, max=2), wrap_lines=True),
                 Condition(lambda: self.phase != "approval" or not self._tiny())),
@@ -262,6 +268,10 @@ class EnhancedTerminal:
 
         @bindings.add("enter", eager=True)
         def submit(event):
+            if self.phase == "idle" and self.chat.complete_state:
+                state = self.chat.complete_state
+                self.chat.apply_completion(state.current_completion or state.completions[0])
+                return
             if self.phase == "idle" and self._pending is not None:
                 text = self.chat.text
                 future = self._pending
@@ -285,6 +295,10 @@ class EnhancedTerminal:
                 else:
                     self._notice = "无效选项；尚未批准，请重新选择或浏览详情"
                 self.application.invalidate()
+
+        @bindings.add("escape", eager=True, filter=idle & Condition(lambda: self.chat.complete_state is not None))
+        def dismiss_completion(event):
+            self.chat.cancel_completion()
 
         @bindings.add("escape", "enter", filter=idle)
         def newline(event):
@@ -325,7 +339,9 @@ class EnhancedTerminal:
 
         @bindings.add("up", filter=idle)
         def up(event):
-            if self.chat.document.cursor_position_row:
+            if self.chat.complete_state:
+                self.chat.complete_previous()
+            elif self.chat.document.cursor_position_row:
                 self.chat.cursor_up()
             elif self._history and self._history_index > 0:
                 if self._history_index == len(self._history):
@@ -335,7 +351,9 @@ class EnhancedTerminal:
 
         @bindings.add("down", filter=idle)
         def down(event):
-            if not self.chat.document.on_last_line:
+            if self.chat.complete_state:
+                self.chat.complete_next()
+            elif not self.chat.document.on_last_line:
                 self.chat.cursor_down()
             elif self._history_index < len(self._history):
                 self._history_index += 1
@@ -347,7 +365,11 @@ class EnhancedTerminal:
             if self.chat.complete_state:
                 self.chat.complete_next()
             else:
-                self.chat.start_completion(select_first=True)
+                choices = list(self.chat.completer.get_completions(self.chat.document, CompleteEvent(completion_requested=True)))
+                if len(choices) == 1:
+                    self.chat.apply_completion(choices[0])
+                elif choices:
+                    self.chat.start_completion(select_first=True)
 
         @bindings.add("pageup", filter=approval)
         def previous_page(event):

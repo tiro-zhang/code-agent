@@ -151,7 +151,7 @@ async def test_tab_really_completes_and_history_navigation_keeps_multiline_curso
         try:
             pending = asyncio.create_task(terminal.readline())
             await tick()
-            pipe.send_text('/per\t')
+            pipe.send_text('/permissions\t')
             await tick()
             assert terminal.chat.text == '/permissions' and not pending.done()
             pipe.send_text('\r')
@@ -412,5 +412,40 @@ async def test_narrow_review_header_shows_page_before_long_request_id():
             assert not pending.done()
             pipe.send_text('1\r')
             assert await asyncio.wait_for(pending, 1) == 'deny'
+        finally:
+            await terminal.close()
+
+
+@async_test
+async def test_completion_menu_enter_confirms_then_submits_and_escape_dismisses():
+    from mewcode.terminal.input import EnhancedTerminal
+    with create_pipe_input() as pipe:
+        terminal = EnhancedTerminal(pipe, DummyOutput(), on_interrupt=lambda: None)
+        await terminal.start()
+        try:
+            pending = asyncio.create_task(terminal.readline())
+            await asyncio.sleep(.03)
+            pipe.send_text('/per\t')
+            await asyncio.sleep(.1)
+            assert len(terminal.chat.complete_state.completions) == 2
+            pipe.send_text('\r')
+            await asyncio.sleep(.05)
+            assert not pending.done() and terminal.chat.complete_state is None
+            assert terminal.chat.text == '/permission'
+            pipe.send_text('\r')
+            assert await asyncio.wait_for(pending, 1) == '/permission'
+            pending = asyncio.create_task(terminal.readline())
+            await asyncio.sleep(.03)
+            pipe.send_text('/per\t')
+            await asyncio.sleep(.1)
+            pipe.send_text('\x1b')
+            await asyncio.sleep(.6)
+            assert terminal.chat.complete_state is None and not pending.done()
+            assert terminal.chat.text == '/per'
+            pipe.send_text('\x15/HE\t')
+            await asyncio.sleep(.1)
+            assert terminal.chat.text == '/help' and terminal.chat.complete_state is None
+            pipe.send_text('\r')
+            assert await asyncio.wait_for(pending, 1) == '/help'
         finally:
             await terminal.close()

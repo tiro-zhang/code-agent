@@ -12,12 +12,14 @@ from .async_utils import protected
 from .config import ConfigError, ProviderConfig, load_config
 from .providers import make_provider
 from .permissions.terminal import InputReader
-from .session import ChatSession, PlanStateError, operation_summary
+from .session import ChatSession, operation_summary
 from .tools.base import ToolError
 from .types import AgentEvent, Provider, ProviderError, TokenUsage
 from .mcp.config import load_config as load_mcp_config
 from .mcp.manager import MCPManager
-from .terminal.commands import parse_command, help_text
+from .commands import parse_command, dispatch, RegistrationError
+from .commands.builtins import build_registry
+from .commands.adapter import SessionCommandContext
 from .terminal.controller import TerminalController
 from .terminal.text import terminal_text, usage_text
 
@@ -113,6 +115,11 @@ class _Renderer:
 async def _run(config, input_stream, output_stream, error_stream, factory, *,
                permission_mode="default", approval_responder=None, input_reader=None, resume=None,
                persistent=True, memory_enabled=True, user_root=None):
+    try:
+        registry = build_registry()
+    except RegistrationError as error:
+        error_stream.write(f"启动失败：{terminal_text(str(error), config.api_key)}\n")
+        return 2
     provider = factory(config)
     loop = asyncio.get_running_loop()
     active_cancel = asyncio.Event()
@@ -146,7 +153,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                 user_root=user_root, notify=maintenance)
             session.permissions.config.load()
             terminal = TerminalController(reader, output_stream, secret=config.api_key,
-                root=session.executor.context.root, on_interrupt=interrupt, allow_enhanced=input_reader is None)
+                root=session.executor.context.root, on_interrupt=interrupt, allow_enhanced=input_reader is None, registry=registry)
             terminal.sync_session(session)
             renderer = _Renderer(terminal.stream, config.api_key)
             session.permissions.responder = approval_responder or terminal.approve
@@ -178,6 +185,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             count = sum(message.role != 'context' for message in session.history)
             status = f'已恢复 · {count} 条工作消息 · 等待新输入' if session.resumed else '新建存档'
             renderer.line(f'会话> {session.session_id} · {status}')
+        context = SessionCommandContext(registry, session, terminal, renderer, config)
         while True:
             terminal.sync_session(session)
             try:
@@ -191,43 +199,15 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             if question is None:
                 renderer.line("")
                 return 0
-            command = parse_command(question)
-            if command.kind == "exit":
+            parsed = parse_command(question)
+            result = await dispatch(parsed, registry, context)
+            if result.kind == 'exit':
                 return 0
-            if command.kind == "empty":
+            if result.kind == 'handled':
                 continue
-            if command.kind == "error":
-                renderer.line("提示> " + command.text)
-                continue
-            if command.kind == "help":
-                renderer.line(help_text(enhanced=terminal.enhanced))
-                continue
-            if command.kind == "status":
-                renderer.line(terminal.state.status_text(root=session.executor.context.root, model=config.model,
-                    mode=session.mode, permission_mode=session.permissions.mode, has_pending_plan=session.has_pending_plan))
-                renderer.line(session.context_status())
-                continue
-            if command.kind == "permissions":
-                try:
-                    renderer.line(terminal_text(session.permission_command(command.text), config.api_key, multiline=True))
-                except (ValueError, ToolError, OSError) as error:
-                    renderer.line(f"提示> {renderer.safe(error, 400)}")
-                continue
-            if command.kind == "plan":
-                try:
-                    session.enter_plan()
-                except OSError:
-                    renderer.line('提示> 模式存档失败，请检查磁盘；模式保持')
-                    continue
-                if not command.text:
-                    renderer.line("提示> 已进入只读规划模式，请输入任务；计划完成后输入 /do 直接执行")
-                    continue
-            if command.kind == "do" and not session.has_pending_plan:
-                renderer.line("提示> 没有有效的待执行计划，请先使用 /plan 生成计划")
-                continue
-            if command.kind == "message":
+            if parsed.kind == 'message':
                 terminal.remember(question)
-            maintenance = command.kind == 'compact'
+            maintenance = result.kind == 'summary'
             if maintenance:
                 terminal.set_phase('summary')
             else:
@@ -235,12 +215,11 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             terminal.sync_session(session)
             active_cancel = asyncio.Event()
             source = (session.compact(cancel_event=active_cancel) if maintenance else
-                      session.execute_plan(cancel_event=active_cancel) if command.kind == "do"
-                      else session.ask(command.text, cancel_event=active_cancel))
+                      session.ask(result.text, cancel_event=active_cancel))
             try:
                 async for event in source:
                     terminal.show(renderer, event, managed_approval=approval_responder is None, maintenance=maintenance)
-            except (PlanStateError, ProviderError, OSError) as error:
+            except (ProviderError, OSError) as error:
                 renderer.line(f"提示> {renderer.safe(error, 300)}")
             finally:
                 await protected(source.aclose(), cancel_event=active_cancel)

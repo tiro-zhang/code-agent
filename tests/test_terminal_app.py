@@ -44,15 +44,15 @@ def test_pipe_preloaded_questions_survive_task_cancel(tmp_path, monkeypatch):
     assert Message("user", "第二问") in provider.requests[1][0]
 
 
-def test_escaped_slash_is_a_message_and_status_keeps_pending_plan(tmp_path, monkeypatch):
+def test_escaped_slash_is_a_message_and_status_keeps_mode(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     provider = ScriptedProvider([answer("计划"), answer("完成"), answer("路径解释")])
     output = StringIO()
     text = "/plan 任务\n/status\n/do extra\n/do\n//tmp/example\n/exit\n"
     assert run(config_file(tmp_path), stdin=StringIO(text), stdout=output,
                provider_factory=lambda config: provider) == 0
-    assert len(provider.requests) == 3
-    assert "待执行计划 可用" in output.getvalue()
+    assert len(provider.requests) == 2
+    assert "[PLAN]" in output.getvalue() and "待执行计划" not in output.getvalue()
     assert Message("user", "/tmp/example") in provider.requests[-1][0]
 
 

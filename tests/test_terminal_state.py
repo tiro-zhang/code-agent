@@ -20,7 +20,7 @@ def tool_event(kind, identifier="call-one", *, run_id="run-a", name="read_file",
 
 def status(state):
     return state.status_text(root="/项目", model="test-model", mode="plan",
-                             permission_mode="strict", has_pending_plan=True)
+                             permission_mode="strict")
 
 
 def test_terminal_text_redacts_before_escaping_and_limiting():
@@ -53,7 +53,7 @@ def test_empty_status_reports_no_task_without_inventing_usage():
     text = status(TerminalState())
     assert "暂无任务记录" in text
     assert "/项目" in text and "test-model" in text
-    assert "规划" in text and "strict" in text and "可用" in text
+    assert "规划" in text and "strict" in text and "[PLAN]" in text and "待执行计划" not in text
     assert "Token 0" not in text
 
 
@@ -349,7 +349,7 @@ def test_status_safely_escapes_every_untrusted_display_field():
     state.update(AgentEvent("finished", run_id="run-a", reason="stream_error",
                             text="private-key\x1b[31m", usage=TokenUsage()))
     text = state.status_text(root="/private-key\r", model="private-key\x1b", mode="execute",
-                             permission_mode="private-key\x1b", has_pending_plan=False)
+                             permission_mode="private-key\x1b")
     assert "private-key" not in text and "\x1b" not in text and "\r" not in text
     assert "[已隐藏]" in text and "\\x1b" in text and "\\r" in text
 

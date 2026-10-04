@@ -1,0 +1,26 @@
+{
+  "unchanged": true,
+  "files": {
+    "project/.mewcode/memory/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.md": {
+      "sha256": "851f77bed35ab899e4b213e5a099782c6bdd2ee9ac3d16fffeff67979330a133",
+      "mode": "0o644",
+      "mtime_ns": 1791126752617535921
+    },
+    "project/.mewcode/memory/MEMORY.md": {
+      "sha256": "264b1ac398f21a908a8227b0b96a5d04e845052a866c3ad75f46d6c1e1114397",
+      "mode": "0o644",
+      "mtime_ns": 1791126752617672170
+    },
+    "user/memory/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.md": {
+      "sha256": "9704023f8d15c69ee16cdd955a7e4094530eddf1f658c7f4a4fc6dde64e4f2c1",
+      "mode": "0o644",
+      "mtime_ns": 1791126752618916532
+    },
+    "user/memory/MEMORY.md": {
+      "sha256": "264b1ac398f21a908a8227b0b96a5d04e845052a866c3ad75f46d6c1e1114397",
+      "mode": "0o644",
+      "mtime_ns": 1791126752619012864
+    }
+  },
+  "no_lock": true
+}

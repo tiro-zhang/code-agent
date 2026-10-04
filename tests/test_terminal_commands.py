@@ -41,32 +41,11 @@ def test_parse_preserves_messages_and_recognizes_valid_commands(draft, kind, tex
     from mewcode.terminal.commands import parse_command
 
     command = parse_command(draft)
-    assert (command.kind, command.text) == (kind, text)
-
-
-@pytest.mark.parametrize("draft, usage", [
-    ("/help extra", "/help"),
-    ("/status extra", "/status"),
-    ("/exit extra", "/exit"),
-    ("/do extra", "/do"),
-    ("/permissions extra", "/permissions"),
-    ("/permissions mode", "/permissions mode strict|default|bypass"),
-    ("/permissions mode invalid", "/permissions mode strict|default|bypass"),
-    ("/permissions mode strict extra", "/permissions mode strict|default|bypass"),
-    ("/permissions revoke", "/permissions revoke session|permanent"),
-    ("/permissions revoke invalid", "/permissions revoke session|permanent"),
-    ("/permissions revoke session extra", "/permissions revoke session|permanent"),
-    ("/hepl", "/help"),
-    ("/HELP", "/help"),
-    ("/", "/help"),
-])
-def test_invalid_commands_return_local_chinese_usage(draft, usage):
-    from mewcode.terminal.commands import parse_command
-
-    command = parse_command(draft)
-    assert command.kind == "error"
-    assert usage in command.text
-    assert any("\u4e00" <= character <= "\u9fff" for character in command.text)
+    if kind in {"empty", "message"}:
+        assert (command.kind, command.text) == (kind, text)
+    else:
+        assert command.kind == "command" and command.name == kind
+        assert command.text == (draft.strip().split(maxsplit=1)[1] if len(draft.strip().split(maxsplit=1)) == 2 else "")
 
 
 @pytest.mark.parametrize("enhanced", [False, True])
@@ -89,8 +68,8 @@ def test_help_lists_full_commands_and_phase_specific_controls(enhanced):
 
 @pytest.mark.parametrize("draft, expected", [
     ("/he", ["/help"]),
-    ("/per", ["/permissions"]),
-    (" /per", [" /permissions"]),
+    ("/per", ["/permission", "/permissions"]),
+    (" /per", [" /permission", " /permissions"]),
     ("/permissions ", ["/permissions mode", "/permissions revoke"]),
     ("/permissions m", ["/permissions mode"]),
     ("/permissions mode ", ["/permissions mode strict", "/permissions mode default", "/permissions mode bypass"]),
@@ -110,26 +89,3 @@ def test_command_completions_only_offer_known_command_positions(draft, expected)
     from mewcode.terminal.commands import command_completions
 
     assert command_completions(draft) == expected
-
-
-@async_test
-async def test_pending_plan_status_is_readonly_and_tracks_plan_lifecycle(tmp_path):
-    provider = ScriptedProvider([answer("待执行计划"), answer("执行结果"), answer("新计划")])
-    executor = ToolExecutor(default_registry(), ToolContext(tmp_path), permissions=permission_bypass(tmp_path))
-    session = ChatSession(provider, executor=executor)
-    assert session.has_pending_plan is False
-    session.enter_plan()
-    await collect(session.ask("规划任务"))
-    before = tuple(session.history)
-    assert session.has_pending_plan is True
-    assert session.has_pending_plan is True
-    assert tuple(session.history) == before and len(provider.requests) == 1
-    with pytest.raises(AttributeError):
-        session.has_pending_plan = False
-    await collect(session.execute_plan())
-    assert session.has_pending_plan is False
-    session.enter_plan()
-    await collect(session.ask("再次规划"))
-    assert session.has_pending_plan is True
-    session.enter_plan()
-    assert session.has_pending_plan is False

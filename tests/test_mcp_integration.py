@@ -93,7 +93,7 @@ def test_plan_excludes_mcp_and_do_restores_tools_without_approval(tmp_path, monk
     provider = ScriptedProvider([calls(ToolCall("forged", name, '{}')), answer("目标：外部调用。步骤：调用 echo。验证：返回文本。"),
                                  calls(ToolCall("do", name, '{}')), answer("未获批准")])
     output = StringIO()
-    assert run(config_file(tmp_path), stdin=StringIO("/plan 测试\n/do\n/exit\n"), stdout=output,
+    assert run(config_file(tmp_path), stdin=StringIO("/plan 测试\n/do\n执行任务\n/exit\n"), stdout=output,
                provider_factory=lambda _: provider) == 0
     assert [len(options["tools"]) for _, options in provider.requests] == [3, 3, 8, 8]
     assert "tool_not_allowed" in output.getvalue() and "permission_denied" in output.getvalue()

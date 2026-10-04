@@ -1,0 +1,7 @@
+{
+  "tmux_server": "mewcode-slash",
+  "session": "mewcode-e2e",
+  "pane_dead": true,
+  "exit_code": 0,
+  "observed": "tmux display-message: 1 0"
+}

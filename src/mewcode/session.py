@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncIterator
-from dataclasses import dataclass, asdict
+from dataclasses import asdict
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from uuid import uuid4
@@ -14,17 +14,6 @@ from .tools import default_registry
 from .tools.base import ToolContext, strict_json
 from .tools.executor import ToolExecutor
 from .types import AgentEvent, AgentMode, Message, Provider, ToolCall
-
-
-class PlanStateError(RuntimeError):
-    """没有可执行的待执行计划，可直接提示用户。"""
-
-
-@dataclass(frozen=True)
-class _PlanSnapshot:
-    task: str
-    answer: str
-    context: tuple[Message, ...]
 
 
 def operation_summary(call: ToolCall) -> str:
@@ -69,8 +58,8 @@ class ChatSession:
                                                  responder=approval_responder)
         self.history: list[Message] = []
         self.mode: AgentMode = "execute"
-        self._pending_plan: _PlanSnapshot | None = None
         root = self.executor.context.root
+        self.user_root = Path(user_root) if user_root is not None else Path.home() / ".mewcode"
         from .instructions import load_instructions
         instructions = load_instructions(root, user_root)
         self.warnings.extend(instructions.warnings)
@@ -158,13 +147,8 @@ class ChatSession:
         if getattr(self, '_notify', None):
             self._notify(notification)
 
-    @property
-    def has_pending_plan(self) -> bool:
-        """当前是否有有效待执行计划；读取不消费计划或改变会话状态。"""
-        return self._pending_plan is not None
-
     def permission_command(self, question: str) -> str:
-        """只在空闲期执行的本地控制，不触碰历史或计划状态。"""
+        """只在空闲期执行的本地控制，不触碰对话历史。"""
         parts = question.split()
         usage = "用法：/permissions；/permissions mode strict|default|bypass；/permissions revoke session|permanent"
         if parts == ["/permissions"]:
@@ -187,17 +171,12 @@ class ChatSession:
             self.journal.append('mode_changed', {'mode': 'plan'})
         self.mode = "plan"
         self.prompt_state.enter_mode("plan")
-        self._pending_plan = None
 
     async def ask(self, question: str, *, cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
-        if self.mode == "plan":
-            self._pending_plan = None
         source = self.agent.run(question, history=self.history, mode=self.mode, cancel_event=cancel)
         try:
             async for event in source:
-                if self.mode == "plan" and event.kind == "finished" and event.reason == "model_done":
-                    self._pending_plan = _PlanSnapshot(question, self.history[-1].content, tuple(self.history))
                 if event.kind == 'finished' and event.reason == 'model_done' and self.memory:
                     if self.memory.enqueue(self.agent.last_task):
                         self.memory_tasks[event.run_id] = 'queued'
@@ -205,25 +184,14 @@ class ChatSession:
         finally:
             await protected(source.aclose(), cancel_event=cancel)
 
-    async def execute_plan(self, *, cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
-        if self._pending_plan is None:
-            raise PlanStateError("没有有效的待执行计划，请先使用 /plan 生成计划")
-        snapshot = self._pending_plan
-        # 取出与消费标记不包含 await，重复 /do 无法重放已启动计划。
-        self._pending_plan = None
+    def enter_execute(self) -> None:
+        """只切换模式；重复切换不重置当前请求周期。"""
+        if self.mode == "execute":
+            return
         if self.journal:
             self.journal.append('mode_changed', {'mode': 'execute'})
         self.mode = "execute"
         self.prompt_state.enter_mode("execute")
-        question = ("请直接执行以下最新计划，按需核对当前文件状态，完成后验证结果。\n"
-                    f"任务上下文：{snapshot.task}\n最新计划：\n{snapshot.answer}")
-        source = self.ask(question, cancel_event=cancel_event)
-        try:
-            async for event in source:
-                yield event
-        finally:
-            await protected(source.aclose(), cancel_event=cancel_event)
-
 
     def context_status(self) -> str:
         allowed = self.executor.registry.names(read_only=True) if self.mode == 'plan' else self.executor.registry.names()
@@ -306,7 +274,7 @@ class ChatSession:
             self.journal.append('maintenance_finished', {'purpose': purpose, 'state': self.context.state(), 'usage': data})
 
     async def compact(self, *, cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
-        """独立维护操作，不消费待执行计划、不伪造用户任务。"""
+        """独立维护操作，保留模式和工作任务记录。"""
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
         run_id = uuid4().hex
         iteration = 0

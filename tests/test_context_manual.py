@@ -9,8 +9,8 @@ from test_context_partition import history_for_task
 
 
 def test_compact_command_help_completion_and_escape():
-    assert parse_command('/compact').kind == 'compact'
-    assert parse_command('/compact extra').kind == 'error'
+    assert parse_command('/compact').name == 'compact'
+    assert parse_command('/compact extra').text == 'extra'
     assert parse_command('//compact').text == '/compact'
     assert parse_command('/compact\n正文').kind == 'message'
     assert command_completions('/comp') == ['/compact']
@@ -29,13 +29,15 @@ async def test_manual_recovers_circuit_preserves_plan_and_request_period(tmp_pat
     sequence = chat.prompt_state.request_sequence
     events = await collect(chat.compact())
     assert events[-1].phase == 'success' and chat.context.failures == 0
-    assert chat.has_pending_plan and chat.mode == 'plan'
+    assert chat.mode == 'plan'
     assert task in chat.history and chat.prompt_state.request_sequence == sequence
     assert len(provider.requests) == 2
     assert not any(e.kind in {'text_delta','thinking_delta','finished'} for e in events)
-    await collect(chat.execute_plan())
-    assert not chat.has_pending_plan and len(provider.requests) == 3
-    assert '完整计划' in provider.requests[-1][0][-2].content
+    chat.enter_execute()
+    assert len(provider.requests) == 2
+    await collect(chat.ask("按计划执行"))
+    assert len(provider.requests) == 3
+    assert any(m.content == "完整计划" for m in provider.requests[-1][0])
 
 
 @async_test
