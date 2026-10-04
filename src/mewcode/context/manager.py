@@ -38,6 +38,21 @@ class ContextManager:
         self.summary_files: set[str] = set()
         self.last_estimate: int | None = None
         self.manual_usage: TokenUsage | None = None
+        self.checkpoint = None
+
+    def state(self, **changes):
+        value = {'version': self.version, 'failures': self.failures, 'circuit_open': self.circuit_open,
+                 'quotes': self.quotes, 'summary_files': sorted(self.summary_files),
+                 'cache_paths': sorted(self.cache.paths)}
+        value.update(changes)
+        return value
+
+    def restore_state(self, state):
+        self.version = state.get('version', 0)
+        self.failures = state.get('failures', 0)
+        self.quotes = state.get('quotes', {})
+        self.summary_files = set(state.get('summary_files', []))
+        self.estimator.invalidate()
 
     @property
     def circuit_open(self):
@@ -47,8 +62,12 @@ class ContextManager:
         return estimate + self.output + (3000 if manual else 13000) < self.window
 
     def spill(self, history):
-        result = spill_history(history, self.cache)
+        candidate = list(history)
+        result = spill_history(candidate, self.cache)
         if result[0]:
+            if self.checkpoint:
+                self.checkpoint(candidate, self.state())
+            history[:] = candidate
             self.estimator.invalidate()
         return result
 
@@ -151,6 +170,9 @@ class ContextManager:
             if tuple(history) != baseline:
                 raise ValueError('摘要期间历史已变化，候选结果丢弃')
             # 校验后无 await 地共同提交状态，取消不会留下半份摘要。
+            if self.checkpoint:
+                self.checkpoint(candidate, self.state(version=self.version + 1, failures=0,
+                    circuit_open=False, quotes=quotes, summary_files=sorted(files)))
             history[:] = candidate
             self.quotes, self.summary_files = quotes, files
             self.failures = 0
@@ -163,7 +185,7 @@ class ContextManager:
             result.cancelled, result.text = True, '摘要已取消，历史和失败计数保留'
         except OSError:
             result.blocked = True
-            result.text = '摘要期间缓存文件不可用，历史保留；请检查文件和磁盘'
+            result.text = '摘要缓存或存档提交失败，历史保留；请检查文件和磁盘'
         except Exception as error:
             self.failures += 1
             result.overflow = isinstance(error, ContextLimitError)

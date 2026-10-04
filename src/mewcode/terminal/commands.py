@@ -59,9 +59,9 @@ def help_text(*, enhanced: bool) -> str:
     commands = (
         "本地命令（仅单行草稿生效）\n"
         "  /help                       查看帮助\n"
-        "  /status                     查看模式、待执行计划和最近任务详情\n"
+        "  /status                     查看会话 ID、模式、上下文和最近任务详情\n"
         "  /compact                    压缩较早历史，保留当前任务和近期原文\n"
-        "  /exit                       退出会话\n"
+        "  /exit                       退出并保留存档；启动用 --resume ID|latest 恢复\n"
         "  /plan [任务]                进入只读规划模式，可直接提供任务\n"
         "  /do                         执行最新有效计划，仅执行一次\n"
         "  /permissions                查看权限与授权\n"
@@ -71,6 +71,7 @@ def help_text(*, enhanced: bool) -> str:
         "  /permissions revoke session 撤销当前项目的会话授权\n"
         "  /permissions revoke permanent 撤销当前项目的永久授权\n"
         "以 // 开头的单行消息去掉一个 / 后作为普通消息发送。\n"
+        "启动选项：--list-sessions 列出当前项目存档；--resume ID|latest 显式恢复；默认新建。\n"
     )
     editing = (
         "发送与换行：Enter 发送完整草稿；先按 Esc 再按 Enter 换行；"

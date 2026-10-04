@@ -1,0 +1,16 @@
+[
+  {
+    "project": "anthropic-fast",
+    "file": "resumed.txt",
+    "bytes": 11,
+    "content": "resumed-ok\\n",
+    "sha256": "8f7d98dc3f60455a7659ec7322441641b335c6a8572f3717bd4aa44e594cd07a"
+  },
+  {
+    "project": "deepseek-openai",
+    "file": "resumed.txt",
+    "bytes": 11,
+    "content": "resumed-ok\\n",
+    "sha256": "8f7d98dc3f60455a7659ec7322441641b335c6a8572f3717bd4aa44e594cd07a"
+  }
+]

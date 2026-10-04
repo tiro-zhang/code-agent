@@ -1,0 +1,56 @@
+{
+  "server": "mewcode-memory",
+  "panes": [
+    {
+      "session": "anthropic",
+      "dead": "1",
+      "exit_code": "0"
+    },
+    {
+      "session": "compression-o-final",
+      "dead": "1",
+      "exit_code": "0"
+    },
+    {
+      "session": "compression-o-retry",
+      "dead": "1",
+      "exit_code": "0"
+    },
+    {
+      "session": "new-a",
+      "dead": "1",
+      "exit_code": "0"
+    },
+    {
+      "session": "new-o",
+      "dead": "1",
+      "exit_code": "0"
+    },
+    {
+      "session": "openai",
+      "dead": "1",
+      "exit_code": "0"
+    },
+    {
+      "session": "resume-a",
+      "dead": "1",
+      "exit_code": "0"
+    },
+    {
+      "session": "resume-a-final",
+      "dead": "1",
+      "exit_code": "0"
+    },
+    {
+      "session": "resume-o",
+      "dead": "1",
+      "exit_code": "0"
+    },
+    {
+      "session": "resume-o-final",
+      "dead": "1",
+      "exit_code": "0"
+    }
+  ],
+  "background_exit_prompt": "会话已保存，笔记更新未完成"
+}

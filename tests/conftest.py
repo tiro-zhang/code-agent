@@ -68,3 +68,13 @@ def permission_bypass(root):
     """旧执行行为测试显式选择放行，隔离机器上的用户权限文件。"""
     from mewcode.permissions.runtime import PermissionManager
     return PermissionManager(root, mode="bypass", user_path=root / ".test-user-permissions.yaml")
+
+
+def run_work_app(*args, **options):
+    """旧工作流测试隔离存档和后台提取，避免污染工作项目与响应脚本。"""
+    from pathlib import Path
+    from mewcode.app import run
+    options.setdefault('memory_enabled', False)
+    options.setdefault('persistent', False)
+    options.setdefault('user_root', Path.cwd() / '.test-empty-user')
+    return run(*args, **options)

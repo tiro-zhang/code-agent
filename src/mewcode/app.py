@@ -76,7 +76,10 @@ class _Renderer:
         elif event.kind == "history_trimmed":
             self.line(f"提示> {self.safe(event.text)}")
         elif event.kind == "usage":
-            self.line(f"用量> {'摘要' if event.purpose == 'summary' else '本次'} Token · {self.usage_text(event.usage)}")
+            label = {'summary': '摘要', 'restore': '恢复摘要', 'memory': '记忆维护'}.get(event.purpose, '本次')
+            self.line(f"用量> {label} Token · {self.usage_text(event.usage)}")
+        elif event.kind == 'memory_update':
+            self.line(f'记忆> {self.safe(event.text, 400)}')
         elif event.kind in {"tool_call", "tool_started", "tool_result"}:
             name = self.safe(event.tool_name, 60)
             id = self.safe(event.tool_call_id, 60)
@@ -108,7 +111,8 @@ class _Renderer:
 
 
 async def _run(config, input_stream, output_stream, error_stream, factory, *,
-               permission_mode="default", approval_responder=None, input_reader=None):
+               permission_mode="default", approval_responder=None, input_reader=None, resume=None,
+               persistent=True, memory_enabled=True, user_root=None):
     provider = factory(config)
     loop = asyncio.get_running_loop()
     active_cancel = asyncio.Event()
@@ -127,7 +131,19 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
     try:
         try:
             reader = input_reader or InputReader(input_stream)
-            session = ChatSession(provider, max_iterations=config.max_iterations, permission_mode=permission_mode, config=config)
+            def maintenance(notification):
+                kind = notification.get('kind')
+                event = AgentEvent('usage' if kind in {'usage', 'restore_usage'} else 'memory_update',
+                    purpose=notification.get('purpose', 'memory'), text=notification.get('text', ''),
+                    usage=notification.get('usage'))
+                # 独立通道不写入当前任务统计，也不改变输入阶段或草稿。
+                if terminal is not None:
+                    terminal.show(renderer, event, maintenance=True)
+                else:
+                    renderer.show(event)
+            session = ChatSession(provider, max_iterations=config.max_iterations, permission_mode=permission_mode,
+                config=config, persistent=persistent, resume=resume, memory_enabled=memory_enabled,
+                user_root=user_root, notify=maintenance)
             session.permissions.config.load()
             terminal = TerminalController(reader, output_stream, secret=config.api_key,
                 root=session.executor.context.root, on_interrupt=interrupt, allow_enhanced=input_reader is None)
@@ -149,8 +165,19 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             return 0
         session.permissions.bind_mcp_tools(mcp.tools)
         terminal.state.bind_tools(mcp.tools)
+        try:
+            await session.prepare_restore(cancel_event=active_cancel)
+        except (ValueError, OSError) as error:
+            error_stream.write(f'恢复失败：{renderer.safe(error, 400)}\n')
+            return 2
+        for warning in session.warnings:
+            renderer.line(f'提示> {renderer.safe(warning, 400)}')
         active_cancel = None
         renderer.line(f"MewCode · {renderer.safe(config.name, 100)} · 权限 {session.permissions.mode} · /help 查看帮助")
+        if session.session_id:
+            count = sum(message.role != 'context' for message in session.history)
+            status = f'已恢复 · {count} 条工作消息 · 等待新输入' if session.resumed else '新建存档'
+            renderer.line(f'会话> {session.session_id} · {status}')
         while True:
             terminal.sync_session(session)
             try:
@@ -187,7 +214,11 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                     renderer.line(f"提示> {renderer.safe(error, 400)}")
                 continue
             if command.kind == "plan":
-                session.enter_plan()
+                try:
+                    session.enter_plan()
+                except OSError:
+                    renderer.line('提示> 模式存档失败，请检查磁盘；模式保持')
+                    continue
                 if not command.text:
                     renderer.line("提示> 已进入只读规划模式，请输入任务；计划完成后输入 /do 直接执行")
                     continue
@@ -209,7 +240,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             try:
                 async for event in source:
                     terminal.show(renderer, event, managed_approval=approval_responder is None, maintenance=maintenance)
-            except (PlanStateError, ProviderError) as error:
+            except (PlanStateError, ProviderError, OSError) as error:
                 renderer.line(f"提示> {renderer.safe(error, 300)}")
             finally:
                 await protected(source.aclose(), cancel_event=active_cancel)
@@ -225,9 +256,9 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
         try:
             if session is not None:
                 try:
-                    session.close()
+                    await protected(session.aclose(), cancel_event=active_cancel)
                 except OSError:
-                    renderer.line('提示> 本会话缓存清理失败，请检查 .mewcode/context；其他会话缓存未清理')
+                    renderer.line('提示> 会话句柄关闭失败，请检查 .mewcode；存档缓存保留')
             if terminal is not None:
                 terminal.set_phase("closing")
             try:
@@ -246,11 +277,26 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
 
 def run(config_path: str | Path, *, stdin: TextIO | None = None, stdout: TextIO | None = None,
         stderr: TextIO | None = None, provider_factory: Callable[[ProviderConfig], Provider] | None = None,
-        permission_mode: str = "default", approval_responder=None, input_reader=None) -> int:
+        permission_mode: str = "default", approval_responder=None, input_reader=None, resume=None,
+        list_sessions=False, persistent=True, memory_enabled=True, user_root=None) -> int:
     """保留同步启动接口，由单个事件循环管理会话与客户端。"""
     input_stream = stdin if stdin is not None else sys.stdin
     output_stream = stdout if stdout is not None else sys.stdout
     error_stream = stderr if stderr is not None else sys.stderr
+    if list_sessions:
+        from .sessions import scan_sessions
+        try:
+            rows = scan_sessions(Path.cwd())
+            output_stream.write('会话 ID · 标题 · 消息数 · 最后活动 · 状态\n')
+            for row in rows:
+                status = '活动中' if row.active else '可恢复' if row.recoverable else '不可恢复'
+                output_stream.write(terminal_text(f'{row.id} · {row.title} · {row.message_count} · {row.last_activity.isoformat()} · {status}', '', limit=500) + '\n')
+            if not rows:
+                output_stream.write('没有会话存档\n')
+            return 0
+        except (ValueError, OSError) as error:
+            error_stream.write(f'扫描失败：{terminal_text(str(error), "", limit=400)}\n')
+            return 2
     try:
         config = load_config(config_path)
     except ConfigError as error:
@@ -258,4 +304,5 @@ def run(config_path: str | Path, *, stdin: TextIO | None = None, stdout: TextIO 
         return 2
     return asyncio.run(_run(config, input_stream, output_stream, error_stream, provider_factory or make_provider,
                            permission_mode=permission_mode, approval_responder=approval_responder,
-                           input_reader=input_reader))
+                           input_reader=input_reader, resume=resume, persistent=persistent,
+                           memory_enabled=memory_enabled, user_root=user_root))

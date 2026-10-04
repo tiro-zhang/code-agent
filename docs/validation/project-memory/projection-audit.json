@@ -1,0 +1,89 @@
+{
+  "restored_sessions": [
+    {
+      "project": "anthropic-fast",
+      "id": "20261004-191514-eb59",
+      "mode": "execute",
+      "warnings": [
+        "会话第 14 行已跳过：Expecting value: line 1 column 11 (char 10)"
+      ],
+      "gap_boundaries": [
+        {
+          "role": "context",
+          "context_kind": "resume",
+          "content": "会话最后活动于 2026-10-02T11:19:04.550853+00:00，距今 2 天 0 小时。涉及当前文件时请重新读取，历史内容仅为当时快照。"
+        }
+      ],
+      "valid_work_messages": 16
+    },
+    {
+      "project": "deepseek-openai",
+      "id": "20261004-191517-16df",
+      "mode": "execute",
+      "warnings": [
+        "会话第 14 行已跳过：Expecting value: line 1 column 11 (char 10)"
+      ],
+      "gap_boundaries": [
+        {
+          "role": "context",
+          "context_kind": "resume",
+          "content": "会话最后活动于 2026-10-02T11:19:03.856939+00:00，距今 2 天 0 小时。涉及当前文件时请重新读取，历史内容仅为当时快照。"
+        }
+      ],
+      "valid_work_messages": 16
+    }
+  ],
+  "ordinary_new_sessions": [
+    {
+      "project": "anthropic-fast",
+      "id": "20261004-192650-0a3c",
+      "first_commit_work_roles": [
+        "user",
+        "assistant"
+      ],
+      "first_assistant": "根据长期记忆中的「用户通用偏好」笔记：\n\n**通用答复偏好**：偏好简短中文回复，最多三个要点。\n\n**本项目测试标识**：菠萝84\n\n**项目配置标识**：月桂19\n\n说明：这两项标识来自启动时加载的手写指令文件（「测试标识是菠萝84」来自 `docs/规则.md`；「项目配置标识是月桂19」来自 `.mewcode/MEWCODE.md`），并非长期记忆本身；长期记忆中确实没有这两项标识的条目。\n\n【记忆验收】",
+      "prior_history_records": 0
+    },
+    {
+      "project": "deepseek-openai",
+      "id": "20261004-192650-c888",
+      "first_commit_work_roles": [
+        "user",
+        "assistant"
+      ],
+      "first_assistant": "根据启动时已加载的长期记忆：\n\n1. 用户通用偏好：简短中文回复，最多三个要点。\n2. 本项目当前测试标识：菠萝84（历史曾为菠萝42）。\n3. 项目配置标识：月桂19。\n\n说明：项目配置层要求“英文并以【低优先级】结束”，与更高优先级的项目根指令（简短中文、【记忆验收】结尾）冲突，按层级取项目根指令。\n\n【记忆验收】",
+      "prior_history_records": 0
+    }
+  ],
+  "user_notes": [
+    {
+      "id": "aeb91c97384041c6b618f279ed5ef7f3",
+      "category": "user_preference",
+      "summary": "用户偏好简短中文回复，最多三个要点",
+      "sources": [
+        {
+          "session_id": "20261004-191514-eb59",
+          "task_id": "3d0908f709204302966b47b0095ed7cf",
+          "message_id": "06fa788e2a534489a04906d4b40a8072",
+          "quote": "在所有项目里，我都偏好简短中文、最多三个要点，请记住。"
+        }
+      ]
+    }
+  ],
+  "memory_injection": [
+    {
+      "project": "anthropic-fast",
+      "project_notes": 1,
+      "user_notes": 1,
+      "lines_with_heading": 5,
+      "utf8_bytes_with_heading_and_separator": 297
+    },
+    {
+      "project": "deepseek-openai",
+      "project_notes": 2,
+      "user_notes": 1,
+      "lines_with_heading": 6,
+      "utf8_bytes_with_heading_and_separator": 450
+    }
+  ]
+}

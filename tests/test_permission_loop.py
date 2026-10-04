@@ -53,13 +53,15 @@ async def test_approval_wait_is_outside_execution_timeout(tmp_path):
         await release.wait()
         return "once"
     runner = executor(tmp_path, responder=approve)
-    runner.timeout = 0.5
+    # spawn 启动也计入执行预算，留出启动余量；审批等待仍明确超过预算。
+    runner.timeout = 2
     task = asyncio.create_task(runner.execute("write_file", '{"path":"a","content":"ok"}'))
     await entered.wait()
-    await asyncio.sleep(0.6)
+    await asyncio.sleep(runner.timeout + 0.1)
     assert not task.done() and not (tmp_path / "a").exists()
     release.set()
     assert (await task).ok
+    assert (tmp_path / "a").read_text() == "ok"
 
 
 @async_test

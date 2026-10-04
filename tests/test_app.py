@@ -6,7 +6,7 @@ from io import StringIO
 from pathlib import Path
 import pytest
 from conftest import ScriptedProvider
-from mewcode.app import run
+from conftest import run_work_app as run
 from mewcode.types import ContextLimitError, Message, ProviderError, ProviderEvent, ToolCall
 from test_agent_loop import answer, calls
 

@@ -100,7 +100,7 @@ def _candidate_matcher(tool, arguments: dict):
 
 def _candidate(record: bytes, context: ToolContext, matcher) -> str | None:
     relative = safe_relative(record.decode("utf-8", errors="surrogateescape"), context)
-    if relative is None or relative.startswith(".mewcode/context/") or not matcher(relative):
+    if relative is None or relative.startswith((".mewcode/context/", ".mewcode/sessions/", ".mewcode/memory/")) or not matcher(relative):
         return None
     try:
         relative.encode("utf-8")
@@ -215,7 +215,7 @@ def _selected_paths(tool, arguments: dict, context: ToolContext) -> tuple[str, .
         # 授权绑定规范真实路径；候选被换成链接后不能借原批准访问其他目标。
         if path != Path(value) or Path(value).is_symlink() or not path.is_file():
             raise ToolError("permission_check_failed", "获准搜索文件的真实目标已变化，请重新检查权限", not_started=True)
-        if str(path.relative_to(context.root)).startswith(".mewcode/context/"):
+        if str(path.relative_to(context.root)).startswith((".mewcode/context/", ".mewcode/sessions/", ".mewcode/memory/")):
             continue
         if matcher(str(path.relative_to(context.root))):
             selected.add(str(path))

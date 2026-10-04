@@ -10,12 +10,14 @@ from .executor import ToolExecutor
 
 
 class ToolScheduler:
-    def __init__(self, executor: ToolExecutor, *, max_parallel: int = 4) -> None:
+    def __init__(self, executor: ToolExecutor, *, max_parallel: int = 4, on_result=None) -> None:
         if max_parallel < 1:
             raise ValueError("并发上限必须是正整数")
         self.executor = executor
         self.max_parallel = min(max_parallel, 4)
         self.results: tuple[ToolResult, ...] = ()
+        self.on_result = on_result
+        self.storage_error = None
 
     async def run(self, calls: Sequence[ToolCall], *, allowed_tools: frozenset[str] | None,
                   run_id: str, iteration: int, mode: AgentMode,
@@ -66,6 +68,12 @@ class ToolScheduler:
                         result = await protected(operation, cancel_event=cancel)
                     except Exception:
                         result = ToolResult.failure("execution_error", "工具执行入口异常结束")
+            if self.on_result and self.storage_error is None:
+                try:
+                    self.on_result(call, result)
+                except OSError as error:
+                    # 已产生的真实结果仍回传；后续未启动工具停在存档边界。
+                    self.storage_error = error
             await queue.put((index, event("tool_result", index, result=result)))
 
         async def drain_and_cleanup():
@@ -88,7 +96,7 @@ class ToolScheduler:
                 yield event("tool_call", index, call=call)
             readonly = self.executor.registry.names(read_only=True)
             position = 0
-            while position < len(calls) and not cancel.is_set():
+            while position < len(calls) and not cancel.is_set() and self.storage_error is None:
                 end = position + 1
                 limit = 1
                 if calls[position].name in readonly:
@@ -98,7 +106,7 @@ class ToolScheduler:
                 next_index = position
                 active: dict[int, asyncio.Task] = {}
                 while next_index < end or active:
-                    while next_index < end and len(active) < limit and not cancel.is_set():
+                    while next_index < end and len(active) < limit and not cancel.is_set() and self.storage_error is None:
                         task = asyncio.create_task(execute_one(next_index))
                         jobs[next_index] = active[next_index] = task
                         next_index += 1
@@ -116,7 +124,8 @@ class ToolScheduler:
                 position = end
             for index in range(len(calls)):
                 if index not in results:
-                    results[index] = unstarted()
+                    results[index] = (ToolResult.failure('storage_error', '存档失败，工具未启动',
+                                      details={'not_started': True}) if self.storage_error else unstarted())
                     yield event("tool_result", index, result=results[index])
             normal_end = True
         finally:

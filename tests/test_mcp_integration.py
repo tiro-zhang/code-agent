@@ -13,7 +13,7 @@ from conftest import ScriptedProvider, async_test
 from test_agent_loop import answer, calls
 from test_mcp_manager import config, stdio
 from test_app import config_file
-from mewcode.app import run
+from conftest import run_work_app as run
 from mewcode.mcp.manager import MCPManager
 from mewcode.mcp.tools import tool_alias
 from mewcode.permissions.runtime import PermissionManager

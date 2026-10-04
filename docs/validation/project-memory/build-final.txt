@@ -1,0 +1,409 @@
+Building source distribution...
+running egg_info
+writing src/mewcode.egg-info/PKG-INFO
+writing dependency_links to src/mewcode.egg-info/dependency_links.txt
+writing entry points to src/mewcode.egg-info/entry_points.txt
+writing requirements to src/mewcode.egg-info/requires.txt
+writing top-level names to src/mewcode.egg-info/top_level.txt
+reading manifest file 'src/mewcode.egg-info/SOURCES.txt'
+writing manifest file 'src/mewcode.egg-info/SOURCES.txt'
+running sdist
+running egg_info
+writing src/mewcode.egg-info/PKG-INFO
+writing dependency_links to src/mewcode.egg-info/dependency_links.txt
+writing entry points to src/mewcode.egg-info/entry_points.txt
+writing requirements to src/mewcode.egg-info/requires.txt
+writing top-level names to src/mewcode.egg-info/top_level.txt
+reading manifest file 'src/mewcode.egg-info/SOURCES.txt'
+writing manifest file 'src/mewcode.egg-info/SOURCES.txt'
+running check
+creating mewcode-0.1.0
+creating mewcode-0.1.0/src/mewcode
+creating mewcode-0.1.0/src/mewcode.egg-info
+creating mewcode-0.1.0/src/mewcode/context
+creating mewcode-0.1.0/src/mewcode/instructions
+creating mewcode-0.1.0/src/mewcode/mcp
+creating mewcode-0.1.0/src/mewcode/memory
+creating mewcode-0.1.0/src/mewcode/permissions
+creating mewcode-0.1.0/src/mewcode/providers
+creating mewcode-0.1.0/src/mewcode/sessions
+creating mewcode-0.1.0/src/mewcode/terminal
+creating mewcode-0.1.0/src/mewcode/tools
+creating mewcode-0.1.0/tests
+copying files to mewcode-0.1.0...
+copying README.md -> mewcode-0.1.0
+copying pyproject.toml -> mewcode-0.1.0
+copying src/mewcode/__init__.py -> mewcode-0.1.0/src/mewcode
+copying src/mewcode/__main__.py -> mewcode-0.1.0/src/mewcode
+copying src/mewcode/agent.py -> mewcode-0.1.0/src/mewcode
+copying src/mewcode/app.py -> mewcode-0.1.0/src/mewcode
+copying src/mewcode/async_utils.py -> mewcode-0.1.0/src/mewcode
+copying src/mewcode/cli.py -> mewcode-0.1.0/src/mewcode
+copying src/mewcode/collector.py -> mewcode-0.1.0/src/mewcode
+copying src/mewcode/config.py -> mewcode-0.1.0/src/mewcode
+copying src/mewcode/errors.py -> mewcode-0.1.0/src/mewcode
+copying src/mewcode/prompts.py -> mewcode-0.1.0/src/mewcode
+copying src/mewcode/session.py -> mewcode-0.1.0/src/mewcode
+copying src/mewcode/types.py -> mewcode-0.1.0/src/mewcode
+copying src/mewcode.egg-info/PKG-INFO -> mewcode-0.1.0/src/mewcode.egg-info
+copying src/mewcode.egg-info/SOURCES.txt -> mewcode-0.1.0/src/mewcode.egg-info
+copying src/mewcode.egg-info/dependency_links.txt -> mewcode-0.1.0/src/mewcode.egg-info
+copying src/mewcode.egg-info/entry_points.txt -> mewcode-0.1.0/src/mewcode.egg-info
+copying src/mewcode.egg-info/requires.txt -> mewcode-0.1.0/src/mewcode.egg-info
+copying src/mewcode.egg-info/top_level.txt -> mewcode-0.1.0/src/mewcode.egg-info
+copying src/mewcode/context/__init__.py -> mewcode-0.1.0/src/mewcode/context
+copying src/mewcode/context/estimate.py -> mewcode-0.1.0/src/mewcode/context
+copying src/mewcode/context/manager.py -> mewcode-0.1.0/src/mewcode/context
+copying src/mewcode/context/partition.py -> mewcode-0.1.0/src/mewcode/context
+copying src/mewcode/context/spill.py -> mewcode-0.1.0/src/mewcode/context
+copying src/mewcode/context/summary.py -> mewcode-0.1.0/src/mewcode/context
+copying src/mewcode/instructions/__init__.py -> mewcode-0.1.0/src/mewcode/instructions
+copying src/mewcode/mcp/__init__.py -> mewcode-0.1.0/src/mewcode/mcp
+copying src/mewcode/mcp/_launch.py -> mewcode-0.1.0/src/mewcode/mcp
+copying src/mewcode/mcp/config.py -> mewcode-0.1.0/src/mewcode/mcp
+copying src/mewcode/mcp/http.py -> mewcode-0.1.0/src/mewcode/mcp
+copying src/mewcode/mcp/manager.py -> mewcode-0.1.0/src/mewcode/mcp
+copying src/mewcode/mcp/permissions.py -> mewcode-0.1.0/src/mewcode/mcp
+copying src/mewcode/mcp/runtime.py -> mewcode-0.1.0/src/mewcode/mcp
+copying src/mewcode/mcp/tools.py -> mewcode-0.1.0/src/mewcode/mcp
+copying src/mewcode/memory/__init__.py -> mewcode-0.1.0/src/mewcode/memory
+copying src/mewcode/memory/manager.py -> mewcode-0.1.0/src/mewcode/memory
+copying src/mewcode/memory/store.py -> mewcode-0.1.0/src/mewcode/memory
+copying src/mewcode/permissions/__init__.py -> mewcode-0.1.0/src/mewcode/permissions
+copying src/mewcode/permissions/config.py -> mewcode-0.1.0/src/mewcode/permissions
+copying src/mewcode/permissions/grants.py -> mewcode-0.1.0/src/mewcode/permissions
+copying src/mewcode/permissions/models.py -> mewcode-0.1.0/src/mewcode/permissions
+copying src/mewcode/permissions/rules.py -> mewcode-0.1.0/src/mewcode/permissions
+copying src/mewcode/permissions/runtime.py -> mewcode-0.1.0/src/mewcode/permissions
+copying src/mewcode/permissions/shell.py -> mewcode-0.1.0/src/mewcode/permissions
+copying src/mewcode/permissions/terminal.py -> mewcode-0.1.0/src/mewcode/permissions
+copying src/mewcode/providers/__init__.py -> mewcode-0.1.0/src/mewcode/providers
+copying src/mewcode/providers/anthropic.py -> mewcode-0.1.0/src/mewcode/providers
+copying src/mewcode/providers/openai.py -> mewcode-0.1.0/src/mewcode/providers
+copying src/mewcode/providers/tool_messages.py -> mewcode-0.1.0/src/mewcode/providers
+copying src/mewcode/providers/usage.py -> mewcode-0.1.0/src/mewcode/providers
+copying src/mewcode/sessions/__init__.py -> mewcode-0.1.0/src/mewcode/sessions
+copying src/mewcode/sessions/codec.py -> mewcode-0.1.0/src/mewcode/sessions
+copying src/mewcode/sessions/projection.py -> mewcode-0.1.0/src/mewcode/sessions
+copying src/mewcode/sessions/store.py -> mewcode-0.1.0/src/mewcode/sessions
+copying src/mewcode/terminal/__init__.py -> mewcode-0.1.0/src/mewcode/terminal
+copying src/mewcode/terminal/approval.py -> mewcode-0.1.0/src/mewcode/terminal
+copying src/mewcode/terminal/commands.py -> mewcode-0.1.0/src/mewcode/terminal
+copying src/mewcode/terminal/controller.py -> mewcode-0.1.0/src/mewcode/terminal
+copying src/mewcode/terminal/input.py -> mewcode-0.1.0/src/mewcode/terminal
+copying src/mewcode/terminal/state.py -> mewcode-0.1.0/src/mewcode/terminal
+copying src/mewcode/terminal/text.py -> mewcode-0.1.0/src/mewcode/terminal
+copying src/mewcode/tools/__init__.py -> mewcode-0.1.0/src/mewcode/tools
+copying src/mewcode/tools/base.py -> mewcode-0.1.0/src/mewcode/tools
+copying src/mewcode/tools/command.py -> mewcode-0.1.0/src/mewcode/tools
+copying src/mewcode/tools/executor.py -> mewcode-0.1.0/src/mewcode/tools
+copying src/mewcode/tools/files.py -> mewcode-0.1.0/src/mewcode/tools
+copying src/mewcode/tools/paths.py -> mewcode-0.1.0/src/mewcode/tools
+copying src/mewcode/tools/processes.py -> mewcode-0.1.0/src/mewcode/tools
+copying src/mewcode/tools/registry.py -> mewcode-0.1.0/src/mewcode/tools
+copying src/mewcode/tools/scheduler.py -> mewcode-0.1.0/src/mewcode/tools
+copying src/mewcode/tools/search.py -> mewcode-0.1.0/src/mewcode/tools
+copying tests/test_agent_contract.py -> mewcode-0.1.0/tests
+copying tests/test_agent_loop.py -> mewcode-0.1.0/tests
+copying tests/test_anthropic_provider.py -> mewcode-0.1.0/tests
+copying tests/test_app.py -> mewcode-0.1.0/tests
+copying tests/test_cache_usage.py -> mewcode-0.1.0/tests
+copying tests/test_collector.py -> mewcode-0.1.0/tests
+copying tests/test_config.py -> mewcode-0.1.0/tests
+copying tests/test_context_agent.py -> mewcode-0.1.0/tests
+copying tests/test_context_estimation.py -> mewcode-0.1.0/tests
+copying tests/test_context_manual.py -> mewcode-0.1.0/tests
+copying tests/test_context_partition.py -> mewcode-0.1.0/tests
+copying tests/test_context_spill.py -> mewcode-0.1.0/tests
+copying tests/test_context_summary.py -> mewcode-0.1.0/tests
+copying tests/test_file_tools.py -> mewcode-0.1.0/tests
+copying tests/test_instructions.py -> mewcode-0.1.0/tests
+copying tests/test_mcp_config.py -> mewcode-0.1.0/tests
+copying tests/test_mcp_integration.py -> mewcode-0.1.0/tests
+copying tests/test_mcp_manager.py -> mewcode-0.1.0/tests
+copying tests/test_mcp_permissions.py -> mewcode-0.1.0/tests
+copying tests/test_mcp_sdk_contract.py -> mewcode-0.1.0/tests
+copying tests/test_mcp_tools.py -> mewcode-0.1.0/tests
+copying tests/test_memory_integration.py -> mewcode-0.1.0/tests
+copying tests/test_memory_manager.py -> mewcode-0.1.0/tests
+copying tests/test_memory_store.py -> mewcode-0.1.0/tests
+copying tests/test_openai_provider.py -> mewcode-0.1.0/tests
+copying tests/test_permission_app.py -> mewcode-0.1.0/tests
+copying tests/test_permission_config.py -> mewcode-0.1.0/tests
+copying tests/test_permission_execution.py -> mewcode-0.1.0/tests
+copying tests/test_permission_grants.py -> mewcode-0.1.0/tests
+copying tests/test_permission_loop.py -> mewcode-0.1.0/tests
+copying tests/test_permission_review.py -> mewcode-0.1.0/tests
+copying tests/test_permission_rules.py -> mewcode-0.1.0/tests
+copying tests/test_permission_runtime.py -> mewcode-0.1.0/tests
+copying tests/test_permission_search.py -> mewcode-0.1.0/tests
+copying tests/test_permission_shell.py -> mewcode-0.1.0/tests
+copying tests/test_permission_terminal.py -> mewcode-0.1.0/tests
+copying tests/test_plan_mode.py -> mewcode-0.1.0/tests
+copying tests/test_prompt_context.py -> mewcode-0.1.0/tests
+copying tests/test_provider_errors.py -> mewcode-0.1.0/tests
+copying tests/test_session.py -> mewcode-0.1.0/tests
+copying tests/test_session_persistence.py -> mewcode-0.1.0/tests
+copying tests/test_terminal_app.py -> mewcode-0.1.0/tests
+copying tests/test_terminal_approval.py -> mewcode-0.1.0/tests
+copying tests/test_terminal_commands.py -> mewcode-0.1.0/tests
+copying tests/test_terminal_controller.py -> mewcode-0.1.0/tests
+copying tests/test_terminal_input.py -> mewcode-0.1.0/tests
+copying tests/test_terminal_state.py -> mewcode-0.1.0/tests
+copying tests/test_tool_execution.py -> mewcode-0.1.0/tests
+copying tests/test_tool_providers.py -> mewcode-0.1.0/tests
+copying tests/test_tool_registry.py -> mewcode-0.1.0/tests
+copying tests/test_tool_scheduler.py -> mewcode-0.1.0/tests
+copying tests/test_tool_session.py -> mewcode-0.1.0/tests
+Writing mewcode-0.1.0/setup.cfg
+Creating tar archive
+removing 'mewcode-0.1.0' (and everything under it)
+Building wheel from source distribution...
+running egg_info
+writing src/mewcode.egg-info/PKG-INFO
+writing dependency_links to src/mewcode.egg-info/dependency_links.txt
+writing entry points to src/mewcode.egg-info/entry_points.txt
+writing requirements to src/mewcode.egg-info/requires.txt
+writing top-level names to src/mewcode.egg-info/top_level.txt
+reading manifest file 'src/mewcode.egg-info/SOURCES.txt'
+writing manifest file 'src/mewcode.egg-info/SOURCES.txt'
+running bdist_wheel
+running build
+running build_py
+creating build/lib/mewcode
+copying src/mewcode/config.py -> build/lib/mewcode
+copying src/mewcode/async_utils.py -> build/lib/mewcode
+copying src/mewcode/collector.py -> build/lib/mewcode
+copying src/mewcode/session.py -> build/lib/mewcode
+copying src/mewcode/__init__.py -> build/lib/mewcode
+copying src/mewcode/types.py -> build/lib/mewcode
+copying src/mewcode/prompts.py -> build/lib/mewcode
+copying src/mewcode/cli.py -> build/lib/mewcode
+copying src/mewcode/agent.py -> build/lib/mewcode
+copying src/mewcode/app.py -> build/lib/mewcode
+copying src/mewcode/errors.py -> build/lib/mewcode
+copying src/mewcode/__main__.py -> build/lib/mewcode
+creating build/lib/mewcode/instructions
+copying src/mewcode/instructions/__init__.py -> build/lib/mewcode/instructions
+creating build/lib/mewcode/tools
+copying src/mewcode/tools/files.py -> build/lib/mewcode/tools
+copying src/mewcode/tools/command.py -> build/lib/mewcode/tools
+copying src/mewcode/tools/paths.py -> build/lib/mewcode/tools
+copying src/mewcode/tools/registry.py -> build/lib/mewcode/tools
+copying src/mewcode/tools/__init__.py -> build/lib/mewcode/tools
+copying src/mewcode/tools/processes.py -> build/lib/mewcode/tools
+copying src/mewcode/tools/search.py -> build/lib/mewcode/tools
+copying src/mewcode/tools/scheduler.py -> build/lib/mewcode/tools
+copying src/mewcode/tools/base.py -> build/lib/mewcode/tools
+copying src/mewcode/tools/executor.py -> build/lib/mewcode/tools
+creating build/lib/mewcode/context
+copying src/mewcode/context/spill.py -> build/lib/mewcode/context
+copying src/mewcode/context/partition.py -> build/lib/mewcode/context
+copying src/mewcode/context/__init__.py -> build/lib/mewcode/context
+copying src/mewcode/context/summary.py -> build/lib/mewcode/context
+copying src/mewcode/context/estimate.py -> build/lib/mewcode/context
+copying src/mewcode/context/manager.py -> build/lib/mewcode/context
+creating build/lib/mewcode/memory
+copying src/mewcode/memory/store.py -> build/lib/mewcode/memory
+copying src/mewcode/memory/__init__.py -> build/lib/mewcode/memory
+copying src/mewcode/memory/manager.py -> build/lib/mewcode/memory
+creating build/lib/mewcode/providers
+copying src/mewcode/providers/__init__.py -> build/lib/mewcode/providers
+copying src/mewcode/providers/openai.py -> build/lib/mewcode/providers
+copying src/mewcode/providers/tool_messages.py -> build/lib/mewcode/providers
+copying src/mewcode/providers/anthropic.py -> build/lib/mewcode/providers
+copying src/mewcode/providers/usage.py -> build/lib/mewcode/providers
+creating build/lib/mewcode/terminal
+copying src/mewcode/terminal/controller.py -> build/lib/mewcode/terminal
+copying src/mewcode/terminal/__init__.py -> build/lib/mewcode/terminal
+copying src/mewcode/terminal/input.py -> build/lib/mewcode/terminal
+copying src/mewcode/terminal/text.py -> build/lib/mewcode/terminal
+copying src/mewcode/terminal/approval.py -> build/lib/mewcode/terminal
+copying src/mewcode/terminal/commands.py -> build/lib/mewcode/terminal
+copying src/mewcode/terminal/state.py -> build/lib/mewcode/terminal
+creating build/lib/mewcode/mcp
+copying src/mewcode/mcp/config.py -> build/lib/mewcode/mcp
+copying src/mewcode/mcp/tools.py -> build/lib/mewcode/mcp
+copying src/mewcode/mcp/_launch.py -> build/lib/mewcode/mcp
+copying src/mewcode/mcp/__init__.py -> build/lib/mewcode/mcp
+copying src/mewcode/mcp/runtime.py -> build/lib/mewcode/mcp
+copying src/mewcode/mcp/http.py -> build/lib/mewcode/mcp
+copying src/mewcode/mcp/permissions.py -> build/lib/mewcode/mcp
+copying src/mewcode/mcp/manager.py -> build/lib/mewcode/mcp
+creating build/lib/mewcode/permissions
+copying src/mewcode/permissions/config.py -> build/lib/mewcode/permissions
+copying src/mewcode/permissions/models.py -> build/lib/mewcode/permissions
+copying src/mewcode/permissions/terminal.py -> build/lib/mewcode/permissions
+copying src/mewcode/permissions/shell.py -> build/lib/mewcode/permissions
+copying src/mewcode/permissions/__init__.py -> build/lib/mewcode/permissions
+copying src/mewcode/permissions/rules.py -> build/lib/mewcode/permissions
+copying src/mewcode/permissions/grants.py -> build/lib/mewcode/permissions
+copying src/mewcode/permissions/runtime.py -> build/lib/mewcode/permissions
+creating build/lib/mewcode/sessions
+copying src/mewcode/sessions/store.py -> build/lib/mewcode/sessions
+copying src/mewcode/sessions/__init__.py -> build/lib/mewcode/sessions
+copying src/mewcode/sessions/codec.py -> build/lib/mewcode/sessions
+copying src/mewcode/sessions/projection.py -> build/lib/mewcode/sessions
+running egg_info
+writing src/mewcode.egg-info/PKG-INFO
+writing dependency_links to src/mewcode.egg-info/dependency_links.txt
+writing entry points to src/mewcode.egg-info/entry_points.txt
+writing requirements to src/mewcode.egg-info/requires.txt
+writing top-level names to src/mewcode.egg-info/top_level.txt
+reading manifest file 'src/mewcode.egg-info/SOURCES.txt'
+writing manifest file 'src/mewcode.egg-info/SOURCES.txt'
+installing to build/bdist.macosx-11.0-arm64/wheel
+running install
+running install_lib
+creating build/bdist.macosx-11.0-arm64/wheel
+creating build/bdist.macosx-11.0-arm64/wheel/mewcode
+creating build/bdist.macosx-11.0-arm64/wheel/mewcode/instructions
+copying build/lib/mewcode/instructions/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/instructions
+creating build/bdist.macosx-11.0-arm64/wheel/mewcode/tools
+copying build/lib/mewcode/tools/files.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/tools
+copying build/lib/mewcode/tools/command.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/tools
+copying build/lib/mewcode/tools/paths.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/tools
+copying build/lib/mewcode/tools/registry.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/tools
+copying build/lib/mewcode/tools/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/tools
+copying build/lib/mewcode/tools/processes.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/tools
+copying build/lib/mewcode/tools/search.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/tools
+copying build/lib/mewcode/tools/scheduler.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/tools
+copying build/lib/mewcode/tools/base.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/tools
+copying build/lib/mewcode/tools/executor.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/tools
+creating build/bdist.macosx-11.0-arm64/wheel/mewcode/context
+copying build/lib/mewcode/context/spill.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/context
+copying build/lib/mewcode/context/partition.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/context
+copying build/lib/mewcode/context/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/context
+copying build/lib/mewcode/context/summary.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/context
+copying build/lib/mewcode/context/estimate.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/context
+copying build/lib/mewcode/context/manager.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/context
+copying build/lib/mewcode/config.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode
+creating build/bdist.macosx-11.0-arm64/wheel/mewcode/memory
+copying build/lib/mewcode/memory/store.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/memory
+copying build/lib/mewcode/memory/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/memory
+copying build/lib/mewcode/memory/manager.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/memory
+copying build/lib/mewcode/async_utils.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode
+creating build/bdist.macosx-11.0-arm64/wheel/mewcode/providers
+copying build/lib/mewcode/providers/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/providers
+copying build/lib/mewcode/providers/openai.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/providers
+copying build/lib/mewcode/providers/tool_messages.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/providers
+copying build/lib/mewcode/providers/anthropic.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/providers
+copying build/lib/mewcode/providers/usage.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/providers
+copying build/lib/mewcode/collector.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode
+copying build/lib/mewcode/session.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode
+copying build/lib/mewcode/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode
+creating build/bdist.macosx-11.0-arm64/wheel/mewcode/terminal
+copying build/lib/mewcode/terminal/controller.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/terminal
+copying build/lib/mewcode/terminal/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/terminal
+copying build/lib/mewcode/terminal/input.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/terminal
+copying build/lib/mewcode/terminal/text.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/terminal
+copying build/lib/mewcode/terminal/approval.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/terminal
+copying build/lib/mewcode/terminal/commands.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/terminal
+copying build/lib/mewcode/terminal/state.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/terminal
+creating build/bdist.macosx-11.0-arm64/wheel/mewcode/mcp
+copying build/lib/mewcode/mcp/config.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/mcp
+copying build/lib/mewcode/mcp/tools.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/mcp
+copying build/lib/mewcode/mcp/_launch.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/mcp
+copying build/lib/mewcode/mcp/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/mcp
+copying build/lib/mewcode/mcp/runtime.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/mcp
+copying build/lib/mewcode/mcp/http.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/mcp
+copying build/lib/mewcode/mcp/permissions.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/mcp
+copying build/lib/mewcode/mcp/manager.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/mcp
+copying build/lib/mewcode/types.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode
+creating build/bdist.macosx-11.0-arm64/wheel/mewcode/permissions
+copying build/lib/mewcode/permissions/config.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/permissions
+copying build/lib/mewcode/permissions/models.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/permissions
+copying build/lib/mewcode/permissions/terminal.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/permissions
+copying build/lib/mewcode/permissions/shell.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/permissions
+copying build/lib/mewcode/permissions/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/permissions
+copying build/lib/mewcode/permissions/rules.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/permissions
+copying build/lib/mewcode/permissions/grants.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/permissions
+copying build/lib/mewcode/permissions/runtime.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/permissions
+copying build/lib/mewcode/prompts.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode
+creating build/bdist.macosx-11.0-arm64/wheel/mewcode/sessions
+copying build/lib/mewcode/sessions/store.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/sessions
+copying build/lib/mewcode/sessions/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/sessions
+copying build/lib/mewcode/sessions/codec.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/sessions
+copying build/lib/mewcode/sessions/projection.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode/sessions
+copying build/lib/mewcode/cli.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode
+copying build/lib/mewcode/agent.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode
+copying build/lib/mewcode/app.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode
+copying build/lib/mewcode/errors.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode
+copying build/lib/mewcode/__main__.py -> build/bdist.macosx-11.0-arm64/wheel/./mewcode
+running install_egg_info
+Copying src/mewcode.egg-info to build/bdist.macosx-11.0-arm64/wheel/./mewcode-0.1.0-py3.11.egg-info
+running install_scripts
+creating build/bdist.macosx-11.0-arm64/wheel/mewcode-0.1.0.dist-info/WHEEL
+creating '<REPO_ROOT>/dist/.tmp-tb0m145j/mewcode-0.1.0-py3-none-any.whl' and adding 'build/bdist.macosx-11.0-arm64/wheel' to it
+adding 'mewcode/__init__.py'
+adding 'mewcode/__main__.py'
+adding 'mewcode/agent.py'
+adding 'mewcode/app.py'
+adding 'mewcode/async_utils.py'
+adding 'mewcode/cli.py'
+adding 'mewcode/collector.py'
+adding 'mewcode/config.py'
+adding 'mewcode/errors.py'
+adding 'mewcode/prompts.py'
+adding 'mewcode/session.py'
+adding 'mewcode/types.py'
+adding 'mewcode/context/__init__.py'
+adding 'mewcode/context/estimate.py'
+adding 'mewcode/context/manager.py'
+adding 'mewcode/context/partition.py'
+adding 'mewcode/context/spill.py'
+adding 'mewcode/context/summary.py'
+adding 'mewcode/instructions/__init__.py'
+adding 'mewcode/mcp/__init__.py'
+adding 'mewcode/mcp/_launch.py'
+adding 'mewcode/mcp/config.py'
+adding 'mewcode/mcp/http.py'
+adding 'mewcode/mcp/manager.py'
+adding 'mewcode/mcp/permissions.py'
+adding 'mewcode/mcp/runtime.py'
+adding 'mewcode/mcp/tools.py'
+adding 'mewcode/memory/__init__.py'
+adding 'mewcode/memory/manager.py'
+adding 'mewcode/memory/store.py'
+adding 'mewcode/permissions/__init__.py'
+adding 'mewcode/permissions/config.py'
+adding 'mewcode/permissions/grants.py'
+adding 'mewcode/permissions/models.py'
+adding 'mewcode/permissions/rules.py'
+adding 'mewcode/permissions/runtime.py'
+adding 'mewcode/permissions/shell.py'
+adding 'mewcode/permissions/terminal.py'
+adding 'mewcode/providers/__init__.py'
+adding 'mewcode/providers/anthropic.py'
+adding 'mewcode/providers/openai.py'
+adding 'mewcode/providers/tool_messages.py'
+adding 'mewcode/providers/usage.py'
+adding 'mewcode/sessions/__init__.py'
+adding 'mewcode/sessions/codec.py'
+adding 'mewcode/sessions/projection.py'
+adding 'mewcode/sessions/store.py'
+adding 'mewcode/terminal/__init__.py'
+adding 'mewcode/terminal/approval.py'
+adding 'mewcode/terminal/commands.py'
+adding 'mewcode/terminal/controller.py'
+adding 'mewcode/terminal/input.py'
+adding 'mewcode/terminal/state.py'
+adding 'mewcode/terminal/text.py'
+adding 'mewcode/tools/__init__.py'
+adding 'mewcode/tools/base.py'
+adding 'mewcode/tools/command.py'
+adding 'mewcode/tools/executor.py'
+adding 'mewcode/tools/files.py'
+adding 'mewcode/tools/paths.py'
+adding 'mewcode/tools/processes.py'
+adding 'mewcode/tools/registry.py'
+adding 'mewcode/tools/scheduler.py'
+adding 'mewcode/tools/search.py'
+adding 'mewcode-0.1.0.dist-info/METADATA'
+adding 'mewcode-0.1.0.dist-info/WHEEL'
+adding 'mewcode-0.1.0.dist-info/entry_points.txt'
+adding 'mewcode-0.1.0.dist-info/top_level.txt'
+adding 'mewcode-0.1.0.dist-info/RECORD'
+removing build/bdist.macosx-11.0-arm64/wheel
+Successfully built dist/mewcode-0.1.0.tar.gz
+Successfully built dist/mewcode-0.1.0-py3-none-any.whl

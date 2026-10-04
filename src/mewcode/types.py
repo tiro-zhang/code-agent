@@ -72,7 +72,7 @@ class CollectedResponse:
 @dataclass(frozen=True)
 class AgentEvent:
     kind: Literal["thinking_delta", "text_delta", "tool_call", "tool_started", "tool_result",
-                  "permission_requested", "permission_resolved", "usage", "progress", "history_trimmed", "context_compaction", "finished"]
+                  "permission_requested", "permission_resolved", "usage", "progress", "history_trimmed", "context_compaction", "memory_update", "finished"]
     run_id: str = ""
     iteration: int = 0
     mode: AgentMode = "execute"
@@ -90,7 +90,7 @@ class AgentEvent:
     phase: str = ""
     max_iterations: int = 20
     reason: StopReason | None = None
-    purpose: Literal["work", "summary"] = "work"
+    purpose: Literal["work", "summary", "restore", "memory"] = "work"
     estimated_before: int | None = None
     estimated_after: int | None = None
     spilled: int = 0

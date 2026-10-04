@@ -1,0 +1,40 @@
+........................................................................ [  8%]
+........................................................................ [ 16%]
+........................................................................ [ 24%]
+........................................................................ [ 32%]
+........................................................................ [ 40%]
+........................................................................ [ 48%]
+..........................F............................................. [ 56%]
+........................................................................ [ 64%]
+........................................................................ [ 72%]
+........................................................................ [ 80%]
+........................................................................ [ 88%]
+........................................................................ [ 96%]
+................................                                         [100%]
+=================================== FAILURES ===================================
+_______________ test_approval_wait_is_outside_execution_timeout ________________
+
+tmp_path = PosixPath('<TEMP_ROOT>/pytest-of-tiro/pytest-338/test_approval_wait_is_outside_0')
+
+    @async_test
+    async def test_approval_wait_is_outside_execution_timeout(tmp_path):
+        entered, release = asyncio.Event(), asyncio.Event()
+        async def approve(request, cancel):
+            entered.set()
+            await release.wait()
+            return "once"
+        runner = executor(tmp_path, responder=approve)
+        runner.timeout = 0.5
+        task = asyncio.create_task(runner.execute("write_file", '{"path":"a","content":"ok"}'))
+        await entered.wait()
+        await asyncio.sleep(0.6)
+        assert not task.done() and not (tmp_path / "a").exists()
+        release.set()
+>       assert (await task).ok
+E       AssertionError: assert False
+E        +  where False = ToolResult(ok=False, data=None, error={'code': 'timeout', 'message': '工具执行超时；可能已有副作用，请先检查实际状态', 'details': {'side_effects_may_have_occurred': True}}, truncated=False).ok
+
+tests/test_permission_loop.py:62: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_permission_loop.py::test_approval_wait_is_outside_execution_timeout
+1 failed, 895 passed in 90.63s (0:01:30)

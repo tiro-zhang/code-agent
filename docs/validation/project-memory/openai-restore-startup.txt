@@ -1,0 +1,9 @@
+规划 · 权限 default · 启动中 · 暂无任务记录
+Ctrl+C 取消启动
+提示> 会话 20261004-191953-8b32 正在活动，跳过清理
+提示> 会话第 14 行已跳过：Expecting value: line 1 column 11 (char 10)
+MewCode · memory-e2e-deepseek-openai · 权限 default · /help 查看帮助
+会话> 20261004-191517-16df · 已恢复，等待新输入
+规划 · 权限 default · 空闲 · 暂无任务记录
+你>
+Enter 发送 · Esc+Enter 换行 · /help 帮助 · Tab 补全 · Ctrl+C 退出

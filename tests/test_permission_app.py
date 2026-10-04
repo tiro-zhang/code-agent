@@ -9,7 +9,8 @@ from types import SimpleNamespace
 import pytest
 
 from conftest import ScriptedProvider, async_test, collect
-from mewcode.app import _Renderer, run
+from mewcode.app import _Renderer
+from conftest import run_work_app as run
 from mewcode.cli import main
 from mewcode.session import ChatSession
 from mewcode.types import ToolCall
@@ -171,7 +172,7 @@ def test_failed_permanent_revoke_is_not_reported_as_success(tmp_path, monkeypatc
     async def invalidate_after_answer():
         for item in answer("答复"):
             yield item
-        (tmp_path / ".mewcode").mkdir()
+        (tmp_path / ".mewcode").mkdir(exist_ok=True)
         (tmp_path / ".mewcode/permissions.local.yaml").write_text("invalid: true\n")
     provider = ScriptedProvider([invalidate_after_answer])
     output = StringIO()
@@ -220,7 +221,7 @@ async def test_ctrl_c_at_approval_returns_to_prompt_and_accepts_next_question(tm
     sender = asyncio.create_task(send_input())
     try:
         result = await asyncio.wait_for(_run(load_config(config_file(tmp_path)), stream, output,
-            StringIO(), lambda config: provider, input_reader=InputReader(stream, interactive=True)), 3)
+            StringIO(), lambda config: provider, input_reader=InputReader(stream, interactive=True), memory_enabled=False), 3)
         await sender
         assert result == 0 and len(provider.requests) == 2
         assert "cancelled" in output.getvalue() and "下一轮答复" in output.getvalue()

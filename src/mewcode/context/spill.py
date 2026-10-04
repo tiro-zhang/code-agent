@@ -4,9 +4,10 @@ import json
 import os
 from pathlib import Path
 import stat
+import re
 from uuid import uuid4
 
-from ..tools.base import ToolResult
+from ..tools.base import ToolResult, strict_json
 from .estimate import dump, estimate_text
 
 SINGLE_LIMIT = 8000
@@ -25,9 +26,13 @@ def preview(text: str, limit: int) -> str:
 
 
 class ResultCache:
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, *, session_id: str | None = None, persistent=False):
         self.root = root.resolve()
-        self.session_id = uuid4().hex
+        if session_id is not None and not re.fullmatch(r'[a-zA-Z0-9_-]+', session_id):
+            raise ValueError('会话缓存身份无效')
+        self.session_id = session_id or uuid4().hex
+        self.persistent = persistent
+        self._reopening = False
         self.relative = Path('.mewcode/context') / self.session_id
         self.directory = self.root / self.relative
         self._fds: list[int] = []
@@ -50,7 +55,7 @@ class ResultCache:
                 try:
                     os.mkdir(name, mode=0o700, dir_fd=descriptors[-1])
                 except FileExistsError:
-                    if name == self.session_id:
+                    if name == self.session_id and not self._reopening:
                         raise OSError('会话目录已存在')
                 descriptor = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
                                      dir_fd=descriptors[-1])
@@ -92,6 +97,27 @@ class ResultCache:
     @property
     def index_path(self) -> str:
         return str(self.relative / "results-index.jsonl")
+
+    @property
+    def paths(self) -> set[str]:
+        return {str(self.relative / name) for name in self._files}
+
+    def reopen(self, paths) -> None:
+        """仅接管存档明确登记的文件，不能扫描目录猜测所有权。"""
+        paths = set(paths)
+        for path in paths:
+            relative = Path(path)
+            if relative.parent != self.relative or not re.fullmatch(r'[a-zA-Z0-9_.-]+\.jsonl', relative.name):
+                raise OSError('缓存登记路径不属于当前会话')
+        if not paths:
+            # 空存档可能尚未创建缓存目录；首次写入仍安全创建。
+            self._reopening = self.directory.exists()
+            return
+        if not self.directory.is_dir():
+            raise OSError('存档缓存目录缺失')
+        self._reopening = True
+        self._open()
+        self._files = {Path(path).name for path in paths}
 
     def write_index(self, paths) -> str:
         from ..types import Message
@@ -136,13 +162,26 @@ class ResultCache:
         with os.fdopen(fd, encoding='utf-8') as file:
             if not stat.S_ISREG(os.fstat(file.fileno()).st_mode):
                 raise OSError('缓存不是普通文件')
-            json.loads(next(file))
-            return ToolResult.from_dict(json.loads(''.join(json.loads(line)['chunk'] for line in file)))
+            try:
+                header = strict_json(next(file))
+                if (not isinstance(header, dict) or header.get('format') != 'mewcode-result-v1'
+                        or type(header.get('characters')) is not int or header['characters'] < 0
+                        or not isinstance(header.get('source'), str) or not header['source']):
+                    raise ValueError('缓存格式无效')
+                raw = ''.join(strict_json(line)['chunk'] for line in file)
+                if len(raw) != header['characters']:
+                    raise ValueError('缓存正文不完整')
+                from ..sessions.codec import decode_result
+                return decode_result(strict_json(raw))
+            except (ValueError, TypeError, KeyError, StopIteration):
+                raise ValueError('缓存格式或正文损坏') from None
 
     def close(self) -> None:
         if not self._fds:
             return
         try:
+            if self.persistent:
+                return
             # unlink 不跟随链接；仅删除应用成功创建并登记的文件。
             for name in tuple(self._files):
                 try:

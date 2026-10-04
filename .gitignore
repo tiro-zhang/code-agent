@@ -15,3 +15,5 @@ dist/
 
 # 会话工具结果缓存（可能包含项目内容）
 .mewcode/context/
+.mewcode/sessions/
+.mewcode/memory/

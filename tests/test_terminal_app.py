@@ -5,7 +5,7 @@ from io import StringIO
 import os
 
 from conftest import ScriptedProvider, async_test
-from mewcode.app import run
+from conftest import run_work_app as run
 from mewcode.types import Message
 from test_agent_loop import answer
 from test_app import config_file
