@@ -159,7 +159,7 @@
 
 ## 权限系统验收（add-permission-system）
 
-保留前章历史结果。以下项目依据本阶段自动化测试与真实 tmux 证据验收；历史记录不代替本章验证。详细记录见 openspec/changes/add-permission-system/evidence/verification.md。
+保留前章历史结果。以下项目依据本阶段自动化测试与真实 tmux 证据验收；历史记录不代替本章验证。详细记录见 openspec/changes/archive/2026-10-03-add-permission-system/evidence/verification.md。
 
 - [x] 默认以 default 启动，未命中的只读／写入／shell 操作先请求授权，终端同时显示规划／执行与权限模式。
 - [x] `--permission-mode strict|default|bypass` 与 `/permissions mode` 支持合法值，非法值明确报错，十二种规则／模式组合符合矩阵。
