@@ -1,0 +1,32 @@
+/Users/tiro/workspace/code/vibecoding/mewcode-demo/.venv/bin/python /Users/tiro/workspace/code/vibec
+oding/mewcode-demo/docs/validation/terminal-ui/input-pty.py --child /var/folders/vq/3y_6dc151z92wc2k
+zrqfqcpw0000gn/T/mewcode-input-isolation-twbcv2ly
+ tiro@tirodeMacBook-Pro-2  ~/workspace/code/vibecoding/mewcode-demo   master ±  /Users/tiro/work
+space/code/vibecoding/mewcode-demo/.venv/bin/python /Users/tiro/workspace/code/vibecoding/mewcode-de
+mo/docs/validation/terminal-ui/input-pty.py --child /var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T
+/mewcode-input-isolation-twbcv2ly
+等待输入
+你> /sta
+ /status  查看模式、上下文估算及实际 Token 用量
+Enter 发送 · Esc+Enter 换行 · / 发现命令 · F2 详情 · Ctrl+C 清草稿／空草稿退出
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

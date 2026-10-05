@@ -15,7 +15,7 @@ class SessionCommandContext:
         return self.terminal.enhanced
 
     def show_message(self, text):
-        self.renderer.line(terminal_text(text, self.config.api_key, multiline=True, limit=None))
+        self.renderer.line('本地> ' + terminal_text(text, self.config.api_key, multiline=True, limit=None))
 
     async def clear_screen(self):
         await self.terminal.clear_screen()

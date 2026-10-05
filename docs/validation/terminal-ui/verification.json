@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-05",
+  "pytest": {
+    "passed": 1007,
+    "failed": 0,
+    "seconds": 98.12
+  },
+  "build": "passed",
+  "openspec_strict": "passed",
+  "review": {
+    "critical": 0,
+    "important": 0,
+    "recheck_tests_passed": 34
+  },
+  "packaging": {
+    "modules": [
+      "details.py",
+      "projection.py",
+      "markdown.py",
+      "render.py"
+    ],
+    "real_config_packaged": false
+  },
+  "pty": {
+    "checks": 16,
+    "result": "pass",
+    "echo_restored": true,
+    "canonical_restored": true
+  },
+  "temporary_artifact": {
+    "alpha.py": "def alpha():\\n    return 11\\n",
+    "verified": true
+  }
+}

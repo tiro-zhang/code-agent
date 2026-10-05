@@ -1,0 +1,79 @@
+[DEFAULT] 执行 · 权限 default · 启动中
+Ctrl+C 取消启动
+[DEFAULT] 执行 · 权限 default · 启动中
+Ctrl+C 取消启动
+MewCode · claude-demo · 权限 default · /help 查看帮助
+会话> 20261005-114810-cf0a · 新建存档
+
+你> 请直接给一个完整可复制的 Python 示例：实现带类型标注的 LRU 缓存、示例调用和断言，约 60 行。用一个标题、两
+条说明和 python 代码围栏输出，不读写文件、不调用工具。
+MewCode> # 带类型标注的 LRU 缓存实现
+
+**说明一**：使用 `OrderedDict` 记录访问顺序，`get` 命中后把键移到末尾（最近使用），`put` 超出容量时淘汰最久未
+使用的键。
+
+**说明二**：类型参数 `K`、`V` 保持键值类型一致，`typing` 版本需 Python 3.9+（下面用 `collections.OrderedDict`
+与 `Generic`）。
+
+```python
+from collections import OrderedDict
+from typing import Generic, Optional, TypeVar
+
+K = TypeVar("K")  # 键的类型
+V = TypeVar("V")  # 值的类型
+
+
+class LRUCache(Generic[K, V]):
+    """基于 OrderedDict 的最近最少使用缓存。"""
+
+    def __init__(self, capacity: int) -> None:
+        if capacity <= 0:
+            raise ValueError("capacity 必须大于 0")
+        self.capacity: int = capacity
+        self._data: "OrderedDict[K, V]" = OrderedDict()
+
+    def get(self, key: K) -> Optional[V]:
+        """返回键对应的值；不存在返回 None，命中则标记为最近使用。"""
+        if key not in self._data:
+            return None
+        self._data.move_to_end(key)
+        return self._data[key]
+
+    def put(self, key: K, value: V) -> None:
+        """写入键值对；已存在则更新并标记为最近使用，超出容量时淘汰最久未使用。"""
+        if key in self._data:
+            self._data.move_to_end(key)
+            self._data[key] = value
+            return
+        self._data[key] = value
+        if len(self._data) > self.capacity:
+            self._data.popitem(last=False)  # 淘汰最久未使用项
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+
+if __name__ == "__main__":
+    # 示例调用：容量为 2
+    cache: LRUCache[int, str] = LRUCache(2)
+    cache.put(1, "one")
+    cache.put(2, "two")
+
+    assert cache.get(1) == "one"       # 命中 1，1 变为最近使用
+    cache.put(3, "three")              # 淘汰 2（最久未使用）
+
+    assert cache.get(2) is None        # 2 已被淘汰
+    assert cache.get(1) == "one"
+    assert cache.get(3) == "three"
+
+    cache.put(4, "four")               # 淘汰 1
+    assert cache.get(1) is None
+    assert cache.get(4) == "four"
+    assert len(cache) == 2
+
+    print("所有断言通过 ✔")
+```
+结束> model_done · 6.6s · 请求 1/20 · Token 输入 2383 / 输出 645
+[DEFAULT] 执行 · 权限 default · 空闲
+你>
+Enter 发送 · Esc+Enter 换行 · / 发现命令 · F2 详情 · Ctrl+C 清草稿／空草稿退出

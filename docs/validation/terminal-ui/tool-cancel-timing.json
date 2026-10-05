@@ -1,0 +1,10 @@
+{
+  "started": true,
+  "cancelled": true,
+  "returned_to_idle": true,
+  "cancel_seconds": 0.848,
+  "started_at_epoch": 1791172261.2413802,
+  "late_file_present": false,
+  "continued_real_answer": true,
+  "late_check_seconds": 125.6
+}

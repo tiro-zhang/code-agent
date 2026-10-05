@@ -1,6 +1,40 @@
 """所有终端展示共用的脱敏与用量文字。"""
 
 from ..types import TokenUsage
+import json
+import re
+
+
+def redact_json(text: str, secret: str) -> str:
+    """在 JSON 字符串解码后脱敏，保留键值结构和重复字段。"""
+    if not secret:
+        return text
+    def hide(match):
+        try:
+            value = json.loads(match[0])
+        except ValueError:
+            return match[0]
+        return json.dumps(value.replace(secret, '[已隐藏]'), ensure_ascii=False)
+    return re.sub(r'"(?:\\.|[^"\\])*"', hide, text)
+
+
+class StreamText:
+    """暂存可能构成密钥的尾缀，避免分片到达时泄露密钥前半段。"""
+
+    def __init__(self, secret: str):
+        self.secret, self.pending = secret, ''
+
+    def feed(self, text: str, *, final: bool = False) -> str:
+        value = self.pending + text
+        self.pending = ''
+        if self.secret:
+            value = value.replace(self.secret, '[已隐藏]')
+            if not final:
+                for count in range(min(len(value), len(self.secret) - 1), 0, -1):
+                    if value.endswith(self.secret[:count]):
+                        self.pending, value = value[-count:], value[:-count]
+                        break
+        return terminal_text(value, '', multiline=True)
 
 
 def terminal_text(text: str, secret: str, *, limit: int | None = None,

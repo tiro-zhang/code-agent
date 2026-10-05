@@ -11,11 +11,13 @@ from ..agent import _total_usage
 from ..tools.base import ToolResult
 from ..types import AgentEvent, TokenUsage, ToolCall
 from .text import terminal_text, usage_text
+from .details import DetailStore
 
 
 PHASE_LABELS = {
     "starting": "启动中", "idle": "空闲", "running": "任务运行中",
     "approval": "等待授权", "closing": "退出清理", "model": "请求模型",
+    "cancelling": "正在停止", "thinking": "思考中", "answer": "正在回答",
     "summary": "压缩上下文", "tools": "权限检查／执行工具", "permissions": "权限检查", "permission": "等待授权",
 }
 
@@ -61,6 +63,7 @@ class TerminalState:
         self._reason = ""
         self._finish_text = ""
         self._base_phase = "idle"
+        self.details = DetailStore(secret)
 
     def safe(self, value: object, *, limit: int | None = None) -> str:
         """展示边界先脱敏，再转义不可信字符。"""
@@ -94,6 +97,7 @@ class TerminalState:
         self.mode, self.permission_mode = mode, permission_mode
         self.max_iterations = max_iterations
         self._tools.clear()
+        self.details = DetailStore(self.secret)
         self._usage.clear()
         self._purposes.clear()
         self._total_usage = None
@@ -131,7 +135,15 @@ class TerminalState:
         if event.tool_name:
             tool.name = event.tool_name
         if event.call is not None:
-            tool.call = event.call
+            self.details.put(identifier + ':arguments', f'调用 #{tool.number} · {identifier} · 参数', event.call.arguments)
+            # 活动状态只需简短操作；完整参数由同一个有界缓存持有。
+            try:
+                args = json.loads(event.call.arguments)
+                brief = {key: terminal_text(value, self.secret, limit=180) for key, value in args.items()
+                         if key in {'path', 'command', 'pattern'} and isinstance(value, str)} if isinstance(args, dict) else {}
+            except (ValueError, RecursionError):
+                brief = {}
+            tool.call = replace(event.call, arguments=json.dumps(brief, ensure_ascii=False))
             if not tool.name:
                 tool.name = event.call.name
         if tool.name in self._tool_identities:
@@ -200,7 +212,7 @@ class TerminalState:
             self.elapsed
             self._finished = True
             self._reason = event.reason or "未知"
-            self._finish_text = event.text
+            self._finish_text = self.safe(event.text, limit=2000)
             self._total_usage = event.usage
             self.iteration = max(self.iteration, event.iteration)
             self.phase = "idle"
@@ -212,7 +224,24 @@ class TerminalState:
             if event.kind == "tool_result" and event.result is not None:
                 if tool.result is not None:
                     return []
-                tool.result = event.result
+                data = event.result.data if isinstance(event.result.data, dict) else {}
+                references = {key: value for key, value in data.items() if key in {
+                    'path', 'cache_path', 'cache_paths', 'output_file', 'permission_limited',
+                    'skipped_files', 'side_effects_may_have_occurred', 'exit_code'}}
+                # 大正文只留在预算缓存；状态保留有界的引用和错误摘要。
+                references = {key: value if isinstance(value, (bool, int, type(None))) else self.safe(value, limit=1024)
+                              for key, value in references.items()}
+                self.details.put(tool.identifier + ':result',
+                    self._tool_line(replace(tool, result=event.result), detail=True) +
+                    ('\n引用> ' + self.safe(json.dumps(references, ensure_ascii=False)) if references else ''),
+                    event.result.to_json())
+                error = event.result.error
+                brief_error = None if not error else {
+                    'code': self.safe(error.get('code', 'unknown'), limit=100),
+                    'message': self.safe(error.get('message', '未知错误'), limit=2000),
+                    'details': {key: bool((error.get('details') or {}).get(key))
+                                for key in ('not_started', 'side_effects_may_have_occurred')}}
+                tool.result = replace(event.result, data=references, error=brief_error)
                 tool.stage = "已结束"
                 self._refresh_phase()
                 return [self._tool_line(tool)]
@@ -227,7 +256,7 @@ class TerminalState:
                     if key not in tool.warning_keys:
                         tool.warning_keys.add(key)
                         label = "本次批准（永久未保存）" if event.permission_decision == "permanent" else "权限警告"
-                        line = f"权限> [#{tool.number}] {self.safe(tool.name)} · {label} · {self.safe(event.warning)}"
+                        line = f"权限> [#{tool.number}] {self.safe(tool.name)} · {label} · {self.safe(event.warning, limit=2000)}"
                         tool.warnings.append(line)
                         return [line]
             elif tool.result is None and not self._finished:
@@ -279,6 +308,8 @@ class TerminalState:
             text += " · 输出已截断"
         if isinstance(result.data, dict) and result.data.get("permission_limited"):
             text += f" · 搜索范围受限，跳过 {self.safe(result.data.get('skipped_files', '未知'))} 个文件"
+        if isinstance(result.data, dict) and result.data.get('side_effects_may_have_occurred'):
+            text += ' · 操作状态未知，可能已有副作用，请检查实际状态'
         return text
 
     def _tool_line(self, tool: _ToolState, *, detail: bool = False) -> str:
@@ -299,6 +330,31 @@ class TerminalState:
         if self._finished:
             return []
         return [self._tool_line(tool) for tool in self._tools.values() if tool.result is None]
+
+    def details_text(self, section='tools') -> str:
+        """同一份内存快照供 F2 和纯文本 /status 使用。"""
+        return self.details.text(section)
+
+    def compact_status(self) -> str:
+        mode = '[PLAN] 规划' if self.mode == 'plan' else '[DEFAULT] 执行'
+        header = f'{mode} · 权限 {self.safe(self.permission_mode)} · {PHASE_LABELS.get(self.phase, self.phase)}'
+        if self.phase != 'idle' and self._started_at is not None:
+            header += f' · 请求 {self.iteration}/{self.max_iterations} · {self.elapsed:.1f}s'
+        return header
+
+    def final_summary(self) -> str:
+        usage = self._total_usage
+        def count(field):
+            value = getattr(usage, field) if usage else None
+            return '未知' if value is None else str(value) + ('（部分）' if field in usage.incomplete_fields else '')
+        label = '结束' if self._reason == 'model_done' else '本轮未完成'
+        incoming = count('total_input_tokens')
+        if usage and usage.total_input_tokens is None:
+            incoming += f'（基础输入 {count("input_tokens")}）'
+        complete = '' if usage and usage.complete and usage.cache_complete else ' · 统计不完整'
+        return (f'{label}> {self.safe(self._reason)} · {self.elapsed:.1f}s · 请求 {self.iteration}/{self.max_iterations}'
+                f' · Token 输入 {incoming} / 输出 {count("output_tokens")}{complete}'
+                + (f' · {self.safe(self._finish_text, limit=300)}' if self._reason != 'model_done' else ''))
 
     @staticmethod
     def _usage_summary(usage: TokenUsage) -> str:
@@ -375,4 +431,5 @@ class TerminalState:
             lines.extend(tool.warnings)
         if not self._tools:
             lines.append("工具> 暂无调用记录")
+        lines += [self.details_text('tools'), self.details_text('thinking')]
         return "\n".join(lines)

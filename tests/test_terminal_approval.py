@@ -42,8 +42,10 @@ def test_summary_makes_decision_and_exact_file_scope_reviewable():
     item = request()
     summary = view_for(item).summary()
     for text in (item.id, item.tool, item.reason, "/项目", "1", "本次", "会话", "永久",
-                 "真实目标", "1 拒绝", "Ctrl+C", "完整参数", "详情"):
+                 "真实目标", "完整参数", "详情"):
         assert text in summary
+    # 决定选项由增强／plain 终端的唯一决定栏提供，操作正文不再重复。
+    assert '1 拒绝' not in summary and '完整写入内容' in summary
     assert "同一路径" in summary
     assert "不扩展目录" in summary
 

@@ -1,0 +1,89 @@
+
+    neg_sorted = _radix_sort_unsigned(negatives)
+    pos_sorted = _radix_sort_unsigned(positives)
+
+    # 负数部分需要倒序并还原符号
+    return [-x for x in reversed(neg_sorted)] + pos_sorted
+
+def _radix_sort_unsigned(arr: List[int]) -> List[int]:
+    if not arr:
+        return []
+    max_val = max(arr)
+    exp = 1
+    output = arr[:]
+
+    while max_val // exp > 0:
+        # 对当前位做稳定计数排序（基数为 10）
+        count = [0] * 10
+        for x in output:
+            count[(x // exp) % 10] += 1
+        for i in range(1, 10):
+            count[i] += count[i - 1]
+
+        temp = [0] * len(output)
+        for x in reversed(output):
+            digit = (x // exp) % 10
+            count[digit] -= 1
+            temp[count[digit]] = x
+        output = temp
+        exp *= 10
+
+    return output
+```
+
+---
+
+## 十、桶排序（Bucket Sort）
+
+**核心思想**：把数据按取值范围划分到若干个"桶"中，每个桶内部用插入排序等算法排序，最后按桶的顺序拼接。适合元素
+均匀分布的场景。
+
+**复杂度**：平均 O(n + n²/k + k)（k 为桶数），元素均匀分布时接近 O(n)；最坏 O(n²)（全部落入同一桶）；空间 O(n
++ k)；**稳定性取决于桶内排序算法**。
+
+```python
+def bucket_sort(arr: List[float]) -> List[float]:
+    if not arr:
+        return []
+
+    n = len(arr)
+    buckets: List[List[float]] = [[] for _ in range(n)]
+
+    # 将元素放入对应的桶
+    for x in arr:
+        idx = int(x * n)
+        if idx >= n:
+            idx = n - 1
+        buckets[idx].append(x)
+
+    # 每个桶内部排序
+    for b in buckets:
+        b.sort()  # 这里
+本轮未完成> cancelled · 32.5s · 请求 1/20 · Token 输入 3865 / 输出 0 · 统计不完整 · 用户取消任务；已完成的操作
+和结果保留，请按需检查实际状态
+
+你> 请读取 beta.py 并概括。
+工具> [#1] 取消 · cancelled：任务取消，工具未启动 · 未启动 · read_file · beta.py
+本轮未完成> cancelled · 68.8s · 请求 1/20 · Token 输入 3855 / 输出 45 · 用户取消任务；已完成的操作和结果保留，
+请按需检查实际状态
+
+你> 请只回答 APPROVAL_CONTINUE_OK，不调用工具。
+MewCode> APPROVAL_CONTINUE_OK
+结束> model_done · 2.5s · 请求 1/20 · Token 输入 4213 / 输出 8
+[DEFAULT] 执行 · 权限 default · 空闲
+你>
+Enter 发送 · Esc+Enter 换行 · / 发现命令 · F2 详情 · Ctrl+C 清草稿／空草稿退出
+
+
+
+
+
+
+
+
+
+
+
+
+
+

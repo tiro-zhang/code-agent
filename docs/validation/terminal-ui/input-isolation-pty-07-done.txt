@@ -1,0 +1,54 @@
+/Users/tiro/workspace/code/vibecod
+ing/mewcode-demo/.venv/bin/python
+/Users/tiro/workspace/code/vibecod
+ing/mewcode-demo/docs/validation/t
+erminal-ui/input-pty.py --child /v
+ar/folders/vq/3y_6dc151z92wc2kzrqf
+qcpw0000gn/T/mewcode-input-isolati
+on-twbcv2ly
+ tiro@tirodeMacBook-Pro-2  ~/work
+space/code/vibecoding/mewcode-demo
+   master ±  /Users/tiro/worksp
+ace/code/vibecoding/mewcode-demo/.
+venv/bin/python /Users/tiro/worksp
+ace/code/vibecoding/mewcode-demo/d
+ocs/validation/terminal-ui/input-p
+ty.py --child /var/folders/vq/3y_6
+dc151z92wc2kzrqfqcpw0000gn/T/mewco
+de-input-isolation-twbcv2ly
+运行中
+
+
+Ctrl+C 取消本轮
+
+
+
+
+
+
+
+
+正在停止
+
+
+正在停止，等待流和工具清理；已完成
+操作可能保留
+
+
+
+
+
+
+
+正在停止
+正在停止，等待流和工具清理；已完成
+操作可能保留
+
+
+
+
+
+
+
+
+

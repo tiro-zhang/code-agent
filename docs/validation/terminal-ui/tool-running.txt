@@ -1,0 +1,34 @@
+[DEFAULT] 执行 · 权限 default · 任务运行中 · 请求 1/20 · 73.3s
+工具> [#1] 执行中 · execute_command · python3 -c "from pathlib import Path; import time; Path(\"cancel-started
+\").write_text(\"started\"); time.sleep(60); Path(\"cancel-finished\").write_text(\"finished\")"
+Ctrl+C 取消本轮
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

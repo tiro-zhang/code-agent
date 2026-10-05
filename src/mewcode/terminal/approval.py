@@ -19,7 +19,7 @@ FILE_TOOLS = {"read_file", "write_file", "edit_file", "glob_files", "search_code
 class ApprovalView:
     """展示同一请求的固定参数、真实目标和批准范围。"""
 
-    sections = ("targets", "arguments", "content")
+    sections = ("targets", "arguments", "content", "scope")
     decisions = DECISIONS
 
     def __init__(self, request, *, root: str | Path, secret: str = ""):
@@ -38,6 +38,13 @@ class ApprovalView:
     def request_id(self) -> str:
         """供控制器关联请求的原始完整标识；展示时仍须转义。"""
         return self._id
+
+    def identity(self) -> str:
+        """翻到任意页面时仍可辨认当前操作对象。"""
+        if self._external:
+            return self._field(f'{self._external[0]} / {self._external[1]}')
+        count = f' · {len(self._targets)} 个目标' if self._tool in FILE_TOOLS else ''
+        return self._field(self._tool) + count
 
     def _safe(self, text: str) -> str:
         return terminal_text(text, self._secret, multiline=True)
@@ -79,40 +86,39 @@ class ApprovalView:
         return lines
 
     def summary(self) -> str:
-        """首页优先给出操作与四种决定，详情入口保留完整资料。"""
+        """首页依次展示操作身份、批准范围和完整操作内容；决定栏由终端负责。"""
+        labels = {"read_file": "读取文件", "write_file": "写入文件", "edit_file": "编辑文件",
+                  "search_code": "搜索代码", "glob_files": "搜索文件", "execute_command": "执行命令"}
+        operation = labels.get(self._tool, "调用工具")
         if self._external:
-            operation = f"调用外部工具 {self._field(self._tool)}"
-        elif self._tool == "execute_command":
-            operation = "执行命令 " + self._preview(str(self._arguments.get("command", "")))
-        elif self._tool in FILE_TOOLS:
-            label = {"read_file": "读取文件", "write_file": "写入文件", "edit_file": "编辑文件",
-                     "search_code": "搜索代码", "glob_files": "搜索文件"}.get(self._tool, "调用工具")
-            target = self._targets[0] if self._targets else str(self._arguments.get("path", ""))
-            operation = label + (" " + self._preview(target) if target else "")
+            operation = f"调用外部工具\n外部 Server> {self._field(self._external[0])} · 原始工具> {self._field(self._external[1])}"
+        elif self._tool in FILE_TOOLS and self._targets:
+            operation += " " + self._field(self._targets[0])
+        scope = ("精确外部身份及完整参数" if self._external else "完整精确命令" if self._tool == "execute_command"
+                 else "列出的真实文件（未来内容可变）" if self._tool in FILE_TOOLS else "完整 JSON 参数")
+        lines = [f"操作> {operation}", f"范围> 本次仅当前调用；会话／永久绑定当前项目及{scope}。"]
+        if self._external:
+            lines.append(self.detail('arguments'))
+        elif self._tool in {'write_file', 'edit_file'}:
+            lines.append(self.detail('content'))
+        elif self._tool in FILE_TOOLS | {'execute_command'}:
+            lines.append(self.detail('targets'))
         else:
-            operation = "调用扩展工具 " + self._field(self._tool)
-        lines = [f"操作> {operation}",
-                 "授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久",
-                 "取消> 回车／1 拒绝本次操作，本轮可继续；Ctrl+C 取消整轮。",
-                 f"关联标识> {self._field(self._id)}", f"工具> {self._field(self._tool)} · 等待授权 · {self._field(self._mode)}",
-                 f"原因> {self._field(self._reason)}", f"工作根目录> {self._field(self._root)}"]
+            lines.append(self.detail('arguments'))
+        lines += [f"关联标识> {self._field(self._id)}", f"工具> {self._field(self._tool)} · 等待授权 · {self._field(self._mode)}",
+                  f"原因> {self._field(self._reason)}", f"工作根目录> {self._field(self._root)}"]
         if self._external:
-            server, original = self._external
-            lines += [f"外部 Server> {self._field(server)}", f"稳定别名> {self._field(self._tool)}", f"原始工具> {self._field(original)}",
-                      f"安全连接描述> {self._field(self._connection) or '未提供'}",
+            lines += [f"稳定别名> {self._field(self._tool)}", f"安全连接描述> {self._field(self._connection) or '未提供'}",
                       "目标> 外部调用参数不作为经过本地验证的真实文件。"]
-        elif self._tool == "execute_command":
-            lines.append("命令数量> 1（完整精确命令见目标详情）")
         elif self._tool in FILE_TOOLS:
             lines.append(f"真实目标数量> {len(self._targets)}（完整列表见目标详情）")
-        else:
-            lines.append("授权对象数量> 1（本次完整 JSON 参数，见参数详情）")
         lines += self._scope()
-        lines.append("详情> targets 查看全部目标／命令／外部身份；arguments 查看完整参数；content 查看完整写入内容／编辑差异。next／back 翻页，all 查看全部；查看详情不批准。")
         return self._safe("\n".join(lines))
 
     def detail(self, section: str) -> str:
         """返回指定部分的全部安全文字，不读取目标文件。"""
+        if section == "scope":
+            return self._safe("\n".join(self._scope()))
         if section == "summary":
             return self.summary()
         if section == "all":

@@ -1,0 +1,15 @@
+[DEFAULT] 执行 · 权限 default · 等待授权 · 请
+工具> [#1] 等待授权 · execute_command · pyt…
+审阅 1/3 页 · summary · execute_command
+操作> 执行命令
+范围> 本次仅当前调用；会话／永久绑定当前项目
+及完整精确命令。
+完整精确命令：
+python3 -c "from pathlib import Path; import
+ time; Path(\"cancel-started\").write_text(\
+"started\"); time.sleep(60); Path(\"cancel-f
+inished\").write_text(\"finished\")"
+授权>
+1 拒绝 · 2 本次 · 3 会话 · 4 永久
+↑↓ 翻页 · all 全文 · scope 范围
+Ctrl+C 取消整轮

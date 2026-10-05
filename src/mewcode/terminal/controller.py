@@ -8,12 +8,16 @@ from prompt_toolkit.application import run_in_terminal
 from prompt_toolkit.application.current import set_app
 from prompt_toolkit.input.defaults import create_input
 from prompt_toolkit.output.defaults import create_output
+from prompt_toolkit import print_formatted_text
+from prompt_toolkit.formatted_text import FormattedText
 
 from ..permissions.terminal import TerminalApproval
 from .approval import ApprovalView
 from .input import EnhancedTerminal
 from .state import TerminalState
 from .text import terminal_text
+from .projection import TerminalProjection
+from .markdown import MarkdownStyle
 
 
 class _Output:
@@ -29,6 +33,9 @@ class _Output:
     def flush(self):
         self.owner.output.flush()
 
+    def response_style(self, enabled):
+        self.owner._markdown = MarkdownStyle() if enabled else None
+
 
 class TerminalController:
     def __init__(self, reader, output, *, secret, root, on_interrupt, allow_enhanced=True, registry=None):
@@ -37,6 +44,7 @@ class TerminalController:
         self.reader, self.output = reader, output
         self.secret, self.root, self.on_interrupt = secret, root, on_interrupt
         self.state = TerminalState(secret)
+        self.projection = TerminalProjection(self.state)
         self.state.set_phase("starting")
         self.stream, self.review_stream = _Output(self), _Output(self, review=True)
         self.backend = None
@@ -46,6 +54,9 @@ class TerminalController:
         self._deferred_alerts = []
         self._queue = []
         self._partial = ""
+        self._markdown = None
+        self._plain_phase = ''
+        self._plain_starts = set()
         self._writer = None
         self._approval_lock = asyncio.Lock()
         self._decisions = {}
@@ -74,8 +85,10 @@ class TerminalController:
         try:
             backend = EnhancedTerminal(create_input(self.reader.stream, always_prefer_tty=False),
                 create_output(self.output, always_prefer_tty=False), on_interrupt=self.on_interrupt,
-                status=self.state.summary, active=self._active_lines, secret=self.secret,
-                results=lambda: "".join(self._deferred), registry=self.registry)
+                status=self.state.compact_status, active=self._active_lines, secret=self.secret,
+                details=self.state.details_text,
+                results=lambda: "".join(self._deferred) + '\n'.join(
+                    event.text for event in self.projection.flush(consume=False)), registry=self.registry)
             await backend.start()
             self.backend = backend
             self.set_phase("starting")
@@ -89,6 +102,9 @@ class TerminalController:
 
     def _active_lines(self):
         lines = self.state.active_lines()
+        finished = sum(tool.result is not None for tool in self.state._tools.values())
+        if finished and not self.state._finished:
+            lines.insert(0, f'调用进度> 已结束 {finished}/{len(self.state._tools)} 次调用')
         if self._deferred:
             records = [line for line in "".join(self._deferred).splitlines() if line.strip()]
             if records:
@@ -120,7 +136,7 @@ class TerminalController:
         if self.backend:
             from .input import CommandCompleter
             self.backend.registry = registry
-            self.backend.chat.completer = CommandCompleter(registry)
+            self.backend.chat.completer = CommandCompleter(registry, self.secret)
             self.backend.chat.cancel_completion()
             self.backend.application.invalidate()
 
@@ -137,9 +153,12 @@ class TerminalController:
         text = self._partial + text
         boundary = text.rfind("\n") + 1
         self._partial = text[boundary:]
-        self.backend.set_live_text(self._partial)
+        # 在入队时固定样式，避免稍后的角色／阶段切换改变已生成的正文。
+        fragments = self._markdown.render(text[:boundary]) if self._markdown else [('', text[:boundary])]
+        live = self._markdown.render(self._partial, commit=False) if self._markdown else [('', self._partial)]
+        self.backend.set_live_text(self._partial, fragments=live)
         if boundary:
-            self._queue.append(text[:boundary])
+            self._queue.append((text[:boundary], fragments))
             if self._writer is None or self._writer.done():
                 self._writer = asyncio.create_task(self._flush())
 
@@ -149,10 +168,14 @@ class TerminalController:
 
     async def _flush(self):
         while self._queue:
-            text = "".join(self._queue)
+            queued = self._queue[:]
             self._queue.clear()
             def emit():
-                self.output.write(text)
+                if getattr(self.output, 'isatty', lambda: False)():
+                    fragments = [part for _, fragments in queued for part in fragments]
+                    print_formatted_text(FormattedText(fragments), output=self.backend.application.output, end='')
+                else:
+                    self.output.write(''.join(text for text, _ in queued))
                 self.output.flush()
             with set_app(self.backend.application):
                 await run_in_terminal(emit)
@@ -212,6 +235,27 @@ class TerminalController:
         self.state.begin_task(mode=self.state.mode, permission_mode=self.state.permission_mode,
                               max_iterations=self.state.max_iterations)
         self.set_phase("running")
+        self.projection.reset()
+        self._plain_phase = ''
+        self._plain_starts.clear()
+
+    def cancelling(self):
+        """取消已提出但清理尚未完成；不提前恢复输入。"""
+        if self.phase not in {'idle', 'closing', 'cancelling'}:
+            self.set_phase('cancelling')
+            if not self.enhanced:
+                self.write('状态> 正在停止，等待清理完成\n')
+
+    def echo(self, renderer, text):
+        """只回显实际提交的原始问题，保留正文换行和缩进。"""
+        if not self.enhanced:
+            # plain 已写出提示符；交互 TTY 由终端行规程回显，管道需显式保留问题。
+            if not (getattr(self.reader.stream, 'isatty', lambda: False)() and
+                    getattr(self.output, 'isatty', lambda: False)()):
+                renderer.line(terminal_text(text, self.secret, multiline=True))
+            return
+        renderer.line('')
+        renderer.line('你> ' + terminal_text(text, self.secret, multiline=True))
 
     async def approve(self, request, cancel):
         async with self._approval_lock:
@@ -219,6 +263,8 @@ class TerminalController:
                 return self._decisions[request.id]
             if cancel.is_set():
                 return "deny"
+            for event in self.projection.flush():
+                self.write(event.text + '\n')
             # 此前队列先输出，然后建立当前唯一审批区域。
             self.finish_line()
             await self.drain()
@@ -234,41 +280,35 @@ class TerminalController:
                 self._decisions[request.id] = decision
                 return decision
             finally:
-                self.phase = "running"
-                self.state.set_phase("running")
+                self.phase = "cancelling" if cancel.is_set() else "running"
+                self.state.set_phase(self.phase)
                 self._release_output()
                 await self.drain()
 
     def show(self, renderer, event, *, managed_approval=True, maintenance=False):
-        if maintenance:
+        # 手动压缩保留其独立结果与用量，后台维护走安静通道。
+        if maintenance and event.purpose == 'summary':
             renderer.show(event)
-            if self.backend:
-                self.backend.application.invalidate()
             return
-        lines = self.state.update(event)
+        visible = self.projection.accept(event, maintenance=maintenance)
+        if self.phase in {'cancelling', 'approval'}:
+            self.state.set_phase(self.phase)
         if self.backend:
             self.backend.application.invalidate()
-        if event.kind == "permission_requested" and managed_approval:
-            return
-        if not self.enhanced:
-            renderer.show(event)
-            return
-        if event.kind in {"progress", "usage", "tool_call", "tool_started", "tool_result",
-                          "permission_requested", "permission_resolved"}:
-            result = event.result
-            needs_attention = bool(event.warning) or (result is not None and (
-                not result.ok or result.truncated or
-                isinstance(result.data, dict) and result.data.get("permission_limited")))
-            if self.approval_active and needs_attention:
-                self._deferred_alerts.extend(lines)
-            for line in lines:
-                renderer.line(line)
-        elif event.kind == "finished":
-            label = "结束" if event.reason == "model_done" else "本轮未完成"
-            renderer.line(f"{label}> {event.reason} · {renderer.safe(event.text, 300)} · 请求 {event.iteration}/{event.max_iterations}")
-            renderer.line(self.state.summary())
-        else:
-            renderer.show(event)
+        elif not maintenance and event.kind in {'progress', 'thinking_delta'}:
+            if self.state.phase != self._plain_phase:
+                self._plain_phase = self.state.phase
+                renderer.line('状态> ' + self.state.compact_status())
+        actual = event.child_event if event.kind == 'skill_event' else event
+        if not self.enhanced and not maintenance and actual and actual.kind == 'tool_started':
+            identity = (actual.run_id, actual.tool_call_id)
+            if identity not in self._plain_starts:
+                self._plain_starts.add(identity)
+                renderer.line('状态> 正在执行 ' + renderer.safe(actual.tool_name))
+        if self.approval_active and actual and self.projection.needs_attention(actual):
+            self._deferred_alerts.extend(item.text for item in visible if item.kind == 'display_line')
+        for item in visible:
+            renderer.show(item)
 
     def discard_pending(self):
         if self.backend:

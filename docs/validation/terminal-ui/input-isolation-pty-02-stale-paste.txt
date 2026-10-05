@@ -1,0 +1,42 @@
+/Users/tiro/workspace/code/vibecod
+ing/mewcode-demo/.venv/bin/python
+/Users/tiro/workspace/code/vibecod
+ing/mewcode-demo/docs/validation/t
+erminal-ui/input-pty.py --child /v
+ar/folders/vq/3y_6dc151z92wc2kzrqf
+qcpw0000gn/T/mewcode-input-isolati
+on-twbcv2ly
+ tiro@tirodeMacBook-Pro-2  ~/work
+space/code/vibecoding/mewcode-demo
+   master ±  /Users/tiro/worksp
+ace/code/vibecoding/mewcode-demo/.
+venv/bin/python /Users/tiro/worksp
+ace/code/vibecoding/mewcode-demo/d
+ocs/validation/terminal-ui/input-p
+ty.py --child /var/folders/vq/3y_6
+dc151z92wc2kzrqfqcpw0000gn/T/mewco
+de-input-isolation-twbcv2ly
+运行中
+
+
+Ctrl+C 取消本轮
+
+
+
+
+
+
+
+
+等待授权
+审阅 1/5 页 · summary · write_fi…
+操作> 写入文件 /var/folders/vq/3y
+_6dc151z92wc2kzrqfqcpw0000gn/T/me
+wcode-input-isolation-twbcv2ly/is
+olated.txt
+范围> 本次仅当前调用；会话／永久
+绑定当前项目及列出的真实文件（未
+授权>
+1 拒绝 · 2 本次 · 3 会话 · 4 永久
+↑↓ 翻页 · all 全文 · scope 范围
+Ctrl+C 取消整轮

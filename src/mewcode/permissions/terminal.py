@@ -144,7 +144,7 @@ class TerminalApproval:
                 elif choice in {"next", "n", "back", "b"}:
                     page = max(0, page + (1 if choice in {"next", "n"} else -1))
                     show_page()
-                elif choice in {"summary", "targets", "arguments", "content"}:
+                elif choice in {"summary", "targets", "arguments", "content", "scope"}:
                     section, page = choice, 0
                     show_page()
                 else:

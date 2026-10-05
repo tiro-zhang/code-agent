@@ -110,11 +110,13 @@ class CommandRegistry:
             '以 // 开头的单行消息去掉一个 / 后作为普通消息发送；多行中的命令文字作为普通正文。',
             '启动选项：--list-sessions 列出当前项目存档；--resume ID|latest 显式恢复；默认新建。',
             ('发送与换行：Enter 发送完整草稿；Esc 后 Enter 或 Alt+Enter 换行；粘贴只编辑草稿。\n'
-             'Tab 补全只修改草稿；菜单中 Enter 确认候选，再按 Enter 执行；Esc 关闭菜单。'
+             '输入 / 自动发现命令及描述；Tab 补全只修改草稿；菜单中 Enter 确认候选，再按 Enter 执行；Esc 关闭菜单。'
              if enhanced else '发送：纯文本兼容模式逐行读取，Enter 提交当前行；不支持多行草稿编辑。'),
-            '取消与退出：空闲 Ctrl+C 或 EOF（终端通常为 Ctrl+D）退出会话；任务运行中 Ctrl+C 取消整轮。',
+            ('取消与退出：空闲 Ctrl+C 清除非空草稿，空草稿时退出；运行中 Ctrl+C 显示正在停止，清理结束后恢复输入。'
+             if enhanced else '取消与退出：空闲 Ctrl+C 或 EOF（终端通常为 Ctrl+D）退出会话；任务运行中 Ctrl+C 取消整轮。'),
             '授权阶段：回车／1 拒绝本次操作，本轮可继续；Ctrl+C 取消整轮；EOF 取消未发送调用并收尾退出。',
         ])
         if enhanced:
-            lines.append('增强审批中输入 results 可分页查看全部旁路结果；浏览不批准。')
+            lines.append('F2 查看最近任务的调用／思考，Tab 切换、PgUp/PgDn 翻页、Esc/F2 返回；浏览保留草稿，不提交。')
+            lines.append('增强审批中输入 results 可分页查看全部旁路结果，scope 查看批准范围；浏览不批准。')
         return '\n'.join(lines)

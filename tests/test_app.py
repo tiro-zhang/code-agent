@@ -61,13 +61,13 @@ def test_streaming_flushes_thinking_and_answer_before_completion(tmp_path):
     output = ObservedOutput()
     async def response():
         yield ProviderEvent("thinking_delta", "先分析")
-        assert "思考> 先分析" in output.flushed
+        assert "先分析" not in output.flushed
         yield ProviderEvent("text_delta", "最终回答")
         assert "MewCode> 最终回答" in output.flushed
         yield ProviderEvent("completed", message=Message("assistant", "最终回答"))
     provider = ScriptedProvider([response])
     _, shown = invoke(tmp_path, provider, "问题\n/exit\n", output)
-    assert shown.index("思考> 先分析") < shown.index("MewCode> 最终回答")
+    assert '先分析' not in shown and 'MewCode> 最终回答' in shown
 
 
 def test_stream_failure_discards_candidate_and_reports_reason(tmp_path):
@@ -111,14 +111,15 @@ def test_tool_metadata_is_flushed_redacted_and_body_not_printed(tmp_path, monkey
     output = ObservedOutput()
     provider = ScriptedProvider([calls(ToolCall("a", "write_file", json.dumps({"path":"dummy\x1b[31m\nfile", "content":"正文不要打印" * 100}))), answer()])
     async def execute(self, *args, **options):
-        assert "已接收" in output.flushed and "[已隐藏]" in output.flushed
+        assert "已接收" not in output.flushed
         assert "\x1b" not in output.flushed and "正文不要打印" not in output.flushed
         await options["on_event"]({"kind": "tool_started"})
         return ToolResult.success({"path":"x"}, truncated=True)
     monkeypatch.setattr("mewcode.tools.executor.ToolExecutor.execute", execute)
     _, shown = invoke(tmp_path, provider, "创建\n/exit\n", output)
     assert "成功" in shown and "截断" in shown and "dummy" not in shown
-    assert shown.index("已接收") < shown.index("开始") < shown.index("成功") < shown.index("MewCode> 完成")
+    assert "已接收" not in shown and "开始" not in shown
+    assert shown.index("成功") < shown.index("MewCode> 完成")
 
 
 @pytest.mark.parametrize("code,label", [("file_exists", "失败"), ("timeout", "超时"), ("cancelled", "取消")])

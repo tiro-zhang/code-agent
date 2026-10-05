@@ -1,0 +1,38 @@
+[DEFAULT] 执行 · 权限 default · 启动中
+Ctrl+C 取消启动
+[DEFAULT] 执行 · 权限 default · 启动中
+Ctrl+C 取消启动
+MewCode · openai-compatible-demo · 权限 default · /help 查看帮助
+会话> 20261005-112844-a38e · 新建存档
+
+你> 读取 README.md、alpha.py、beta.py，并搜索 def，四个工具调用请在同一批执行，然后用两句话概括。
+本轮未完成> stream_error · 0.9s · 请求 1/20 · Token 输入 未知（基础输入 未知） / 输出 未知 · 统计不完整 · Open
+AI 兼容服务 TLS 连接失败，请检查网络、代理配置及服务端连接状态
+[DEFAULT] 执行 · 权限 default · 空闲
+你>
+Enter 发送 · Esc+Enter 换行 · / 发现命令 · F2 详情 · Ctrl+C 清草稿／空草稿退出
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

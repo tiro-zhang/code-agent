@@ -370,9 +370,11 @@ async def test_tiny_review_keeps_priority_side_result_and_all_review_lines_visib
         try:
             pending = asyncio.create_task(terminal.approve(NumberedView(), asyncio.Event()))
             seen = set()
-            for page in range(5):
+            await tick()
+            height = terminal._review_height()
+            for page in range((20 + height - 1) // height):
                 # 等待目标页真正绘制，固定 40ms 会在高负载下跨过一页。
-                expected = f'REVIEW-LINE-{page * 4:02}'
+                expected = f'REVIEW-LINE-{page * height:02}'
                 deadline = asyncio.get_running_loop().time() + 2
                 while expected not in screen_text(terminal):
                     assert asyncio.get_running_loop().time() < deadline, screen_text(terminal)

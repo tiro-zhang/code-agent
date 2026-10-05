@@ -90,7 +90,7 @@ async def run_skill(session, name, args='', *, cancel_event=None):
                     'mode': session.mode, 'state': session.context.state(), 'usage': usage})
             if reason == 'model_done' and session.memory and session.memory.enqueue(session.agent.last_task):
                 session.memory_tasks[run_id] = 'queued'
-            yield event('text_delta', text=summary)
+            yield event('text_delta', text=summary, replay_of=data.get('child_run_id', ''))
         yield event('finished', reason=reason, text='Skill 已结束' if result.ok else 'Skill 未完成；已完成操作保留', usage=total)
     except asyncio.CancelledError:
         cancel.set()
