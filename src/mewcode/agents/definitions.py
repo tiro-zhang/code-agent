@@ -41,6 +41,7 @@ class AgentRole:
     model: str = "inherit"
     max_iterations: int = 20
     permission_mode: str = "inherit"
+    isolation: str | None = None
 
     def tools(self, parent_tools) -> frozenset[str]:
         """只收紧父范围；系统入口同样遵守白黑名单。"""
@@ -97,7 +98,7 @@ def parse_role(path: Path, *, layer: str) -> AgentRole:
         if not match or not match[2].strip():
             raise ValueError("缺少 YAML frontmatter 或非空角色正文")
         metadata = yaml.load(match[1], Loader=_StrictLoader)
-        fields = {"name", "description", "allowed-tools", "disallowed-tools", "model", "max-iterations", "permission-mode"}
+        fields = {"name", "description", "allowed-tools", "disallowed-tools", "model", "max-iterations", "permission-mode", "isolation"}
         if not isinstance(metadata, dict) or not metadata.keys() <= fields:
             raise ValueError("元信息必须是映射且不得含未知字段")
         name, description = metadata.get("name"), metadata.get("description")
@@ -110,13 +111,16 @@ def parse_role(path: Path, *, layer: str) -> AgentRole:
             raise ValueError("model 必须为 inherit、haiku、sonnet 或 opus")
         if permission not in {"inherit", "strict", "default", "bypass"}:
             raise ValueError("permission-mode 无效")
+        isolation = metadata.get("isolation")
+        if "isolation" in metadata and isolation != "worktree":
+            raise ValueError("isolation 仅接受 worktree；共享模式请省略该字段")
         iterations = metadata.get("max-iterations", 20)
         if type(iterations) is not int or iterations <= 0:
             raise ValueError("max-iterations 必须为正整数")
         return AgentRole(name, description, match[2], path, layer,
                          hashlib.sha256(str(path).encode() + b"\x00" + raw).hexdigest(),
                          _tools(metadata, "allowed-tools", None),
-                         _tools(metadata, "disallowed-tools", frozenset()), model, iterations, permission)
+                         _tools(metadata, "disallowed-tools", frozenset()), model, iterations, permission, isolation)
     except (yaml.YAMLError, ValueError, TypeError, RecursionError) as error:
         message = str(error) if type(error) is ValueError else "角色元信息或 UTF-8 无效"
         raise ToolError("invalid_agent_definition", message, not_started=True) from None

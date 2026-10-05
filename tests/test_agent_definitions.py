@@ -128,3 +128,20 @@ def test_refresh_failure_keeps_previous_complete_catalog(tmp_path):
     store.refresh()
     assert store.catalog.get("sample").body == "合法新定义"
     assert frozen.body == "旧定义"
+
+
+def test_role_worktree_isolation_is_frozen(tmp_path):
+    module=api()
+    path=entry(tmp_path/'isolated.md', extra='isolation: worktree\n')
+    role=module.parse_role(path,layer='project')
+    assert role.isolation == 'worktree'
+    entry(path)
+    assert module.parse_role(path,layer='project').isolation is None
+    assert role.isolation == 'worktree'
+
+
+@pytest.mark.parametrize('value',['null','false','true','shared','[]','{}','1','""'])
+def test_invalid_isolation_does_not_fall_back(tmp_path,value):
+    with pytest.raises(ToolError) as caught:
+        api().parse_role(entry(tmp_path/'bad.md',extra=f'isolation: {value}\n'),layer='project')
+    assert caught.value.code == 'invalid_agent_definition'
