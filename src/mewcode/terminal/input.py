@@ -120,13 +120,15 @@ class EnhancedTerminal:
     """Application 从启动存活至资源收尾，不另开 stdin 或全屏缓冲。"""
 
     def __init__(self, input, output, *, on_interrupt, status=lambda: "", active=lambda: [], secret="",
-                 results=lambda: "", registry=None, details=lambda section: '暂无详情'):
+                 results=lambda: "", registry=None, details=lambda section: '暂无详情', on_background=lambda: None):
         self.input, self.output = input, output
         self.secret = secret
         self._closing = False
         self._ready = False
         self._review_cache = None
         self.on_interrupt, self.status, self.active = on_interrupt, status, active
+        self.on_background = on_background
+        self._saved_draft = None
         self.results = results
         self.details = details
         self.details_open = False
@@ -342,6 +344,10 @@ class EnhancedTerminal:
         bindings = KeyBindings()
         idle = Condition(lambda: self.phase == "idle" and not self.details_open)
         approval = Condition(lambda: self.phase == "approval")
+
+        @bindings.add('c-b', eager=True)
+        def background(event):
+            self.on_background()
 
         @bindings.add("enter", eager=True)
         def submit(event):
@@ -584,10 +590,21 @@ class EnhancedTerminal:
             self._cancel = cancel
             self._history_index, self._history_draft = len(self._history), ""
             self.set_phase("idle")
+            if self._saved_draft is not None:
+                self.chat.set_document(self._saved_draft, bypass_readonly=True)
+                self._saved_draft = None
             try:
                 return await self._wait(cancel)
             finally:
                 self._pending, self._cancel = None, None
+
+    def save_draft(self):
+        """自动接续前保存正文和光标；运行及审批仍独占输入。"""
+        self._saved_draft = self.chat.document
+
+    def input_submitted(self):
+        """提交 Future 比多层读取协程更早完成，供空闲调度原子检查。"""
+        return self._pending is not None and self._pending.done() and not self._pending.cancelled()
 
     def remember(self, text):
         if text.strip() and (not self._history or self._history[-1] != text):

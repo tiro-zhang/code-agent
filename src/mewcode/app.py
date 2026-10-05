@@ -112,16 +112,34 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             status = f'已恢复 · {count} 条工作消息 · 等待新输入' if session.resumed else '新建存档'
             renderer.line(f'会话> {session.session_id} · {status}')
         context = SessionCommandContext(registry, session, terminal, renderer, config)
+        async def notices():
+            while True:
+                report = await session.tasks.events.get()
+                terminal.write(f'后台> {report["task_id"]} · 父 {report["parent_task_id"]} · '
+                    f'{report["display_mode"]} · {report["state"]}（/tasks show 查看结果与用量）\n')
+        notice_task = asyncio.create_task(notices())
         while True:
             terminal.sync_session(session)
             try:
-                question = await terminal.readline(idle_cancel)
+                question, resume_task = await _idle_input(terminal, session, idle_cancel)
             except (KeyboardInterrupt, asyncio.CancelledError):
                 renderer.line("")
                 return 0
             except (OSError, ValueError, UnicodeError) as error:
                 error_stream.write(f"输入通道失效：{renderer.safe(error)}\n")
                 return 2
+            if resume_task:
+                terminal.begin_task()
+                active_cancel = asyncio.Event()
+                source = session.resume_parent(resume_task, cancel_event=active_cancel)
+                try:
+                    async for event in source:
+                        terminal.show(renderer, event, managed_approval=approval_responder is None)
+                finally:
+                    await protected(source.aclose(), cancel_event=active_cancel)
+                    active_cancel = None
+                    terminal.restore_draft()
+                continue
             if question is None:
                 renderer.line("")
                 return 0
@@ -137,7 +155,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                     renderer.line('提示> ' + renderer.safe(error, 400))
                     continue
             parsed = parse_command(question)
-            control = parsed.kind == 'command' and parsed.name in {'plan', 'do'}
+            control = parsed.kind == 'command' and parsed.name in {'plan', 'do', 'reset', 'tasks'}
             if control:
                 terminal.set_phase('control')
             active_cancel = asyncio.Event()
@@ -186,6 +204,9 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             if terminal.eof:
                 return 0
     finally:
+        if 'notice_task' in locals():
+            notice_task.cancel()
+            await asyncio.gather(notice_task, return_exceptions=True)
         active_cancel = asyncio.Event()
         try:
             if terminal is not None:
@@ -207,6 +228,40 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             finally:
                 if has_handler:
                     signal.signal(signal.SIGINT, previous_handler)
+
+
+async def _idle_input(terminal, session, cancel):
+    """唯一输入拥有者与结果唤醒竞争；已提交输入优先，草稿暂存。"""
+    async def read_question():
+        try:
+            return await terminal.readline(cancel)
+        except KeyboardInterrupt:
+            raise asyncio.CancelledError from None
+    read = asyncio.create_task(read_question())
+    try:
+        while True:
+            session.tasks.changed.clear()
+            wake = asyncio.create_task(session.tasks.changed.wait())
+            try:
+                if session.next_parent() is None:
+                    await asyncio.wait((read, wake), return_when=asyncio.FIRST_COMPLETED)
+                # 让已经完成的输入 future 返回给本地控制入口。
+                await asyncio.sleep(0)
+                if read.done() or terminal.input_submitted():
+                    return await read, None
+                parent = session.next_parent()
+                if parent:
+                    terminal.save_draft()
+                    read.cancel()
+                    await asyncio.gather(read, return_exceptions=True)
+                    return '', parent
+            finally:
+                wake.cancel()
+                await asyncio.gather(wake, return_exceptions=True)
+    finally:
+        if not read.done():
+            read.cancel()
+            await asyncio.gather(read, return_exceptions=True)
 
 
 def run(config_path: str | Path, *, stdin: TextIO | None = None, stdout: TextIO | None = None,

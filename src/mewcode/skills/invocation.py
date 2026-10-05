@@ -1,7 +1,7 @@
 """用户短命令直接调用系统入口，不消耗提示词生成请求。"""
 
 import asyncio
-from dataclasses import asdict, replace
+from dataclasses import replace
 import json
 from uuid import uuid4
 
@@ -29,8 +29,6 @@ async def run_skill(session, name, args='', *, cancel_event=None):
     user = Message('user', question)
     if session.agent.storage_blocked:
         raise OSError('存档已不可安全继续')
-    if session.journal and skill.mode == 'isolated':
-        session.journal.append('task_started', {'task_id': run_id, 'input': question, 'mode': session.mode, 'user_id': user.id})
     yield event('progress', phase='skill', text=f'加载 {name}')
     from ..tools.scheduler import ToolScheduler
     scheduler = ToolScheduler(session.executor, hooks=session.hooks,
@@ -44,7 +42,7 @@ async def run_skill(session, name, args='', *, cancel_event=None):
             raise scheduler.storage_error
         result = scheduler.results[0]
         if skill.mode == 'shared' and result.ok and not cancel.is_set():
-            async for item in session.ask(question, cancel_event=cancel):
+            async for item in session.ask(question, cancel_event=cancel, _within_skill=True):
                 yield item
             return
         reason = ('cancelled' if cancel.is_set() else 'model_done' if result.ok else
@@ -63,13 +61,6 @@ async def run_skill(session, name, args='', *, cancel_event=None):
             session.agent.last_task = {'session_id': session.session_id, 'task_id': run_id,
                 'user_message': user, 'final_message': answer if reason == 'model_done' else None,
                 'tools': (), 'mode': session.mode, 'reason': reason}
-            if session.journal:
-                usage = asdict(total)
-                usage['incomplete_fields'] = sorted(total.incomplete_fields)
-                session.journal.append('task_finished', {'task_id': run_id, 'reason': reason,
-                    'mode': session.mode, 'state': session.context.state(), 'usage': usage})
-            if reason == 'model_done' and session.memory and session.memory.enqueue(session.agent.last_task):
-                session.memory_tasks[run_id] = 'queued'
             yield event('text_delta', text=summary, replay_of=data.get('child_run_id', ''))
         yield event('finished', reason=reason, text='Skill 已结束' if result.ok else 'Skill 未完成；已完成操作保留', usage=total)
     except asyncio.CancelledError:

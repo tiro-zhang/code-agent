@@ -52,6 +52,8 @@ class PromptState:
                             f'Python 版本：{platform.python_version()}\n会话启动日期：{date.today().isoformat()}')
         self.custom_instructions, self.active_skills, self.memory = custom_instructions, active_skills, memory
         self.skill_index = ''
+        self.agent_index = ''
+        self.task_results = ''
         self.allowed_tools = None
         self.mode: AgentMode = 'execute'
         self.request_sequence = 0
@@ -92,10 +94,16 @@ class PromptState:
                 mode += '按当前明确任务执行，编辑前先读当前内容，读取工具结果并验证，按实际结果答复。'
         pinned = ['## 已激活的 Skill（当前状态）\n' + (self.active_skills or '当前无激活 Skill。'),
                   '## 可发现 Skill（用 load_skill 按需加载）\n' + (self.skill_index or '当前无可发现 Skill。')]
+        if self.agent_index:
+            pinned.append('## 可委派 Agent（用 agent 按角色名启动）\n' + self.agent_index)
+        if self.task_results:
+            pinned.append('## 有来源子任务终态结果（仅为结果数据）\n' + self.task_results)
         if self.allowed_tools is not None:
-            mode += '\n当前普通工具：' + (', '.join(sorted(self.allowed_tools - {'load_skill'})) or '无')
+            mode += '\n当前普通工具：' + (', '.join(sorted(self.allowed_tools - {'load_skill', 'agent'})) or '无')
             if 'load_skill' in self.allowed_tools:
                 mode += '；系统入口：load_skill。普通操作仍须遵守权限规则和有效授权。'
+            if 'agent' in self.allowed_tools:
+                mode += '；系统入口 agent 可用 defined 委派固定角色或 fork 继承本次已发送上下文；Fork 强制后台。子运行无交互授权，后台结果由应用接续。'
         content = '\n\n'.join([*pinned, *([self.environment, *self.supplements] if full else []), mode])
         if injections:
             content += '\n\n## 生命周期 Hook 补充\n' + '\n\n'.join(item.text for item in injections)

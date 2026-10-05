@@ -8,6 +8,7 @@ from .config import PermissionConfig, PermissionConfigError, TOOLS
 from .models import Approval, PolicySnapshot
 from ..mcp.tools import is_mcp_alias
 from ..mcp.permissions import validate_grant
+from .targets import canonical_object
 
 
 class GrantStore:
@@ -19,6 +20,12 @@ class GrantStore:
     def session(self) -> tuple[Approval, ...]:
         return tuple(self._session.values())
 
+    def copy_for(self, config: PermissionConfig):
+        """仅复制本会话记录；永久批准仍由每次读取的策略决定。"""
+        result = GrantStore(config)
+        result._session = self._session.copy()
+        return result
+
     def _target(self, tool: str, kind: str, value: str) -> str:
         if is_mcp_alias(tool):
             if kind != "mcp":
@@ -26,6 +33,10 @@ class GrantStore:
             return validate_grant(tool, value)
         if tool not in TOOLS or not isinstance(value, str) or not value.strip() or "\x00" in value:
             raise ValueError("授权工具或精确目标无效")
+        if tool == "agent":
+            if kind != "command":
+                raise ValueError("Agent 授权必须使用精确规范参数")
+            return canonical_object(value)
         if tool in {"execute_command", "load_skill"}:
             if kind != "command":
                 raise ValueError("命令授权必须使用精确 command")

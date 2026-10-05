@@ -9,7 +9,7 @@ from ..matching import match_value, path_glob as _path_glob
 
 def _matches(rule: Rule, subject: str) -> bool:
     return match_value(subject, rule.pattern, rule.match,
-                       path=rule.tool != "execute_command" and not is_mcp_alias(rule.tool))
+                       path=rule.tool not in {"execute_command", "agent"} and not is_mcp_alias(rule.tool))
 
 
 def merge_rules(

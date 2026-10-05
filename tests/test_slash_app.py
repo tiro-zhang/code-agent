@@ -37,7 +37,7 @@ def test_review_expands_once_and_preserves_target(tmp_path, monkeypatch):
     assert second.endswith(target)
     assert target in provider.requests[1][0][-1].content
     assert [m.content for m in provider.requests[2][0] if m.role == 'user'][-1] == '任务'
-    assert len(provider.requests[2][1]['tools']) == 4
+    assert len(provider.requests[2][1]['tools']) == 5
 
 
 def test_disabled_memory_show_is_complete_and_safe(tmp_path, monkeypatch):

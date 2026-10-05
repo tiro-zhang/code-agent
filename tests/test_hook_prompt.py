@@ -55,7 +55,7 @@ async def test_large_injection_blocks_before_provider_request(tmp_path):
     result = await collect(chat.ask("work"))
     assert result[-1].reason == "context_blocked" and not provider.requests
     assert sum(item["event"] == "message.before_request" for item in events) == 1
-    assert len(chat.hooks.prompts.snapshot()) == 1
+    assert len(chat.agent.hooks.prompts.snapshot()) == 1
     await chat.aclose()
 
 

@@ -30,6 +30,7 @@ class HookRuntime:
         self._background: set[asyncio.Task] = set()
         self._pending = deque()
         self._close_operation = None
+        self._scopes = {}
         self.serial_tools = any(rule.event in {"tool.before", "tool.after"} and
                                 rule.action.type in {"command", "http"} and not rule.background
                                 for rule in snapshot.rules)
@@ -42,6 +43,18 @@ class HookRuntime:
     @property
     def background_count(self):
         return len(self._background) + len(self._pending)
+
+    def scope(self, task_id, *, permissions=None, current_mode=None):
+        """同父跨执行段复用队列；所有视图借用会话 once 和后台派发器。"""
+        if task_id not in self._scopes:
+            from .actions import ActionRunner
+            from .prompts import PromptQueue
+            runner = ActionRunner(self.snapshot.root, permissions=permissions or self.runner.permissions,
+                                  prompts=PromptQueue(), current_mode=current_mode or self.current_mode,
+                                  http_timeout=self.runner.http_timeout, response_limit=self.runner.response_limit,
+                                  http_owner=self.runner)
+            self._scopes[task_id] = HookScope(self, runner, current_mode or self.current_mode)
+        return self._scopes[task_id]
 
     def event(self, name: str, **fields):
         return HookEvent.create(name, session_id=self.session_id,
@@ -70,7 +83,8 @@ class HookRuntime:
         self.started = True
         await self.emit("session.start", source=source, **fields, cancel_event=cancel_event)
 
-    async def dispatch(self, event, *, cancel_event=None):
+    async def dispatch(self, event, *, cancel_event=None, runner=None):
+        runner = runner or self.runner
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
         if self.closed or (self._closing and event.event != "session.end"):
             return ActionResult("skipped")
@@ -86,7 +100,7 @@ class HookRuntime:
                 if rule.background and self._closing:
                     diagnostic(rule, event, "关闭时不接收后台工作")
                     continue
-                if not self.runner.can_submit(rule, event, background=rule.background, cancel_event=cancel):
+                if not runner.can_submit(rule, event, background=rule.background, cancel_event=cancel):
                     diagnostic(rule, event, "安全状态或后台许可跳过")
                     continue
                 if rule.once and rule.identity in self.once:
@@ -98,12 +112,14 @@ class HookRuntime:
                 if rule.once:
                     self.once.add(rule.identity)
                 if rule.background:
+                    if rule.action.type in {"command", "http"}:
+                        runner.side_effects_possible = True
                     if len(self._background) < self.max_running:
-                        self._spawn(rule, event)
+                        self._spawn(rule, event, runner)
                     else:
-                        self._pending.append((rule, event))
+                        self._pending.append((rule, event, runner))
                     continue
-                result = await self.runner.run(rule, event, cancel_event=cancel,
+                result = await runner.run(rule, event, cancel_event=cancel,
                                                allow_approval=not self._closing)
                 if event.event == "tool.before" and result.decision == "deny":
                     return result
@@ -114,9 +130,10 @@ class HookRuntime:
                 diagnostic(rule, event, type(error).__name__)
         return ActionResult()
 
-    def _spawn(self, rule, event):
+    def _spawn(self, rule, event, runner=None):
+        runner = runner or self.runner
         # 与触发任务的取消事件分离，保留原始不可变快照。
-        task = asyncio.create_task(self.runner.run(rule, event, cancel_event=asyncio.Event(), background=True))
+        task = asyncio.create_task(runner.run(rule, event, cancel_event=asyncio.Event(), background=True))
         self._background.add(task)
 
         def finished(done):
@@ -128,8 +145,8 @@ class HookRuntime:
                     diagnostic(rule, event, type(error).__name__)
             if not self._closing and not self.closed and not self._paused:
                 while self._pending and len(self._background) < self.max_running:
-                    next_rule, next_event = self._pending.popleft()
-                    self._spawn(next_rule, next_event)
+                    next_rule, next_event, next_runner = self._pending.popleft()
+                    self._spawn(next_rule, next_event, next_runner)
 
         task.add_done_callback(finished)
 
@@ -177,3 +194,46 @@ class HookRuntime:
                     pass
             finally:
                 self.closed = True
+                for scope in self._scopes.values():
+                    scope.prompts.clear()
+
+
+class HookScope:
+    """只有提示队列及权限视图归属运行，关闭不影响会话引擎。"""
+
+    def __init__(self, owner, runner, current_mode):
+        self.owner, self.runner, self.current_mode = owner, runner, current_mode
+        self.prompts = runner.prompts
+
+    @property
+    def serial_tools(self):
+        return self.owner.serial_tools
+
+    def event(self, name, **fields):
+        return HookEvent.create(name, session_id=self.owner.session_id,
+                                mode=fields.pop("mode", self.current_mode()),
+                                permission_mode=self.runner.permissions.mode, **fields)
+
+    async def emit(self, name, *, cancel_event=None, fields=None, **values):
+        try:
+            extra = fields() if callable(fields) else (fields or {})
+            return await self.dispatch(self.event(name, **extra, **values), cancel_event=cancel_event)
+        except asyncio.CancelledError:
+            if cancel_event is not None:
+                cancel_event.set()
+            raise
+        except Exception as error:
+            try:
+                LOGGER.warning("Hook 快照 event=%s: %s", name, type(error).__name__)
+            except Exception:
+                pass
+            return ActionResult("failed")
+
+    async def dispatch(self, event, *, cancel_event=None):
+        return await self.owner.dispatch(event, cancel_event=cancel_event, runner=self.runner)
+
+    async def start(self, **options):
+        await self.owner.start(**options)
+
+    async def close(self, **options):
+        self.prompts.clear()

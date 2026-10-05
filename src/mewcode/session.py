@@ -1,8 +1,9 @@
 """会话历史的所有者；单次任务交由 Agent 编排。"""
 
 import asyncio
+import json
 from collections.abc import AsyncIterator
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from uuid import uuid4
@@ -14,6 +15,7 @@ from .tools import default_registry
 from .tools.base import ToolContext, ToolError, strict_json
 from .tools.executor import ToolExecutor
 from .types import AgentEvent, AgentMode, Message, Provider, ToolCall
+from .tasks.ownership import serialized_turn
 
 
 def operation_summary(call: ToolCall) -> str:
@@ -42,6 +44,14 @@ class ChatSession:
         self.provider_factory = provider_factory or make_provider
         self._task_budget = None
         self._task_question = ''
+        self._task_context = None
+        self._main_running = False
+        self._main_owner = asyncio.Lock()
+        self.generation = 0
+        self._prepared_results = ()
+        from .tasks.manager import TaskManager
+        self.tasks = TaskManager()
+        self.tasks.on_parent_cancelled = self._finish_parent
         self.config = config or getattr(provider, 'config', None)
         self.journal = None
         self.memory = None
@@ -68,6 +78,15 @@ class ChatSession:
         self._restore_prepared = False
         root = self.executor.context.root
         self.user_root = Path(user_root) if user_root is not None else Path.home() / ".mewcode"
+        from .agents.definitions import discover_roles
+        self._role_options = {'user_root': self.user_root,
+                              'plugin_dirs': getattr(self.config, 'agent_plugin_dirs', ())}
+        self.roles = discover_roles(root, **self._role_options)
+        self.warnings.extend(self.roles.warnings)
+        from .agents.service import AgentService
+        if not hasattr(self.executor, 'system_handlers'):
+            self.executor.system_handlers = {}
+        self.executor.system_handlers['agent'] = AgentService(self)
         from .skills.catalog import discover_skills
         from .skills.runtime import SkillRuntime
         from .skills.service import SkillService
@@ -93,7 +112,10 @@ class ChatSession:
         self.hooks = create_runtime(root, self.permissions, lambda: self.mode)
         self.agent = Agent(provider, self.executor, max_iterations=max_iterations, prompt_state=self.prompt_state,
                            config=config, journal=self.journal, before_request=self._before_request,
-                           allowed_tools=self.effective_tools, hooks=self.hooks)
+                           allowed_tools=self.effective_tools, hooks=self.hooks,
+                           on_request_sent=self._consume_results,
+                           request_state=lambda: {'prompt_state': self.prompt_state, 'active_skills': self.skills.active,
+                                                 'skill_catalog': self.skills.catalog})
         self.context = self.agent.context
         self.skills.commit = self._save_skills
         try:
@@ -158,6 +180,14 @@ class ChatSession:
 
     def reset(self):
         """原子保存空投影；保留会话、模式、长期记忆和所有历史证据。"""
+        self.generation += 1
+        for parent in self.tasks.parents.values():
+            parent.wake_allowed = False
+            parent.cancel.set()
+            self.tasks.inbox.discard_parent(parent.task_id)
+        self._task_context = None
+        self._prepared_results = ()
+        self.prompt_state.task_results = ''
         from .context.manager import ContextManager
         if self.agent.storage_blocked:
             raise OSError('存档已不可安全继续')
@@ -182,6 +212,15 @@ class ChatSession:
         self.prompt_state.enter_mode(self.mode)
         self._before_request()
 
+    async def reset_async(self):
+        """先撤销唤醒和提交，再等待旧子运行收尾，最后发布空历史。"""
+        self.tasks.paused = True
+        try:
+            await asyncio.gather(*(self.tasks.cancel_parent(task_id) for task_id in self.tasks.parents))
+            self.reset()
+        finally:
+            self.tasks.paused = False
+
     def refresh_memory(self):
         if self.memory:
             self.prompt_state.update_memory(self.memory.refresh())
@@ -194,22 +233,41 @@ class ChatSession:
         self.prompt_state.active_skills = self.skills.render_active()
         self.prompt_state.skill_index = self.skills.catalog.index_text()
         self.prompt_state.allowed_tools = self.effective_tools()
+        self.prompt_state.agent_index = self.roles.index_text()
+        context = self._task_context
+        self._prepared_results = (self.tasks.inbox.peek(context.task_id)
+                                  if context and context.generation == self.generation and context.wake_allowed else ())
+        self.prompt_state.task_results = (json.dumps(self._prepared_results, ensure_ascii=False)
+                                          if self._prepared_results else '')
+
+    def _consume_results(self):
+        self.tasks.inbox.consume(self._prepared_results)
+        self._prepared_results = ()
+        self.hooks.prompts.consume(getattr(self, '_startup_injections', ()))
+        self._startup_injections = ()
 
     def validate_skills(self):
         self.skills.catalog.validate_tools(self.executor.registry.names())
+        self.roles.validate_tools(self.executor.registry.names())
+        if hasattr(self.config, 'validate_agent_tools'):
+            self.config.validate_agent_tools(self.executor.registry.names())
 
     async def _run_isolated(self, skill, args, history, **options):
         from .skills.runner import run_isolated
         return await run_isolated(self, skill, args, history, **options)
 
+    @serialized_turn
     async def run_skill(self, name, args='', *, cancel_event=None, user_text=None):
         from .skills.invocation import run_skill
         from .skills.budget import TaskBudget
-        self.skills.catalog.get(name)
+        skill = self.skills.catalog.get(name)
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
-        budget = TaskBudget(self.agent.max_iterations, uuid4().hex)
-        self._task_budget = budget
         question = user_text if user_text is not None else f'/{name}' + (' ' + args if args else '')
+        self._task_context = self.tasks.new_parent(question, limit=self.agent.max_iterations,
+            mode=self.mode, generation=self.generation, cancel=cancel)
+        budget = self._task_budget = self._task_context.budget
+        if self.journal:
+            self.journal.append('task_started', {'task_id': self._task_context.task_id, 'input': question, 'mode': self.mode})
         await protected(self._begin_hook_turn(question, budget, cancel), cancel_event=cancel)
         source = run_skill(self, name, args, cancel_event=cancel)
         reason = None
@@ -217,29 +275,49 @@ class ChatSession:
             async for item in source:
                 if item.kind == 'finished':
                     reason = item.reason
+                    parent = self._task_context
+                    pending = any(self.tasks.get(child).outcome is None for child in parent.children)
+                    if reason != 'model_done' or (not pending and not self.tasks.inbox.peek(parent.task_id)):
+                        if self._finish_parent(parent, reason):
+                            from .agent import _total_usage
+                            if skill.mode == 'isolated':
+                                task = self.agent.last_task or {}
+                                parent.user_message, parent.final_message = task.get('user_message'), task.get('final_message')
+                                self._enqueue_parent_memory(parent, task)
+                            yield AgentEvent('task_finished', run_id=parent.task_id, reason=reason,
+                                             usage=_total_usage(parent.budget.usage))
                 yield item
         finally:
             if reason is None:
                 cancel.set()
             await protected(source.aclose(), cancel_event=cancel)
             await self._end_hook_turn(budget, reason or 'cancelled', cancel)
+            if cancel.is_set():
+                await protected(self.tasks.cancel_parent(budget.root_run_id), cancel_event=cancel)
             self._task_budget = None
 
     def refresh_skills(self):
         """空闲输入边界先验证完整候选，再共同发布目录和激活。"""
         from .commands.builtins import build_registry
         from .skills.catalog import discover_skills
+        from .agents.definitions import discover_roles
         try:
+            roles = discover_roles(self.executor.context.root, **self._role_options)
+            roles.validate_tools(self.executor.registry.names())
             candidate = discover_skills(self.executor.context.root, user_root=self.user_root)
             if candidate == self.skills.catalog:
-                return None, []
+                self.roles = roles
+                self._before_request()
+                return None, list(roles.warnings)
             registry = build_registry(candidate)
             candidate.validate_tools(self.executor.registry.names())
             warnings = [*candidate.warnings, *self.skills.replace_catalog(candidate)]
+            self.roles = roles
+            warnings.extend(roles.warnings)
             self._before_request()
             return registry, warnings
         except (ValueError, ToolError) as error:
-            return None, [f'Skill 刷新失败，保留上一完整快照：{error}']
+            return None, [f'Skill / Agent 刷新失败，保留上一完整快照：{error}']
 
     def skills_text(self, args=''):
         parts = args.split()
@@ -255,6 +333,37 @@ class ChatSession:
         lines.append('普通工具：' + (', '.join(sorted(self.effective_tools() - {'load_skill'})) or '无'))
         lines.append('系统入口：load_skill；/skills deactivate <name|--all> 停用；/reset 清空对话与激活。')
         return '\n'.join(lines)
+
+    def agents_text(self, args=''):
+        parts = args.split()
+        if parts in ([], ['list']):
+            return '\n'.join(f'{role.name} · {role.description} · {role.layer}:{role.path}' for role in self.roles.roles)
+        if len(parts) == 2 and parts[0] == 'show':
+            role = self.roles.get(parts[1])
+            return (f'{role.name} · {role.description}\n来源：{role.layer}:{role.path}\n'
+                    f'模型：{role.model} · 最大轮次：{role.max_iterations} · 权限：{role.permission_mode}\n'
+                    f'白名单：{role.allowed_tools} · 黑名单：{role.disallowed_tools}\n{role.body}')
+        raise ValueError('用法：/agents [list|show <name>]')
+
+    async def tasks_text(self, args=''):
+        parts = args.split()
+        if parts in ([], ['list']):
+            return '后台任务仅在当前进程有效\n' + ('\n'.join(
+                f'{record.task_id} · 父 {record.parent_task_id} · {record.type}/{record.role} · '
+                f'{record.display_mode} · {record.state}' for record in self.tasks.records.values()) or '没有子任务')
+        if len(parts) == 2:
+            action, task_id = parts
+            if action == 'show':
+                report = self.tasks.parent_report(task_id) if task_id in self.tasks.parents else self.tasks.get(task_id).report()
+                return json.dumps(report, ensure_ascii=False, indent=2)
+            if action == 'cancel':
+                record = await self.tasks.cancel(task_id)
+                return f'{task_id} · {record.state}；已发生操作保留，远端状态可能未知'
+            if action == 'cancel-parent':
+                parent = await self.tasks.cancel_parent(task_id)
+                self.tasks.inbox.discard_parent(task_id)
+                return f'{parent.task_id} · 已取消该父及其子任务'
+        raise ValueError('用法：/tasks [list|show <id>|cancel <id>|cancel-parent <parent_id>]')
 
     def _memory_notification(self, notification):
         kind = notification.get('kind')
@@ -302,34 +411,116 @@ class ChatSession:
         self.mode = "plan"
         self.prompt_state.enter_mode("plan")
 
+    @serialized_turn
     async def ask(self, question: str, *, cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
         self.validate_skills()
-        from .skills.budget import TaskBudget
         owns_turn = self._hook_turn is None
-        self._task_budget = self._task_budget if not owns_turn else TaskBudget(self.agent.max_iterations, uuid4().hex)
-        budget = self._task_budget
-        self._task_question = question
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
         if owns_turn:
+            self._task_context = self.tasks.new_parent(question, limit=self.agent.max_iterations,
+                mode=self.mode, generation=self.generation, cancel=cancel)
+            self._task_budget = self._task_context.budget
+            if self.journal:
+                self.journal.append('task_started', {'task_id': self._task_context.task_id, 'input': question, 'mode': self.mode})
+        budget = self._task_budget
+        self._task_question = question
+        if owns_turn:
             await protected(self._begin_hook_turn(question, budget, cancel), cancel_event=cancel)
+        async for event in self._segment(question, budget, cancel, owns_turn=owns_turn):
+            yield event
+
+    @serialized_turn
+    async def resume_parent(self, task_id, *, cancel_event=None):
+        """同一父目标接续剩余预算；不重放委派或凭据。"""
+        parent = self.tasks.parent(task_id)
+        if (not parent.wake_allowed or parent.finished or parent.generation != self.generation
+                or parent.cancel.is_set() or not self.tasks.inbox.peek(task_id)):
+            return
+        if not parent.budget.remaining:
+            self._finish_parent(parent, 'max_iterations')
+            yield AgentEvent('task_finished', run_id=task_id, reason='max_iterations', text='原父预算耗尽；子结果仅可本地查看')
+            return
+        self._task_context = parent
+        self._task_budget = parent.budget
+        self._task_question = parent.question
+        cancel = cancel_event if cancel_event is not None else parent.cancel
+        await protected(self._begin_hook_turn(parent.question, parent.budget, cancel, resume=True), cancel_event=cancel)
+        async for event in self._segment('接续原父任务：' + parent.question + '\n请结合应用提供的有来源子结果继续完成原目标。', parent.budget, cancel, continuation=True):
+            yield event
+
+    def next_parent(self):
+        if self._main_running or self._main_owner.locked() or self.tasks.paused:
+            return None
+        for task_id in self.tasks.inbox.parent_ids():
+            parent = self.tasks.parent(task_id)
+            if parent.wake_allowed and not parent.finished and parent.generation == self.generation:
+                return task_id
+        return None
+
+    def _finish_parent(self, parent, reason):
+        """父终态存档只有一个提交点，取消与预算边界也使用它。"""
+        if parent.finished:
+            return False
+        from .agent import _total_usage
+        parent.finished, parent.reason, parent.wake_allowed = True, reason, False
+        if self.journal:
+            usage = asdict(_total_usage(parent.budget.usage))
+            usage['incomplete_fields'] = sorted(usage['incomplete_fields'])
+            self.journal.append('task_finished', {'task_id': parent.task_id, 'reason': reason,
+                'mode': parent.mode, 'state': self.context.state(), 'usage': usage})
+        return True
+
+    def _enqueue_parent_memory(self, parent, task):
+        if parent.reason == 'model_done' and self.memory and not parent.memory_enqueued:
+            final = dict(task, task_id=parent.task_id, question=parent.question,
+                         user_message=parent.user_message, tools=tuple(parent.evidence))
+            parent.memory_enqueued = self.memory.enqueue(final)
+            if parent.memory_enqueued:
+                self.memory_tasks[parent.task_id] = 'queued'
+
+    async def _segment(self, question, budget, cancel, *, owns_turn=True, continuation=False):
+        if self._main_running:
+            raise RuntimeError('主运行已有所有者')
+        self._main_running = True
+        parent = self._task_context
+        run_id = uuid4().hex
+        usage_start = len(budget.usage)
         source = self.agent.run(question, history=self.history, mode=self.mode, cancel_event=cancel,
-                                budget=budget, run_id=budget.root_run_id, turn_owned=True)
+                                budget=budget, run_id=run_id, parent_run_id=parent.task_id if parent else '', turn_owned=True,
+                                input_message=Message('context', question, context_kind='task_resume') if continuation else None,
+                                segment=True)
         reason = None
         try:
             async for event in source:
                 if event.kind == 'finished':
+                    from .agent import _total_usage
+                    event = replace(event, usage=_total_usage(budget.usage[usage_start:]))
                     reason = event.reason
-                if event.kind == 'finished' and event.reason == 'model_done' and self.memory:
-                    if self.memory.enqueue(self.agent.last_task):
-                        self.memory_tasks[event.run_id] = 'queued'
+                    if parent:
+                        task = self.agent.last_task or {}
+                        parent.user_message = parent.user_message or task.get('user_message')
+                        parent.final_message = task.get('final_message')
+                        parent.evidence.extend(task.get('tools', ()))
+                        pending = any(self.tasks.get(child).outcome is None for child in parent.children)
+                        reports = self.tasks.inbox.peek(parent.task_id)
+                        terminal = reason != 'model_done' or (not pending and not reports)
+                        if terminal and self._finish_parent(parent, reason):
+                            self._enqueue_parent_memory(parent, task)
+                            yield AgentEvent('task_finished', run_id=parent.task_id, reason=reason,
+                                             usage=_total_usage(parent.budget.usage), parent_run_id=parent.task_id)
                 yield event
         finally:
             if reason is None:
                 cancel.set()
             await protected(source.aclose(), cancel_event=cancel)
+            if parent and (cancel.is_set() or reason not in {None, 'model_done'}):
+                parent.wake_allowed = False
+                if cancel.is_set():
+                    await protected(self.tasks.cancel_parent(parent.task_id), cancel_event=cancel)
             if owns_turn:
                 await self._end_hook_turn(budget, reason or 'cancelled', cancel)
                 self._task_budget = None
+            self._main_running = False
 
     async def start(self, *, cancel_event=None):
         """终端初始化或首次无界面调用后开始；恢复准备不会重复。"""
@@ -338,16 +529,22 @@ class ChatSession:
         await self.hooks.start(source='resume' if self.resumed else 'new',
                                cancel_event=cancel_event, archive_session_id=self.session_id)
 
-    async def _begin_hook_turn(self, question, budget, cancel):
+    async def _begin_hook_turn(self, question, budget, cancel, *, resume=False):
         await self.start(cancel_event=cancel)
+        scope = self.hooks.scope(budget.root_run_id)
+        self._startup_injections = self.hooks.prompts.snapshot()
+        for injection in self._startup_injections:
+            scope.prompts.add(injection.text, source=injection.source, event=injection.event)
+        self.agent.hooks = scope
         fields = self.agent.hook_fields(budget, budget.root_run_id)
         self._hook_turn = budget.root_run_id
-        await self.hooks.emit('turn.start', **fields, message={'text': question}, cancel_event=cancel)
-        await self.hooks.emit('message.user', **fields, message={'text': question, 'role': 'user'}, cancel_event=cancel)
+        await scope.emit('turn.start', **fields, message={'text': question}, cancel_event=cancel)
+        if not resume:
+            await scope.emit('message.user', **fields, message={'text': question, 'role': 'user'}, cancel_event=cancel)
 
     async def _end_hook_turn(self, budget, reason, cancel):
         try:
-            await protected(self.hooks.emit('turn.end', **self.agent.hook_fields(budget, budget.root_run_id), reason=reason, cancel_event=cancel), cancel_event=cancel)
+            await protected(self.agent.hooks.emit('turn.end', **self.agent.hook_fields(budget, budget.root_run_id), reason=reason, cancel_event=cancel), cancel_event=cancel)
         finally:
             self._hook_turn = None
 
@@ -361,6 +558,11 @@ class ChatSession:
             return
         previous = self.mode
         if mode == 'plan':
+            self.tasks.paused = True
+            for parent in self.tasks.parents.values():
+                if any(self.tasks.get(child).mode == 'execute' and self.tasks.get(child).state in {'queued', 'running'}
+                       for child in parent.children):
+                    await self.tasks.cancel_parent(parent.task_id)
             await self.hooks.quiesce(cancel_event=cancel_event)
         try:
             if cancel_event is not None and cancel_event.is_set():
@@ -369,6 +571,7 @@ class ChatSession:
         finally:
             if self.mode == 'execute':
                 self.hooks.resume_mutations()
+            self.tasks.paused = False
         await self.hooks.emit('mode.changed', mode_change={'from': previous, 'to': self.mode}, cancel_event=cancel_event)
 
     def enter_execute(self) -> None:
@@ -398,7 +601,7 @@ class ChatSession:
 
     def close(self) -> None:
         """释放私有句柄；产品存档的缓存随存档保留。"""
-        if hasattr(self, 'hooks') and self.hooks.snapshot.rules and not self.hooks.closed:
+        if (hasattr(self, 'hooks') and self.hooks.snapshot.rules and not self.hooks.closed) or self.tasks.records:
             try:
                 loop = asyncio.get_running_loop()
             except RuntimeError:
@@ -420,6 +623,7 @@ class ChatSession:
     async def aclose(self):
         """后台任务停止后才释放存档，供应商由应用随后关闭。"""
         try:
+            await self.tasks.aclose()
             if hasattr(self, 'hooks'):
                 await self.hooks.close(archive_session_id=self.session_id)
             if self.memory:

@@ -53,7 +53,8 @@ class SkillRuntime:
 
     def allowed_tools(self, registered, *, mode="execute") -> frozenset[str]:
         names = set(registered)
-        ordinary = names - {"load_skill"}
+        systems = names & {"load_skill", "agent"}
+        ordinary = names - systems
         if mode == "plan":
             ordinary &= {"read_file", "glob_files", "search_code"}
         if self.parent_tools is not None:
@@ -61,7 +62,7 @@ class SkillRuntime:
         for activation in self.active:
             if activation.skill.allowed_tools is not None:
                 ordinary &= activation.skill.allowed_tools
-        return frozenset(ordinary | ({"load_skill"} if "load_skill" in names else set()))
+        return frozenset(ordinary | systems)
 
     def render_active(self) -> str:
         if not self.active:

@@ -16,9 +16,10 @@ from ..mcp.config import canonical
 from ..mcp.tools import is_mcp_alias
 from ..mcp.permissions import validate_grant
 from ..tools.base import strict_json
+from .targets import canonical_object
 
 
-TOOLS = frozenset(("read_file", "write_file", "edit_file", "execute_command", "glob_files", "search_code", "load_skill"))
+TOOLS = frozenset(("read_file", "write_file", "edit_file", "execute_command", "glob_files", "search_code", "load_skill", "agent"))
 
 
 class PermissionConfigError(ValueError):
@@ -72,6 +73,13 @@ def _approval(value, path: Path) -> Approval:
             target = validate_grant(tool, target)
         except (ValueError, TypeError, RecursionError):
             _fail(path, "外部工具批准身份或参数无效")
+    elif tool == "agent":
+        if kind != "command":
+            _fail(path, "Agent 批准必须使用精确规范参数 command 范围")
+        try:
+            target = canonical_object(target)
+        except (ValueError, TypeError, RecursionError):
+            _fail(path, "Agent 批准必须是完整有限 JSON 对象")
     elif tool in {"execute_command", "load_skill"}:
         if kind != "command":
             _fail(path, "命令工具批准必须使用精确 command 范围")
@@ -116,7 +124,7 @@ def _document(raw: bytes | None, path: Path, local: bool):
         if tool not in TOOLS and not is_mcp_alias(tool):
             _fail(path, "规则引用未知工具")
         pattern = match[2]
-        if is_mcp_alias(tool) and entry["match"] == "exact":
+        if (is_mcp_alias(tool) or tool == "agent") and entry["match"] == "exact":
             try:
                 arguments = strict_json(pattern)
                 if not isinstance(arguments, dict):

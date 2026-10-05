@@ -52,8 +52,9 @@ def _is_official_claude(base_url: str) -> bool:
 
 
 class AnthropicProvider:
-    def __init__(self, config: ProviderConfig, *, client: Any | None = None) -> None:
+    def __init__(self, config: ProviderConfig, *, client: Any | None = None, owns_client: bool = True) -> None:
         self.config = config
+        self._owns_client, self._closed = owns_client, False
         self.client = client or anthropic.AsyncAnthropic(
             api_key=config.api_key,
             base_url=config.base_url,
@@ -61,7 +62,18 @@ class AnthropicProvider:
         )
 
     async def aclose(self) -> None:
-        await self.client.close()
+        if not self._closed:
+            self._closed = True
+            if self._owns_client:
+                await self.client.close()
+
+    def fork(self, config: ProviderConfig):
+        """模型包装借用会话传输，只允许同一服务。"""
+        if any(getattr(config, key) != getattr(self.config, key) for key in ("protocol", "base_url", "api_key")):
+            raise ValueError("共享传输不能更换模型服务")
+        if self._closed:
+            raise ValueError("模型服务已关闭")
+        return AnthropicProvider(config, client=self.client, owns_client=False)
 
     async def stream(self, messages: Sequence[Message], *, tools: Sequence[ToolDefinition] = (),
                      tool_choice: Literal["auto", "none"] = "auto",
@@ -74,6 +86,9 @@ class AnthropicProvider:
             "model": self.config.model, "max_tokens": self.config.max_output_tokens, "stream": True,
             "messages": anthropic_messages(messages),
         }
+        if official_claude:
+            # 官方自动断点覆盖最后可缓存消息块；Fork 追加少量块保留共同前缀。
+            request["cache_control"] = {"type": "ephemeral"}
         if system_prompt:
             request["system"] = ([{"type": "text", "text": system_prompt,
                                   "cache_control": {"type": "ephemeral"}}] if official_claude else system_prompt)

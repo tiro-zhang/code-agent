@@ -60,6 +60,8 @@
 
 文件与搜索工具的匹配对象 SHALL 是解析真实路径后的项目相对路径，统一使用 `/` 分隔；路径 glob 的 `*`、`?`、字符集合仅在一个路径片段内匹配，`**` SHALL 表示零个或多个路径片段。search_code 的内容正则 SHALL NOT 被当成权限路径。Bash 的 glob SHALL 使用字符串 glob 语义，其 allow 适用范围另受 shell 结构限制。规则 SHALL 仅作用于指定工具，不自动扩展到具有相似用途的其他工具。MCP 规则的工具名 SHALL 使用稳定工具别名，匹配对象 SHALL 是完整有效参数对象的规范 JSON 字符串；exact SHALL 比较整个规范字符串，glob SHALL 使用匹配整个字符串的字符串 glob 语义，SHALL NOT 使用文件路径 glob 语义或对单个参数另行拆分放行。MCP 规则 SHALL NOT 用原始工具名跨 Server 匹配。规范 JSON SHALL 递归按 Unicode 码点排序对象键、移除无意义空白、保留非 ASCII 字符、数组顺序及 JSON 值类型，并拒绝非有限数值；同一规范 SHALL 用于规则匹配及批准记录，SHALL NOT 使用配置凭据或连接参数替代工具调用参数。
 
+权限配置 SHALL 接受 agent 内置系统工具，其匹配对象为完整有效参数的规范 JSON；exact 必须解析完整对象，glob 匹配整个规范字符串。批准 SHALL 绑定真实工作根、工具名及精确规范参数，agent 启动批准 SHALL NOT 授予子普通工具权限。其他工具的既有匹配对象与规则优先级保持。
+
 #### Scenario: 命令里的字面通配符
 - **WHEN** exact 规则的模式包含字面 `*`
 - **THEN** 该字符按字面匹配，不因其出现而把规则推断成 glob
@@ -204,7 +206,9 @@ Bash glob allow SHALL 仅适用于能明确识别命令和静态参数的单个�
 
 ### Requirement: 拒绝可供模型调整且不伪装为取消
 
-对于作用于整次调用的拒绝，黑名单、路径限制、规则 deny、用户拒绝或缺少可用授权通道 SHALL 生成可序列化的失败工具结果，包含稳定错误码、中文原因及适用的 not_started 标记；策略拒绝 SHALL 使用 permission_denied，保留既有路径／规划模式错误码的既有语义。拒绝 SHALL NOT 设置整轮取消标记，不取消同批其他已获准工具；模型 SHALL 在剩余请求预算内收到结果并有机会调整。结果 SHALL NOT 建议模型换一种写法绕过同一禁止操作。shell 解析失败与配置失败 SHALL 同样通过普通工具错误通道返回。搜索中的候选级 deny、人工拒绝或缺少授权通道 SHALL 仅排除对应候选，按 core-tools 的部分成功合同报告 permission_limited 与 skipped_files，即使全部候选被排除也不转换为整次失败；搜索调用级参数、配置或权限检查错误仍 SHALL 返回失败。
+对于作用于整次调用的拒绝，黑名单、路径限制、规则 deny、用户拒绝或缺少可用授权通道 SHALL 生成可序列化的失败工具结果，包含稳定错误码、中文原因及适用的 not_started 标记；明确策略拒绝 SHALL 使用 permission_denied；子 Agent 缺少批准 SHALL 使用 approval_required，保留既有路径／规划模式错误码的既有语义。拒绝 SHALL NOT 设置整轮取消标记，不取消同批其他已获准工具；模型 SHALL 在剩余请求预算内收到结果并有机会调整。结果 SHALL NOT 建议模型换一种写法绕过同一禁止操作。shell 解析失败与配置失败 SHALL 同样通过普通工具错误通道返回。搜索中的候选级 deny、人工拒绝或缺少授权通道 SHALL 仅排除对应候选，按 core-tools 的部分成功合同报告 permission_limited 与 skipped_files，即使全部候选被排除也不转换为整次失败；搜索调用级参数、配置或权限检查错误仍 SHALL 返回失败。
+
+子 Agent 前后台均 SHALL 不请求人工输入，缺少批准不挂起任务或取消同批操作；搜索候选级缺少许可仍排除候选并报告受限范围，不转换为整次失败。
 
 #### Scenario: 被拒后选择获准策略
 - **WHEN** 模型请求的工具被拒绝，随后改用一个符合权限的操作
@@ -217,3 +221,18 @@ Bash glob allow SHALL 仅适用于能明确识别命令和静态参数的单个�
 #### Scenario: 外部调用拒绝后继续任务
 - **WHEN** 用户拒绝一个 MCP 调用，其他调用仍获准且任务未收到本地取消信号
 - **THEN** 该外部调用返回 permission_denied 和 not_started=true，不发送执行请求；模型在剩余预算内收到结果并可调整，普通拒绝不取消本轮
+
+### Requirement: 子授权快照与权限模式上限
+子 Agent 注册时 SHALL 复制父已有本会话批准并独立追踪权限，本次批准不复制，后续父本会话批准或撤销不修改子副本。子 SHALL NOT 自动写入新批准；规则与永久批准每次执行重新读取，明确拒绝和硬限制始终优先。角色模式 SHALL 默认为 inherit，按 strict > default > bypass 取父启动模式与角色模式中较严格者，不扩大工具范围。
+
+#### Scenario: 副本独立
+- **WHEN** 父在子注册后新增或撤销本会话批准
+- **THEN** 子副本保持注册时记录，父及兄弟没有共享可变批准对象，用户可单独取消子运行
+
+#### Scenario: 角色只能收紧
+- **WHEN** 父 default 而角色 bypass，或父 bypass 而角色 strict
+- **THEN** 前者使用 default，后者 strict，有效批准可满足要求但明确拒绝不能被放开
+
+#### Scenario: 最新存储复查
+- **WHEN** 最新规则新增 deny，或子依赖的唯一永久批准已撤销
+- **THEN** 前者明确拒绝，后者在需批准时返回 approval_required，不使用过期存储快照

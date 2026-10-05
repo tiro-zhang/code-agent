@@ -64,18 +64,30 @@ async def interruptible(awaitable, cancel: asyncio.Event):
 
 class PermissionManager:
     def __init__(self, root: Path, *, mode: str = "default", responder=None,
-                 user_path: Path | None = None) -> None:
+                 user_path: Path | None = None, noninteractive: bool = False) -> None:
         self.root = Path(root).resolve()
         self.context = ToolContext(self.root)
         self.config = PermissionConfig(self.root, user_path=user_path)
         self.grants = GrantStore(self.config)
         self.mode = mode
         self.responder = responder
+        self.noninteractive = noninteractive
         self._prompt_lock = asyncio.Lock()
         self.mcp_tools = {}
 
     def bind_mcp_tools(self, tools):
         self.mcp_tools = {tool.name: tool for tool in tools}
+
+    def fork(self, role_mode: str = "inherit"):
+        """冻结会话批准和启动模式，拒绝把角色配置当作提权。"""
+        modes = ("bypass", "default", "strict")
+        if role_mode != "inherit" and role_mode not in modes:
+            raise ValueError("角色权限模式无效")
+        mode = self.mode if role_mode == "inherit" else modes[max(modes.index(self.mode), modes.index(role_mode))]
+        child = PermissionManager(self.root, mode=mode, user_path=self.config.paths[0], noninteractive=True)
+        child.grants = self.grants.copy_for(child.config)
+        child.mcp_tools = self.mcp_tools.copy()
+        return child
 
     @property
     def mode(self) -> str:
@@ -101,6 +113,9 @@ class PermissionManager:
         if tool in self.mcp_tools:
             values = (grant_value(self.mcp_tools[tool], arguments),)
             kind = "mcp"
+        elif tool == "agent":
+            values = (canonical(arguments),)
+            kind = "command"
         elif tool == "execute_command":
             analysis = analyze_command(arguments["command"])
             values = (arguments["command"],)
@@ -145,6 +160,8 @@ class PermissionManager:
                         cancel_event: asyncio.Event | None = None,
                         notify: Callable[[dict], None] | None = None,
                         origin: tuple[str, str] | None = None) -> Authorization:
+        if self.noninteractive:
+            return self.authorize_noninteractive(tool, arguments, targets=targets, cancel_event=cancel_event)
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
         original = deepcopy(arguments)
         once, rejected = set(), set()
@@ -206,12 +223,14 @@ class PermissionManager:
             await interruptible(ask(), cancel)
 
     def authorize_noninteractive(self, tool: str, arguments: dict, *,
-                                cancel_event: asyncio.Event | None = None) -> Authorization:
+                                cancel_event: asyncio.Event | None = None,
+                                targets: tuple[str, ...] | None = None) -> Authorization:
         """后台只能使用已有许可；黑名单、拒绝及有效批准与前台相同。"""
         if cancel_event is not None and cancel_event.is_set():
             raise cancelled()
         original = deepcopy(arguments)
-        kind, allowed, pending, denied, _ = self._evaluate(tool, original, None, set(), set())
-        if pending:
+        kind, allowed, pending, denied, _ = self._evaluate(tool, original, targets, set(), set())
+        search = tool in {"glob_files", "search_code"}
+        if pending and not search:
             raise ToolError("approval_required", "后台动作缺少非交互许可", not_started=True)
-        return Authorization(original, allowed if kind == "path" else None, len(denied))
+        return Authorization(original, allowed if kind == "path" else None, len(denied) + len(pending))

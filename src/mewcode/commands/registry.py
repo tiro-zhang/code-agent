@@ -117,6 +117,7 @@ class CommandRegistry:
             '授权阶段：回车／1 拒绝本次操作，本轮可继续；Ctrl+C 取消整轮；EOF 取消未发送调用并收尾退出。',
         ])
         if enhanced:
+            lines.append('Ctrl+B 在等待前台子 Agent 时切到后台；自动接续保留未提交草稿。/tasks 查看完整结果及取消。')
             lines.append('F2 查看最近任务的调用／思考，Tab 切换、PgUp/PgDn 翻页、Esc/F2 返回；浏览保留草稿，不提交。')
             lines.append('增强审批中输入 results 可分页查看全部旁路结果，scope 查看批准范围；浏览不批准。')
         return '\n'.join(lines)

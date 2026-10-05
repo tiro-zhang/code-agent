@@ -72,7 +72,7 @@ class CollectedResponse:
 @dataclass(frozen=True)
 class AgentEvent:
     kind: Literal["hook_notice", "display_line", "thinking_delta", "text_delta", "tool_call", "tool_started", "tool_result",
-                  "permission_requested", "permission_resolved", "usage", "progress", "history_trimmed", "context_compaction", "memory_update", "skill_loaded", "skill_event", "finished"]
+                  "permission_requested", "permission_resolved", "usage", "progress", "history_trimmed", "context_compaction", "memory_update", "skill_loaded", "skill_event", "task_finished", "task_status", "finished"]
     run_id: str = ""
     iteration: int = 0
     mode: AgentMode = "execute"

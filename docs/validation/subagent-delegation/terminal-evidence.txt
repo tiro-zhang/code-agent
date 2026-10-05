@@ -1,0 +1,79 @@
+2026-10-05 本次真实 tmux 验收脱敏节选。
+已先读取核对真实终端及本地结果，再保存合成任务的必要字段；随机身份替换为场景标签。
+
+显式后台：
+后台> <explicit-child> · 父 <explicit-parent> · background · running
+MewCode> 已委派。
+结束> model_done · 8.7s · 请求 2/20
+后台> <explicit-child> · background · completed
+MewCode> write_file 写 alpha；read_file 确認 alpha；edit_file 改 beta；execute_command 退出 0。
+独立核验> authorized.txt=beta，explicit.txt=done，explicit.runs='once\n'
+
+自动后台：
+后台> <timeout-child> · foreground · running
+后台> <timeout-child> · background · running
+结束> model_done · 39.3s · 请求 2/20
+后台> <timeout-child> · background · completed
+独立核验> timeout.txt=done，timeout.runs='once\n'
+
+手动后台及草稿：
+后台> <manualdraft-child> · foreground · running
+后台> <manualdraft-child> 已切换，执行不会重启
+后台> <manualdraft-child> · background · running
+结束> model_done · 11.4s · 请求 2/20
+输入驱动> 在真实 idle 状态写草稿但未按 Enter；即时 capture 草稿可见=True。
+后台> <manualdraft-child> · background · completed
+结束> model_done · 5.4s · 请求 4/20
+你> 草稿保留314（未提交）
+独立核验> manualdraft.txt=done，manualdraft.runs='once\n'；最终 Ctrl+C 明确清除草稿。
+
+主动父取消：
+后台> <parentcancel-child> · foreground · running
+工具> 取消 · cancelled：系统加载已取消
+父任务结束> <parentcancel-parent> · cancelled
+本轮未完成> cancelled · 8.5s · 请求 1/20；已完成操作和结果保留。
+后台> <parentcancel-child> · foreground · cancelled
+独立核验> started/runs 存在，txt 不存在，存活命令进程=[]；下一真实任务正常运行。
+
+单子取消：
+后台> <singlecancel-child> · background · cancelled
+MewCode> 子任务 cancelled，命令 exit_code=null，可能已有副作用；不重跑。
+父任务结束> <singlecancel-parent> · model_done
+结束> model_done · 请求 3/20
+独立核验> txt 不存在，runs 一行，存活命令进程=[]。
+
+规划与执行：
+后台> <plancontrol-child> · background · cancelled
+本地> 已进入 PLAN 只读规划模式。
+独立核验> txt 不存在，存活命令进程=[]。
+输入驱动> 裸 /do 再 /plan 前后 SDK request 数均为 10。
+规划子> 实际 read_file README 成功；write_file 未声明，未执行，无授权界面。
+SDK 采集> 子请求 12/13：read_file, glob_files, search_code, load_skill。
+独立核验> planblocked.txt 不存在。
+
+权限与嵌套：
+tester> 实际 write_file unapproved.bin：approval_required；not_started=true。
+Fork> 实际 agent(type=fork,prompt=嵌套标记314)：tool_not_allowed；not_started=true。
+本地核对> 两子 /tasks show 原始工具证据包含对应错误和 not_started；无人工审批。
+独立核验> unapproved.bin 不存在，无下一层任务。
+
+reset 与 clear：
+后台> <resetcontrol-child> · background · cancelled
+本地> 对话历史和激活 Skill 已清空；会话身份、模式、权限、长期记忆和存档证据保留。
+独立核验> reset 空历史检查点通过；旧子终态 /tasks show 可见；txt 不存在。
+输入驱动> 在 clearcontrol 真正 started、父 idle 后 /clear。
+后台> <clearcontrol-child> · background · completed
+MewCode> clearcontrol done，退出码0。
+结束> model_done · 请求 3/20
+独立核验> clearcontrol.txt=done，clearcontrol.runs='once\n'。
+
+本次真实成功任务的异步记忆出现超时提示；工作终态和输入恢复正常，不把记忆维护计为工作成功或额外主请求。
+
+退出与恢复：
+输入驱动> exitcontrol started 后、父 idle 时 /exit。
+独立核验> 应用窗口关闭；退出父 Journal cancelled 恰好一次；exitcontrol.txt 不存在，runs 一行。
+进程核对> parentcancel、singlecancel、plancontrol、resetcontrol、exitcontrol 存活命令进程=[]。
+新进程> --resume 本次存档：已恢复 9 条工作消息，等待新输入。
+本地> 后台任务仅在当前进程有效；没有子任务。
+旁路核对> 恢复启动及本地查看的真实 SDK 请求数=0；没有重放 exitcontrol 命令。
+收尾> 恢复进程和本次 tmux 会话关闭，临时复制配置删除，原 .env 未修改。

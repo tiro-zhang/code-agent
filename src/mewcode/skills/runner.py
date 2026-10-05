@@ -41,7 +41,11 @@ async def run_isolated(parent, skill, args, history_scope, *, cancel_event, on_e
     prompt.enter_mode(parent.mode)
     executor = ToolExecutor(parent.executor.registry, parent.executor.context, timeout=parent.executor.timeout,
                             permissions=parent.permissions, mcp=parent.executor.mcp)
-    allowed = lambda: runtime.allowed_tools(executor.registry.names(), mode=parent.mode)
+    allowed = lambda: runtime.allowed_tools(executor.registry.names(), mode=parent.mode) - {'agent'}
+    def guard(name, arguments):
+        if name == 'agent':
+            raise ToolError('tool_not_allowed', '独立 Skill 不能启动子 Agent', not_started=True)
+    executor.guard = guard
     executor.system_handlers['load_skill'] = SkillService(runtime, allowed, timeout=executor.timeout)
     def prepare():
         prompt.active_skills, prompt.skill_index = runtime.render_active(), runtime.catalog.index_text()
@@ -51,7 +55,8 @@ async def run_isolated(parent, skill, args, history_scope, *, cancel_event, on_e
         runtime.commit = lambda records: journal.append('skills_changed', {'active_skills': records})
     provider = parent.provider if config is parent.config else parent.provider_factory(config)
     child = Agent(provider, executor, max_iterations=budget.limit, config=config, journal=journal,
-                  prompt_state=prompt, before_request=prepare, allowed_tools=allowed, hooks=parent.hooks)
+                  prompt_state=prompt, before_request=prepare, allowed_tools=allowed,
+                  hooks=parent.hooks.scope(run_id), system_passthrough=False)
     child.context.cache.close()
     child.context.cache = ChildResultCache(parent.context.cache, run_id)
     if journal:
@@ -91,6 +96,7 @@ async def run_isolated(parent, skill, args, history_scope, *, cancel_event, on_e
         await protected(stream.aclose(), cancel_event=cancel_event)
         parent.context.summary_files.update(child.context.cache.paths)
         child.context.cache.close()
+        await child.hooks.close()
         if provider is not parent.provider:
             await protected(provider.aclose(), cancel_event=cancel_event)
         if child.storage_blocked:

@@ -10,6 +10,7 @@ from .codec import decode_message, decode_messages, encode_message, json_value
 
 
 KINDS = {'session_created', 'session_resumed', 'task_started', 'task_finished', 'mode_changed',
+         'run_started', 'run_finished',
          'maintenance_finished', 'interaction_started', 'tool_result', 'history_commit',
          'history_checkpoint', 'checkpoint', 'skills_changed', 'child_event'}
 STATE_KEYS = {'version', 'failures', 'quotes', 'summary_files', 'cache_paths', 'circuit_open',

@@ -62,6 +62,7 @@ class TerminalController:
         self._decisions = {}
         self._allow_enhanced = allow_enhanced
         self._plain_approval = TerminalApproval(reader, self.review_stream, root=root, secret=secret)
+        self.tasks = None
 
     @property
     def enhanced(self):
@@ -80,6 +81,8 @@ class TerminalController:
 
     async def start(self):
         if not self._can_enhance():
+            if getattr(self.reader, 'interactive', False):
+                self.write('提示> 纯文本模式的 Ctrl+B 不可用；前台子 Agent 等待 30 秒会自动转后台\n')
             return
         backend = None
         try:
@@ -87,6 +90,7 @@ class TerminalController:
                 create_output(self.output, always_prefer_tty=False), on_interrupt=self.on_interrupt,
                 status=self.state.compact_status, active=self._active_lines, secret=self.secret,
                 details=self.state.details_text,
+                on_background=self.background,
                 results=lambda: "".join(self._deferred) + '\n'.join(
                     event.text for event in self.projection.flush(consume=False)), registry=self.registry)
             await backend.start()
@@ -98,6 +102,7 @@ class TerminalController:
                     await backend.close()
             self.output.write("提示> 增强终端初始化失败，已恢复纯文本模式：" +
                               terminal_text(str(error), self.secret) + "\n")
+            self.output.write('提示> 纯文本模式的 Ctrl+B 不可用；前台子 Agent 等待 30 秒会自动转后台\n')
             self.output.flush()
 
     def _active_lines(self):
@@ -124,11 +129,33 @@ class TerminalController:
             self.reader.discard_pending()
 
     def sync_session(self, session):
+        self.tasks = session.tasks
         self.state.mode = session.mode
         self.state.permission_mode = session.permissions.mode
         self.state.max_iterations = session.agent.max_iterations
         if self.backend:
             self.backend.application.invalidate()
+
+    def background(self):
+        task_id = self.tasks.foreground_task_id if self.tasks else None
+        if self.enhanced and self.phase == 'running' and task_id and self.tasks.detach(task_id):
+            self.write(f'后台> {task_id} 已切换，执行不会重启\n')
+        else:
+            self.write('提示> Ctrl+B 仅增强终端等待前台子 Agent 时可用；当前阶段不可用\n')
+
+    def save_draft(self):
+        if self.backend:
+            self.backend.save_draft()
+        else:
+            self.reader.save_draft()
+
+    def input_submitted(self):
+        backend = self.backend or self.reader
+        return backend.input_submitted()
+
+    def restore_draft(self):
+        # 实际恢复留在下一聊天输入边界，先清除运行／审批残留。
+        pass
 
     def replace_registry(self, registry):
         """发布整代命令；帮助、分发和当前补全共用同一对象。"""
@@ -219,6 +246,7 @@ class TerminalController:
         if self.backend:
             return await self.backend.readline(cancel)
         self.reader.discard_pending()
+        self.reader.restore_draft()
         self.write("你> ")
         line = await self.reader.readline(cancel)
         if not line:

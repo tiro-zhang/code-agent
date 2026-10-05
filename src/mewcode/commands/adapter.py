@@ -43,9 +43,21 @@ class SessionCommandContext:
         except ToolError as error:
             raise ValueError(str(error)) from error
 
-    def reset_session(self):
-        self.session.reset()
+    async def reset_session(self):
+        await self.session.reset_async()
         self.terminal.state.reset_task()
+
+    def agents_text(self, args):
+        try:
+            return self.session.agents_text(args)
+        except ToolError as error:
+            raise ValueError(str(error)) from error
+
+    async def tasks_text(self, args):
+        try:
+            return await self.session.tasks_text(args)
+        except ToolError as error:
+            raise ValueError(str(error)) from error
 
     def session_text(self, *, listing):
         if not listing:

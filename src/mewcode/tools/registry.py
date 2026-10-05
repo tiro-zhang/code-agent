@@ -29,10 +29,11 @@ class ToolRegistry:
         return frozenset(t.name for t in self._tools.values()
                          if read_only is None or bool(getattr(t, "read_only", False)) == read_only)
 
-    def definitions(self, *, allowed_tools: frozenset[str] | None = None) -> tuple[ToolDefinition, ...]:
+    def definitions(self, *, allowed_tools: frozenset[str] | None = None,
+                    system_passthrough: bool = True) -> tuple[ToolDefinition, ...]:
         return tuple(ToolDefinition(t.name, t.description, t.input_schema, bool(getattr(t, "read_only", False)))
                      for t in self._tools.values() if allowed_tools is None or t.name in allowed_tools
-                     or getattr(t, "system", False))
+                     or (system_passthrough and getattr(t, "system", False)))
 
     def prepare(self, name: str, raw: str, *, allowed_tools: frozenset[str] | None = None) -> tuple[Tool, dict[str, Any]]:
         tool = self.get(name)

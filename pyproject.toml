@@ -30,6 +30,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "mewcode.skills" = ["builtin/*.md", "builtin/**/*"]
+"mewcode.agents" = ["builtin/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -32,12 +32,24 @@ def _total_usage(records: list[TokenUsage]) -> TokenUsage:
 class Agent:
     def __init__(self, provider: Provider, executor: ToolExecutor, *, max_iterations: int = 20,
                  prompt_state: PromptState | None = None, context_manager: ContextManager | None = None,
-                 config=None, journal=None, before_request=None, allowed_tools=None, hooks=None) -> None:
+                 config=None, journal=None, before_request=None, allowed_tools=None, hooks=None,
+                 system_prompt=None, declared_tools=None, preserve_first_prefix=False,
+                 request_state=None, owns_cache=True, on_request_sent=None,
+                 system_passthrough=True) -> None:
         if isinstance(max_iterations, bool) or not isinstance(max_iterations, int) or max_iterations <= 0:
             raise ValueError("max_iterations 必须是正整数")
         self.provider, self.executor, self.max_iterations = provider, executor, max_iterations
         self.prompt_state = prompt_state or PromptState(executor.context.root)
         config = config or getattr(provider, 'config', None)
+        self.config = config
+        self.last_request = None
+        self.system_prompt = system_prompt
+        self.declared_tools = declared_tools
+        self.preserve_first_prefix = preserve_first_prefix
+        self.request_state = request_state
+        self.owns_cache = owns_cache
+        self.on_request_sent = on_request_sent
+        self.system_passthrough = system_passthrough
         if context_manager is None and config is None:
             raise ValueError('必须提供含 context_window 的配置或上下文管理器')
         self.context = context_manager or ContextManager(executor.context.root,
@@ -64,7 +76,7 @@ class Agent:
 
     async def run(self, question: str, *, history: list[Message], mode: AgentMode,
                   cancel_event: asyncio.Event | None = None, budget=None, run_id=None,
-                  turn_owned=False, parent_run_id='') -> AsyncIterator[AgentEvent]:
+                  turn_owned=False, parent_run_id='', input_message=None, segment=False) -> AsyncIterator[AgentEvent]:
         """直接 Agent 调用也具备边界；会话和 Skill 可声明已有顶层所有者。"""
         from .skills.budget import TaskBudget
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
@@ -78,7 +90,8 @@ class Agent:
             await protected(self.hooks.emit('turn.start', **fields, message={'text': question}, cancel_event=cancel), cancel_event=cancel)
             await protected(self.hooks.emit('message.user', **fields, message={'text': question, 'role': 'user'}, cancel_event=cancel), cancel_event=cancel)
         source = self._run(question, history=history, mode=mode, cancel_event=cancel,
-                           budget=budget, run_id=run_id, parent_run_id=parent_run_id)
+                           budget=budget, run_id=run_id, parent_run_id=parent_run_id,
+                           input_message=input_message, segment=segment)
         reason = None
         try:
             async for item in source:
@@ -103,11 +116,12 @@ class Agent:
 
     async def aclose(self):
         await self.hooks.close()
-        self.context.cache.close()
+        if self.owns_cache:
+            self.context.cache.close()
 
     async def _run(self, question: str, *, history: list[Message], mode: AgentMode,
                    cancel_event: asyncio.Event | None = None, budget=None, run_id=None,
-                   parent_run_id='') -> AsyncIterator[AgentEvent]:
+                   parent_run_id='', input_message=None, segment=False) -> AsyncIterator[AgentEvent]:
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
         from .skills.budget import TaskBudget
         run_id = run_id or uuid4().hex
@@ -119,7 +133,8 @@ class Agent:
         context = None
         committed = False
         force_compaction = recovered = False
-        user = Message("user", question)
+        prefix_sent = False
+        user = input_message if input_message is not None else Message("user", question)
         self.current_user = user
         usage_records: list[TokenUsage] = []
         reason: StopReason = "max_iterations"
@@ -131,8 +146,8 @@ class Agent:
                               permission_mode=getattr(getattr(self.executor, "permissions", None), "mode", "default"),
                               max_iterations=budget.limit, **fields)
 
-        tools = self.executor.registry.definitions(allowed_tools=allowed())
-        system = build_system_prompt()
+        tools = self.declared_tools if self.declared_tools is not None else self.executor.registry.definitions(allowed_tools=allowed(), system_passthrough=self.system_passthrough)
+        system = self.system_prompt if self.system_prompt is not None else build_system_prompt()
 
         interaction_id = None
         tool_messages = {}
@@ -169,7 +184,8 @@ class Agent:
         try:
             if self.storage_blocked:
                 raise OSError('存档已不可安全继续')
-            record('task_started', {'task_id': run_id, 'input': question, 'mode': mode, 'user_id': user.id})
+            record('run_started' if segment else 'task_started', {'task_id': run_id, 'input': question,
+                'mode': mode, 'user_id': user.id, 'parent_task_id': parent_run_id})
             while budget.remaining > 0 and not cancel.is_set():
                 if request_id is None:
                     request_id = uuid4().hex
@@ -178,9 +194,9 @@ class Agent:
                     break
                 if self.before_request:
                     self.before_request()
-                tools = self.executor.registry.definitions(allowed_tools=allowed())
+                tools = self.declared_tools if self.declared_tools is not None else self.executor.registry.definitions(allowed_tools=allowed(), system_passthrough=self.system_passthrough)
                 self.prompt_state.allowed_tools = allowed()
-                spilled, warnings = self.context.spill(history)
+                spilled, warnings = ((0, []) if self.preserve_first_prefix and not prefix_sent else self.context.spill(history))
                 for warning in warnings:
                     yield event('context_compaction', phase='spill_failed', text=warning)
                 if spilled:
@@ -190,6 +206,9 @@ class Agent:
                 estimate = self.context.estimate([*history, *(() if committed else (user,)),
                                                   self.prompt_state.peek_request(injections=selected)], system, tools)
                 if force_compaction or not self.context.fits(estimate):
+                    if self.preserve_first_prefix and not prefix_sent:
+                        reason, detail = 'context_blocked', '首次 Fork 的冻结前缀与子目标无法容纳；未发送模型请求，也未改写父前缀'
+                        break
                     if self.context.circuit_open:
                         reason, detail = 'context_blocked', '自动摘要已熔断，请使用 /compact 单次尝试或新建会话'
                         break
@@ -233,7 +252,7 @@ class Agent:
                 request_snapshot = None
                 request_started = False
                 async def request():
-                    nonlocal context, request_snapshot, iteration, request_started
+                    nonlocal context, request_snapshot, iteration, request_started, prefix_sent
                     if cancel.is_set():
                         return
                     selected = self.hooks.prompts.snapshot()
@@ -246,8 +265,14 @@ class Agent:
                     context = self.prompt_state.begin_request(injections=selected)
                     self.hooks.prompts.consume(selected)
                     request_started = True
+                    prefix_sent = True
                     messages = [*history, *(() if committed else (user,)), context]
+                    from .agents.request import RequestSnapshot
+                    control_state = self.request_state() if self.request_state else {'prompt_state': self.prompt_state}
+                    self.last_request = RequestSnapshot.capture(messages, tools, system, getattr(self.provider, 'config', self.config), control_state=control_state)
                     request_snapshot = self.context.estimator.snapshot(messages, system, tools)
+                    if self.on_request_sent:
+                        self.on_request_sent()
                     stream = self.provider.stream(messages, tools=tools, tool_choice="auto", system_prompt=system)
                     try:
                         async for item in stream:
@@ -354,7 +379,7 @@ class Agent:
         try:
             usage = asdict(total)
             usage['incomplete_fields'] = sorted(total.incomplete_fields)
-            record('task_finished', {'task_id': run_id, 'reason': reason, 'mode': mode,
+            record('run_finished' if segment else 'task_finished', {'task_id': run_id, 'reason': reason, 'mode': mode,
                                     'state': self.context.state(), 'usage': usage})
         except OSError:
             self.storage_blocked = True

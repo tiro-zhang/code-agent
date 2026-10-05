@@ -60,13 +60,15 @@ async def stop_group(process):
 
 class ActionRunner:
     def __init__(self, root: Path, *, permissions, prompts=None, current_mode=None,
-                 http_timeout: float = 30, response_limit: int = 64 * 1024):
+                 http_timeout: float = 30, response_limit: int = 64 * 1024, http_owner=None):
         self.root = Path(root).resolve()
         self.permissions = permissions
         self.prompts = prompts if prompts is not None else PromptQueue()
         self.current_mode = current_mode
         self.http_timeout, self.response_limit = http_timeout, response_limit
         self._client = None
+        self._http_owner = http_owner
+        self.side_effects_possible = False
 
     def can_submit(self, rule, event, *, background=False, cancel_event=None):
         if cancel_event is not None and cancel_event.is_set():
@@ -105,8 +107,10 @@ class ActionRunner:
                 # 授权可能让出执行；再次检查当前模式和取消。
                 if not self.can_submit(rule, event, cancel_event=cancel):
                     return ActionResult("skipped")
+                self.side_effects_possible = True
                 result = await self._wait(self._command(rule, event, cancel), cancel, action.timeout_seconds)
             else:
+                self.side_effects_possible = True
                 result = await self._wait(self._http(rule, event), cancel, self.http_timeout)
             if result.status == "failed":
                 diagnostic(rule, event, "动作失败或无效决策")
@@ -189,6 +193,8 @@ class ActionRunner:
             await protected(asyncio.gather(*tasks, return_exceptions=True), cancel_event=operation_cancel)
 
     async def _http(self, rule, event):
+        if self._http_owner is not None:
+            return await self._http_owner._http(rule, event)
         if self._client is None:
             self._client = httpx2.AsyncClient(timeout=self.http_timeout, follow_redirects=False, trust_env=False)
         action = rule.action
@@ -203,6 +209,6 @@ class ActionRunner:
             return decision_output(bytes(body), rule.identity) if event.event == "tool.before" else ActionResult()
 
     async def close(self):
-        if self._client is not None:
+        if self._http_owner is None and self._client is not None:
             await self._client.aclose()
         self.prompts.clear()

@@ -1,0 +1,70 @@
+{
+  "service_model": "ark-code-latest",
+  "protocol": "openai",
+  "parent_request": 6,
+  "first_fork_request": 7,
+  "common_message_count": 9,
+  "child_message_count": 11,
+  "equal_tools_system_sha256": "7b68c10c868d41b3681ebc94bcf9631964e74b069586dca9d8d5983b0ac44a16",
+  "common_message_digests": [
+    {
+      "role": "system",
+      "digest": "4b585c177df975c4aff0cc549ff5751e4c33ee9e28690f8489e64c7a9a3a4882",
+      "blocks": []
+    },
+    {
+      "role": "user",
+      "digest": "a3cac67bf280c36fe282b11536ef85e9f6066fb0432efe751234dbc3e11fb5ce",
+      "blocks": []
+    },
+    {
+      "role": "user",
+      "digest": "a800eeb0f900e80224327696737b1ec2b71f4f248fce0cca56639bd19dfe4408",
+      "blocks": []
+    },
+    {
+      "role": "assistant",
+      "digest": "9c59f90ffe33a78fb00352abc77203b38dee43d6fae052c6228d2d5132d6fe58",
+      "blocks": []
+    },
+    {
+      "role": "tool",
+      "digest": "750e5780b3d6c348be17975cfb3a103ff828ad28899caeaa31a12a3db4ddf2cc",
+      "blocks": []
+    },
+    {
+      "role": "user",
+      "digest": "25b44a742369462b357ba06280b3759f6012cd66685f14149b1d5af0fada5050",
+      "blocks": []
+    },
+    {
+      "role": "assistant",
+      "digest": "2a89f01fbdc30f867d6bb333f94bc6bce2898f20151a0d12f11c6a87c679833e",
+      "blocks": []
+    },
+    {
+      "role": "user",
+      "digest": "010de52f9b117a2e27e04f57492ecf5e8d1410a352a18a3d69f327f9d4a19fd7",
+      "blocks": []
+    },
+    {
+      "role": "user",
+      "digest": "25b44a742369462b357ba06280b3759f6012cd66685f14149b1d5af0fada5050",
+      "blocks": []
+    }
+  ],
+  "first_fork_raw_usage": {
+    "completion_tokens": 282,
+    "prompt_tokens": 4790,
+    "total_tokens": 5072,
+    "completion_tokens_details": {
+      "reasoning_tokens": 169
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 4408
+    }
+  },
+  "cached_tokens": 4408,
+  "collection": "真实 SDK 请求旁路采集，仅消息/工具/系统哈希及供应商原始用量；无请求正文、URL、密钥或头。",
+  "limitation": "该首轮命中后父存档接续失败，codec 修复后已另起真实进程验证接续。"
+}

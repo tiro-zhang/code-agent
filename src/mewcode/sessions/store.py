@@ -17,7 +17,7 @@ from .projection import Projection, build_projection, timestamp, validate_payloa
 ID_PATTERN = re.compile(r'\d{8}-\d{6}-[0-9a-f]{4}')
 TTL = timedelta(days=30)
 CRITICAL_KINDS = {'session_created', 'session_resumed', 'interaction_started', 'tool_result',
-                  'history_commit', 'history_checkpoint', 'checkpoint', 'task_finished'}
+                  'history_commit', 'history_checkpoint', 'checkpoint', 'task_finished', 'run_finished'}
 
 
 class SessionError(OSError):

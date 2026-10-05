@@ -25,6 +25,9 @@ class ProviderConfig:
     context_window: int = field(kw_only=True)
     max_output_tokens: int = 8192
     skill_models: tuple[tuple[str, int, int], ...] = ()
+    agent_models: tuple[tuple[str, str, int, int], ...] = ()
+    agent_plugin_dirs: tuple[str, ...] = ()
+    agent_background_tools: frozenset[str] | None = None
 
     def for_skill(self, model: str | None):
         """仅覆盖同一服务的模型及其显式预算。"""
@@ -34,6 +37,66 @@ class ProviderConfig:
             if name == model:
                 return replace(self, model=name, context_window=window, max_output_tokens=output)
         raise ConfigError(f'skill_models 未配置模型 {model} 的窗口')
+
+    def for_agent(self, alias: str):
+        """显式别名只覆盖模型预算，保留同一服务与思考配置。"""
+        if alias == "inherit":
+            return self
+        for name, model, window, output in self.agent_models:
+            if name == alias:
+                return replace(self, model=model, context_window=window, max_output_tokens=output)
+        raise ConfigError(f"agent_models 未配置模型别名 {alias}")
+
+    def validate_agent_tools(self, registered) -> None:
+        unknown = (self.agent_background_tools or frozenset()) - set(registered)
+        if unknown:
+            raise ConfigError(f"agent_background_tools 包含未知工具：{', '.join(sorted(unknown))}")
+
+
+def _strict_json(raw):
+    def mapping(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError("重复 JSON 字段")
+            result[key] = value
+        return result
+    return json.loads(raw, object_pairs_hook=mapping,
+                      parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
+
+
+def _agent_models(raw, output):
+    try:
+        value = _strict_json(raw)
+        if not isinstance(value, dict) or not value.keys() <= {"haiku", "sonnet", "opus"}:
+            raise ValueError
+        result = []
+        for alias, limits in value.items():
+            if (not isinstance(limits, dict) or not {"model", "context_window"} <= limits.keys()
+                    or not limits.keys() <= {"model", "context_window", "max_output_tokens"}):
+                raise ValueError
+            model = limits["model"]
+            if not isinstance(model, str) or not model or any(c.isspace() or not c.isprintable() for c in model):
+                raise ValueError
+            window, maximum = limits["context_window"], limits.get("max_output_tokens", output)
+            if type(window) is not int or type(maximum) is not int or maximum <= 0 or window <= maximum + 13000:
+                raise ValueError
+            result.append((alias, model, window, maximum))
+        return tuple(result)
+    except (ValueError, TypeError, RecursionError):
+        raise ConfigError("agent_models 必须是无重复字段的别名 JSON 映射，窗口须大于输出额度 + 13000") from None
+
+
+def _agent_list(raw, field, *, tool_names=False):
+    try:
+        value = _strict_json(raw)
+        if not isinstance(value, list) or any(not isinstance(item, str) or not item.strip() or "\x00" in item for item in value):
+            raise ValueError
+        if tool_names and (len(value) != len(set(value)) or any(any(c.isspace() or not c.isprintable() for c in item) for item in value)):
+            raise ValueError
+        return frozenset(value) if tool_names else tuple(value)
+    except (ValueError, TypeError, RecursionError):
+        raise ConfigError(f"{field} 必须是有效字符串 JSON 列表，工具名称必须精确且不重复") from None
 
 
 def _skill_models(raw, output):
@@ -113,5 +176,8 @@ def load_config(path: str | Path) -> ProviderConfig:
         thinking=thinking,
         max_iterations=int(budget),
         skill_models=_skill_models(values['skill_models'], limits['max_output_tokens']) if 'skill_models' in values else (),
+        agent_models=_agent_models(values['agent_models'], limits['max_output_tokens']) if 'agent_models' in values else (),
+        agent_plugin_dirs=_agent_list(values['agent_plugin_dirs'], 'agent_plugin_dirs') if 'agent_plugin_dirs' in values else (),
+        agent_background_tools=_agent_list(values['agent_background_tools'], 'agent_background_tools', tool_names=True) if 'agent_background_tools' in values else None,
         **limits,
     )

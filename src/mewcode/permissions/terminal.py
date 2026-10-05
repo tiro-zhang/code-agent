@@ -25,6 +25,7 @@ class InputReader:
         self._buffer = ""
         self._lock = asyncio.Lock()
         self._decoder = codecs.getincrementaldecoder(getattr(stream, "encoding", None) or "utf-8")()
+        self._draft = None
 
     def discard_pending(self):
         """丢弃上一输入阶段的残留，终端留给当前提示符的新输入。"""
@@ -39,6 +40,38 @@ class InputReader:
                 termios.tcflush(fd, termios.TCIFLUSH)
         except (AttributeError, OSError, ValueError):
             pass
+
+    def save_draft(self):
+        """将聊天输入搬离审批缓冲；规范终端未提交行也先取出。"""
+        try:
+            fd = self.stream.fileno()
+            if os.isatty(fd):
+                original = termios.tcgetattr(fd)
+                capture = [*original[:-1], list(original[-1])]
+                capture[3] &= ~termios.ICANON
+                capture[6][termios.VMIN] = 0
+                capture[6][termios.VTIME] = 0
+                try:
+                    termios.tcsetattr(fd, termios.TCSANOW, capture)
+                    while data := os.read(fd, 4096):
+                        self._buffer += self._decoder.decode(data)
+                finally:
+                    termios.tcsetattr(fd, termios.TCSANOW, original)
+        except (AttributeError, OSError, ValueError, termios.error):
+            pass
+        self._draft = (self._buffer, self._decoder.getstate())
+        self._buffer = ''
+        self._decoder.reset()
+
+    def restore_draft(self):
+        """仅聊天 readline 边界调用，审批绝不接触暂存内容。"""
+        if self._draft is not None:
+            self._buffer, state = self._draft
+            self._decoder.setstate(state)
+            self._draft = None
+
+    def input_submitted(self):
+        return '\n' in self._buffer or self.eof
 
     async def readline(self, cancel_event: asyncio.Event | None = None) -> str:
         async with self._lock:

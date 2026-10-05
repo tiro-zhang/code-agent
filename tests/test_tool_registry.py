@@ -59,8 +59,8 @@ def test_read_only_filter_and_execution_guard(tmp_path):
     registry = default_registry()
     allowed = registry.names(read_only=True)
     assert allowed == {"read_file", "glob_files", "search_code"}
-    assert len(registry.names()) == 7
-    assert {d.name for d in registry.definitions(allowed_tools=allowed)} == allowed | {'load_skill'}
+    assert len(registry.names()) == 8
+    assert {d.name for d in registry.definitions(allowed_tools=allowed)} == allowed | {'load_skill', 'agent'}
     for name, code in [("write_file", "tool_not_allowed"), ("absent", "unknown_tool"),
                        ("read_file", "invalid_arguments")]:
         with pytest.raises(ToolError) as error:

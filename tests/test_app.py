@@ -93,8 +93,8 @@ def test_plan_commands_and_repeated_do_only_switch_mode(tmp_path):
     provider = ScriptedProvider([answer("目标A步骤A验证A"), answer("目标B步骤B验证B"), answer("执行完成"), answer("下一答")])
     _, shown = invoke(tmp_path, provider, "/plan\n任务A\n修订B\n/do\n/do\n下一问\n/exit\n")
     assert len(provider.requests) == 3
-    assert len(provider.requests[0][1]["tools"]) == len(provider.requests[1][1]["tools"]) == 4
-    assert len(provider.requests[2][1]["tools"]) == 7
+    assert len(provider.requests[0][1]["tools"]) == len(provider.requests[1][1]["tools"]) == 5
+    assert len(provider.requests[2][1]["tools"]) == 8
     assert [m for m in provider.requests[2][0] if m.role == "user"][-1].content == "下一问"
     assert "执行模式" in shown and shown.count("你> ") == 7
 

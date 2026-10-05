@@ -7,5 +7,6 @@ def default_registry():
     from .registry import ToolRegistry
     from .search import GlobFiles, SearchCode
     from ..skills.tool import LoadSkill
+    from ..agents.tool import DelegateAgent
 
-    return ToolRegistry([ReadFile(), WriteFile(), EditFile(), ExecuteCommand(), GlobFiles(), SearchCode(), LoadSkill()])
+    return ToolRegistry([ReadFile(), WriteFile(), EditFile(), ExecuteCommand(), GlobFiles(), SearchCode(), LoadSkill(), DelegateAgent()])

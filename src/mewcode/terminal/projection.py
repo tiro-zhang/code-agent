@@ -5,6 +5,7 @@ from dataclasses import replace
 from pathlib import PurePath
 
 from ..types import AgentEvent
+from .text import usage_text
 
 
 class TerminalProjection:
@@ -81,6 +82,9 @@ class TerminalProjection:
         return [event] if alert else []
 
     def accept(self, event, *, maintenance=False):
+        if event.kind == 'task_finished':
+            return self.flush() + [self.line(f'父任务结束> {self.state.safe(event.run_id)} · {event.reason} · '
+                f'主累计 Token {usage_text(event.usage)}（/tasks show 查看父子用量）')]
         if event.kind == 'hook_notice':
             text = f'Hook> {self.state.safe(event.hook_source)} · {self.state.safe(event.hook_event)} · {self.state.safe(event.text)}'
             return [replace(event, kind='display_line', text=text)]

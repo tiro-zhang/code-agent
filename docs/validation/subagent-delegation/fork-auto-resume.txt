@@ -1,0 +1,18 @@
+本次真实终端记录节选，2026-10-05，OpenAI 兼容服务 ark-code-latest。
+已人工核对并脱敏：省略会话/任务随机身份和临时路径，仅保留合成验收数据。
+
+你> 只调用一次 agent，type=fork，prompt=读取 README.md 并报告验收标记和启动命令。
+后台> <child> · 父 <parent> · background · running
+工具> 完成 1 次agent · 成功
+MewCode> 已委派，后台任务运行中。等待应用自动接续结果，不自行执行子任务。
+结束> model_done · 8.3s · 请求 2/20 · Token 输入 6301 / 输出 324
+后台> <child> · 父 <parent> · background · completed
+MewCode> 子任务已完成。根据 README.md（全文 1 行）的报告：
+验收标记：银杏314；启动命令：uv run mewcode --config .env；安装命令：uv sync。
+无未完成事项。
+结束> model_done · 3.2s · 请求 3/20 · Token 输入 4540 / 输出 123
+记忆> 自动记忆提取超时，既有笔记保留
+状态> 空闲
+
+检查：凭据只返回一次，子正文没有直接混入主流；主段结束后子继续，完成后应用自动接续原父预算。
+附注：此前首轮真实验收发现 task_resume 存档 codec 未登记，已加回归测试并修复；此节选来自修复后的新进程。

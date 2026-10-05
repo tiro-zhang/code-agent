@@ -14,12 +14,24 @@ from .tool_messages import openai_messages, openai_tools, validate_calls
 
 
 class OpenAIProvider:
-    def __init__(self, config: ProviderConfig, *, client: Any | None = None) -> None:
+    def __init__(self, config: ProviderConfig, *, client: Any | None = None, owns_client: bool = True) -> None:
         self.config = config
+        self._owns_client, self._closed = owns_client, False
         self.client = client or openai.AsyncOpenAI(api_key=config.api_key, base_url=config.base_url, max_retries=0)
 
     async def aclose(self) -> None:
-        await self.client.close()
+        if not self._closed:
+            self._closed = True
+            if self._owns_client:
+                await self.client.close()
+
+    def fork(self, config: ProviderConfig):
+        """模型包装借用会话传输，只允许同一服务。"""
+        if any(getattr(config, key) != getattr(self.config, key) for key in ("protocol", "base_url", "api_key")):
+            raise ValueError("共享传输不能更换模型服务")
+        if self._closed:
+            raise ValueError("模型服务已关闭")
+        return OpenAIProvider(config, client=self.client, owns_client=False)
 
     async def stream(self, messages: Sequence[Message], *, tools: Sequence[ToolDefinition] = (),
                      tool_choice: Literal["auto", "none"] = "auto",

@@ -46,7 +46,7 @@ async def test_shared_load_same_batch_restricts_and_pins_next_request(tmp_path):
         assert "a: 一句说明" in first[0][-1].content
         assert "唯一 SOP" not in first[0][-1].content
         assert "唯一 SOP 目标" in second[0][-1].content
-        assert {t.name for t in second[1]["tools"]} == {"read_file", "load_skill"}
+        assert {t.name for t in second[1]["tools"]} == {"read_file", "load_skill", "agent"}
         assert "环境信息" not in second[0][-1].content
         assert not (tmp_path / "bad").exists()
         results = [e.result for e in events if e.kind == "tool_result"]

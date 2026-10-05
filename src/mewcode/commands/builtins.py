@@ -82,9 +82,22 @@ async def skills_command(args: str, context: CommandContext) -> CommandResult:
 
 
 async def reset_command(args: str, context: CommandContext) -> CommandResult:
-    context.reset_session()
+    changed = context.reset_session()
+    if isawaitable(changed):
+        await changed
     context.refresh_status()
     context.show_message('对话历史和激活 Skill 已清空；会话身份、模式、权限、长期记忆和存档证据保留。')
+    return CommandResult()
+
+
+async def agents_command(args: str, context: CommandContext) -> CommandResult:
+    context.show_message(context.agents_text(args))
+    return CommandResult()
+
+
+async def tasks_command(args: str, context: CommandContext) -> CommandResult:
+    context.show_message(await context.tasks_text(args))
+    context.refresh_status()
     return CommandResult()
 
 
@@ -125,6 +138,11 @@ def builtin_definitions() -> tuple[CommandSpec, ...]:
         CommandSpec('skills', (), '查看或停用已激活 Skill', '/skills [list|active|deactivate <name|--all>]',
                     'state', skills_command, accepts_arguments=True,
                     argument_choices=(('list',), ('active',), ('deactivate', '--all'))),
+        CommandSpec('agents', (), '查看 Agent 角色目录及固定提示', '/agents [list|show <name>]',
+                    'local', agents_command, accepts_arguments=True, argument_choices=(('list',), ('show',))),
+        CommandSpec('tasks', (), '查看当前进程子任务、完整结果或取消', '/tasks [list|show <id>|cancel <id>|cancel-parent <parent_id>]',
+                    'state', tasks_command, accepts_arguments=True,
+                    argument_choices=(('list',), ('show',), ('cancel',), ('cancel-parent',))),
         CommandSpec('exit', (), '受控退出并保留存档', '/exit', 'state', exit_command),
     )
 
