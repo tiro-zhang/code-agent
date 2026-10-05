@@ -43,15 +43,18 @@ def enumerate_files(root, *, limit=ENUM_LIMIT):
     while pending:
         directory = pending.pop()
         with directory_fd(directory) as fd:
-            entries = sorted(os.listdir(fd))
-            for name in entries:
-                if name == '.git':
-                    continue
+            entries = []
+            with os.scandir(fd) as iterator:
+                for entry in iterator:
+                    if entry.name == '.git':
+                        continue
+                    seen += 1
+                    if seen > limit:
+                        raise ValueError('文件枚举超限')
+                    entries.append(entry.name)
+            for name in sorted(entries):
                 path = directory / name
                 info = os.stat(name, dir_fd=fd, follow_symlinks=False)
-                seen += 1
-                if seen > limit:
-                    raise ValueError('文件枚举超限')
                 if stat.S_ISDIR(info.st_mode):
                     pending.append(path)
                 else:

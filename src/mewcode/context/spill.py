@@ -124,7 +124,7 @@ class ResultCache:
         message = Message("tool", tool_result=ToolResult.success({"files": sorted(paths)}))
         return self.save(message, "context_result_index", _index=True)
 
-    def save(self, message, tool_name: str, *, _index=False, namespace='') -> str:
+    def save(self, message, tool_name: str, *, _index=False, namespace='', provenance=None) -> str:
         if namespace and not re.fullmatch(r'[a-zA-Z0-9_-]+', namespace):
             raise ValueError('缓存命名空间无效')
         self._open()
@@ -134,6 +134,8 @@ class ResultCache:
         header = {'format': 'mewcode-result-v1', 'source': message.id,
                   'tool_call_id': message.tool_call_id, 'tool_name': tool_name,
                   'characters': len(raw), 'read': '用 read_file 的 start_line/max_lines 分页；依次拼接每行 chunk 后解析 JSON 可恢复完整结果。仅保存采集层实际返回内容。'}
+        if provenance is not None:
+            header['provenance'] = provenance
         try:
             fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
                          0o600, dir_fd=self._fds[-1])
@@ -153,14 +155,29 @@ class ResultCache:
             except FileNotFoundError:
                 pass
 
-    def restore(self, path: str) -> ToolResult:
+    def _read_fd(self, path):
         if not self._fds:
             raise OSError("会话缓存不可用")
         self._check()
         relative = Path(path)
         if relative.parent != self.relative or relative.name not in self._files:
             raise OSError('非本会话缓存引用')
-        fd = os.open(relative.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=self._fds[-1])
+        return os.open(relative.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=self._fds[-1])
+
+    def describe(self, path: str) -> dict:
+        """来源只从已登记的普通缓存文件读取，不接受绝对引用。"""
+        with os.fdopen(self._read_fd(path), encoding='utf-8') as file:
+            if not stat.S_ISREG(os.fstat(file.fileno()).st_mode):
+                raise OSError('缓存不是普通文件')
+            header = strict_json(file.readline(8193))
+            if (not isinstance(header, dict) or header.get('format') != 'mewcode-result-v1'
+                    or type(header.get('characters')) is not int or header['characters'] < 0
+                    or not isinstance(header.get('source'), str) or not header['source']):
+                raise ValueError('缓存来源无效')
+            return header
+
+    def restore(self, path: str, *, max_characters: int | None = None) -> ToolResult:
+        fd = self._read_fd(path)
         with os.fdopen(fd, encoding='utf-8') as file:
             if not stat.S_ISREG(os.fstat(file.fileno()).st_mode):
                 raise OSError('缓存不是普通文件')
@@ -170,7 +187,17 @@ class ResultCache:
                         or type(header.get('characters')) is not int or header['characters'] < 0
                         or not isinstance(header.get('source'), str) or not header['source']):
                     raise ValueError('缓存格式无效')
-                raw = ''.join(strict_json(line)['chunk'] for line in file)
+                chunks, size = [], 0
+                lines = iter(lambda: file.readline(max_characters + 1), '') if max_characters is not None else file
+                for line in lines:
+                    if max_characters is not None and len(line) > max_characters:
+                        raise ValueError('缓存正文超限')
+                    chunk = strict_json(line)['chunk']
+                    size += len(chunk)
+                    if max_characters is not None and size > max_characters:
+                        raise ValueError('缓存正文超限')
+                    chunks.append(chunk)
+                raw = ''.join(chunks)
                 if len(raw) != header['characters']:
                     raise ValueError('缓存正文不完整')
                 from ..sessions.codec import decode_result
@@ -203,9 +230,15 @@ def _states(value):
     """保留权限、启动及副作用等结构化状态，正文从引用文件读取。"""
     if not isinstance(value, dict):
         return {}
-    return {key: item for key, item in value.items()
+    result = {key: item for key, item in value.items()
             if isinstance(item, (bool, int, float)) or item is None
             or key in {'status', 'code', 'side_effects', 'side_effects_uncertain'}}
+    paths = value.get('cache_paths')
+    if isinstance(paths, list) and len(paths) <= 512 and all(
+            isinstance(path, str) and re.fullmatch(r'\.mewcode/context/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+\.jsonl', path)
+            for path in paths):
+        result['cache_paths'] = paths
+    return result
 
 
 def _reference(message, path, tool_name):

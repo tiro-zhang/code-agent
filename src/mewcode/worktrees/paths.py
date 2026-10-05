@@ -126,7 +126,13 @@ def managed_target(container: Path, name: str) -> Path:
                     raise ValueError('分组目录检查超限')
                 if (current / '.git').exists():
                     raise ValueError('目标包含工作树')
-                pending.extend(p for p in current.iterdir() if p.is_dir() and not p.is_symlink())
+                with directory_fd(current) as fd, os.scandir(fd) as entries:
+                    for entry in entries:
+                        visited += 1
+                        if visited > 512:
+                            raise ValueError('分组目录检查超限')
+                        if entry.is_dir(follow_symlinks=False):
+                            pending.append(current/entry.name)
         return target
     except (OSError, ValueError):
         raise ToolError('worktree_path_error', '受管工作树路径越界、嵌套或无法安全检查', not_started=True) from None

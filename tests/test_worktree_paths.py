@@ -97,3 +97,9 @@ def test_missing_git_does_not_fall_back(tmp_path,monkeypatch):
     monkeypatch.setenv('PATH','')
     with pytest.raises(ToolError): api().freeze_repository(root)
     assert not (root/'.mewcode').exists()
+
+
+def test_group_directory_check_stops_at_bounded_entries(tmp_path):
+    root=tmp_path/'container';target=root/'group';target.mkdir(parents=True)
+    for index in range(520): (target/str(index)).touch()
+    with pytest.raises(ToolError): api().managed_target(root,'group')

@@ -28,6 +28,9 @@ class HookRuntime:
         self.started = self.closed = self._closing = self._paused = False
         self.max_running, self.max_pending, self.close_timeout = max_running, max_pending, close_timeout
         self._background: set[asyncio.Task] = set()
+        self._owners = {}
+        self._changed = asyncio.Event()
+        self._closed_runners = set()
         self._pending = deque()
         self._close_operation = None
         self._scopes = {}
@@ -44,12 +47,12 @@ class HookRuntime:
     def background_count(self):
         return len(self._background) + len(self._pending)
 
-    def scope(self, task_id, *, permissions=None, current_mode=None):
+    def scope(self, task_id, *, permissions=None, current_mode=None, root=None):
         """同父跨执行段复用队列；所有视图借用会话 once 和后台派发器。"""
         if task_id not in self._scopes:
             from .actions import ActionRunner
             from .prompts import PromptQueue
-            runner = ActionRunner(self.snapshot.root, permissions=permissions or self.runner.permissions,
+            runner = ActionRunner(root or self.snapshot.root, permissions=permissions or self.runner.permissions,
                                   prompts=PromptQueue(), current_mode=current_mode or self.current_mode,
                                   http_timeout=self.runner.http_timeout, response_limit=self.runner.response_limit,
                                   http_owner=self.runner)
@@ -86,7 +89,7 @@ class HookRuntime:
     async def dispatch(self, event, *, cancel_event=None, runner=None):
         runner = runner or self.runner
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
-        if self.closed or (self._closing and event.event != "session.end"):
+        if runner in self._closed_runners or self.closed or (self._closing and event.event != "session.end"):
             return ActionResult("skipped")
         for rule in self.snapshot.rules:
             if rule.event != event.event:
@@ -118,6 +121,7 @@ class HookRuntime:
                         self._spawn(rule, event, runner)
                     else:
                         self._pending.append((rule, event, runner))
+                        self._changed.set()
                     continue
                 result = await runner.run(rule, event, cancel_event=cancel,
                                                allow_approval=not self._closing)
@@ -135,9 +139,13 @@ class HookRuntime:
         # 与触发任务的取消事件分离，保留原始不可变快照。
         task = asyncio.create_task(runner.run(rule, event, cancel_event=asyncio.Event(), background=True))
         self._background.add(task)
+        self._owners[task] = runner
+        self._changed.set()
 
         def finished(done):
             self._background.discard(done)
+            self._owners.pop(done, None)
+            self._changed.set()
             if not done.cancelled():
                 try:
                     done.result()
@@ -150,6 +158,34 @@ class HookRuntime:
 
         task.add_done_callback(finished)
 
+    async def drain_scope(self, runner, cancel_event=None):
+        """只等待此运行的真实动作；取消时移除它自己的待执行动作。"""
+        self._closed_runners.add(runner)
+        watcher = asyncio.create_task(cancel_event.wait()) if cancel_event is not None else None
+        try:
+            while True:
+                self._changed.clear()
+                owned = tuple(task for task, owner in self._owners.items() if owner is runner)
+                pending = any(item[2] is runner for item in self._pending)
+                if cancel_event is not None and cancel_event.is_set():
+                    self._pending = deque(item for item in self._pending if item[2] is not runner)
+                    for task in owned:
+                        task.cancel()
+                    await asyncio.gather(*owned, return_exceptions=True)
+                    return
+                if not owned and not pending:
+                    return
+                changed = asyncio.create_task(self._changed.wait())
+                try:
+                    await asyncio.wait((changed, watcher) if watcher else (changed,), return_when=asyncio.FIRST_COMPLETED)
+                finally:
+                    changed.cancel()
+                    await asyncio.gather(changed, return_exceptions=True)
+        finally:
+            if watcher:
+                watcher.cancel()
+                await asyncio.gather(watcher, return_exceptions=True)
+
     async def drain_background(self):
         while self._background:
             await asyncio.gather(*tuple(self._background), return_exceptions=True)
@@ -158,6 +194,7 @@ class HookRuntime:
         """切入规划前禁止提交，并清理已接收的后台副作用。"""
         self._paused = True
         self._pending.clear()
+        self._changed.set()
         tasks = tuple(self._background)
         for task in tasks:
             task.cancel()
@@ -236,4 +273,5 @@ class HookScope:
         await self.owner.start(**options)
 
     async def close(self, **options):
+        await self.owner.drain_scope(self.runner, options.get('cancel_event'))
         self.prompts.clear()

@@ -257,7 +257,11 @@ class WorktreeManager:
             return '存在未追踪或未知忽略成果'
         return None
 
-    async def delete(self, tree):
+    async def scan(self, *, now=None):
+        from .cleanup import scan
+        return await scan(self, now=now)
+
+    async def delete(self, tree, *, expired_before=None):
         report = {'state': 'retained', 'branch_state': 'retained', 'reason': '', **tree.metadata()}
         lease = None
         try:
@@ -266,6 +270,10 @@ class WorktreeManager:
             lease.check()
             self.recover(tree.name, task_id=tree.task_id)
             record = load_record(self.record_path(tree.name))
+            if expired_before is not None and (record['last_active'] >= expired_before
+                    or record['created'] > record['last_active']):
+                report['reason'] = '活动时间更新或异常，未清理'
+                return report
             reason = await self._protected_reason(tree, record)
             if reason:
                 report['reason'] = reason

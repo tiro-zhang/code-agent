@@ -55,6 +55,18 @@ def relative_path(value, *, pattern=False):
     return value
 
 
+def regenerable_pattern(value):
+    """再生产物必须限定文件名，只有公开的专属缓存规则可覆盖目录。"""
+    if value in WorktreeConfig().regenerable_paths:
+        return value
+    relative_path(value, pattern=True)
+    parts = value.split('/')
+    literal = re.sub(r'\[[^]]*\]', '', parts[-1]).replace('*', '').replace('?', '')
+    if not literal.strip('.') or (len(parts) > 1 and re.search(r'[*?\[\]]', parts[0])):
+        raise ValueError('可再生规则不能覆盖任意全目录')
+    return value
+
+
 def _items(data, field, default, *, pattern=False):
     values = data.get(field, default)
     if values is default:
@@ -102,7 +114,7 @@ def load_config(root: Path) -> WorktreeConfig:
             values = data['regenerable-paths']
             if not isinstance(values, list) or len(values) > 512:
                 raise ValueError('可再生规则必须为有界列表')
-            regen = tuple(relative_path(p, pattern=True) for p in values)
+            regen = tuple(regenerable_pattern(p) for p in values)
         hooks = relative_path(data['hooks-path']) if 'hooks-path' in data else None
         return WorktreeConfig(_items(data, 'copy-files', defaults.copy_files),
                               _items(data, 'link-directories', defaults.link_directories),

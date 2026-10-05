@@ -47,6 +47,8 @@ class PromptState:
 
     def __init__(self, root: Path, *, custom_instructions: str = '', active_skills: str = '',
                  memory: str = '') -> None:
+        self.root = root.resolve()
+        self.workspace_notice = ''
         self.environment = (f'## 环境信息\n工作根目录：{root.resolve()}\n'
                             f'操作系统：{platform.system()} {platform.release()}\n'
                             f'Python 版本：{platform.python_version()}\n会话启动日期：{date.today().isoformat()}')
@@ -94,6 +96,8 @@ class PromptState:
                 mode += '按当前明确任务执行，编辑前先读当前内容，读取工具结果并验证，按实际结果答复。'
         pinned = ['## 已激活的 Skill（当前状态）\n' + (self.active_skills or '当前无激活 Skill。'),
                   '## 可发现 Skill（用 load_skill 按需加载）\n' + (self.skill_index or '当前无可发现 Skill。')]
+        if self.workspace_notice:
+            pinned.insert(0, '## 当前隔离工作目录\n' + self.workspace_notice)
         if self.agent_index:
             pinned.append('## 可委派 Agent（用 agent 按角色名启动）\n' + self.agent_index)
         if self.task_results:

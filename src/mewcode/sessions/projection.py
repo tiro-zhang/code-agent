@@ -12,7 +12,7 @@ from .codec import decode_message, decode_messages, encode_message, json_value
 KINDS = {'session_created', 'session_resumed', 'task_started', 'task_finished', 'mode_changed',
          'run_started', 'run_finished',
          'maintenance_finished', 'interaction_started', 'tool_result', 'history_commit',
-         'history_checkpoint', 'checkpoint', 'skills_changed', 'child_event'}
+         'history_checkpoint', 'checkpoint', 'skills_changed', 'child_event', 'worktree_event'}
 STATE_KEYS = {'version', 'failures', 'quotes', 'summary_files', 'cache_paths', 'circuit_open',
               'history_version', 'summary_version'}
 
@@ -24,6 +24,7 @@ class Projection:
     state: dict = field(default_factory=dict)
     cache_paths: set[str] = field(default_factory=set)
     active_skills: list[dict] = field(default_factory=list)
+    worktrees: dict = field(default_factory=dict)
     last_activity: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -66,13 +67,44 @@ def validate_payload(kind: str, payload, identity: str, seq: int) -> dict:
     if kind not in KINDS or not isinstance(payload, dict):
         raise ValueError('记录类型或数据无效')
     payload = json_value(payload)
+    if kind == 'worktree_event':
+        fields = {'parent_task_id', 'run_id', 'stage', 'workspace_root', 'worktree', 'cache_mappings'}
+        if 'history_commit_seq' in payload:
+            fields.add('history_commit_seq')
+            if payload.get('stage') != 'returned' or type(payload['history_commit_seq']) is not int or not 0 < payload['history_commit_seq'] < seq:
+                raise ValueError('主历史提交关联无效')
+        if (set(payload) != fields
+                or any(not isinstance(payload[key], str) or not payload[key]
+                       for key in ('parent_task_id', 'run_id', 'stage'))
+                or not re.fullmatch(r'[a-zA-Z0-9_-]+', payload['run_id'])
+                or not isinstance(payload['worktree'], dict)
+                or not isinstance(payload['cache_mappings'], dict) or len(payload['cache_mappings']) > 512):
+            raise ValueError('工作树审计记录无效')
+        workspace = workspace_value(payload['workspace_root'])
+        prefix = workspace / '.mewcode/context' / payload['run_id']
+        for source, destination in payload['cache_mappings'].items():
+            if (not isinstance(source, str) or str(PurePosixPath(source)) != source
+                    or PurePosixPath(source).parent != prefix
+                    or not re.fullmatch(r'[a-zA-Z0-9_-]+\.jsonl', PurePosixPath(source).name)
+                    or not isinstance(destination, str) or not cache_path(destination, identity)):
+                raise ValueError('工作树缓存映射越界或身份无效')
+        return payload
     if kind == 'child_event':
-        if (set(payload) != {'parent_task_id', 'run_id', 'skill', 'kind', 'payload'}
+        expected = {'parent_task_id', 'run_id', 'skill', 'kind', 'payload'}
+        isolated = 'cache_identity' in payload
+        if isolated:
+            expected |= {'cache_identity', 'workspace_root'}
+            if set(payload) != expected:
+                raise ValueError('子运行关联记录无效')
+            workspace_value(payload['workspace_root'])
+            if payload['cache_identity'] != payload['run_id'] or not re.fullmatch(r'[a-zA-Z0-9_-]+', payload['cache_identity']):
+                raise ValueError('子缓存身份无效')
+        if (set(payload) != expected
                 or any(not isinstance(payload[key], str) or not payload[key] for key in ('parent_task_id', 'run_id', 'skill'))
                 or payload['kind'] not in {'task_started', 'task_finished', 'interaction_started', 'tool_result',
                                            'history_commit', 'history_checkpoint', 'skills_changed'}):
             raise ValueError('子运行关联记录无效')
-        validate_payload(payload['kind'], payload['payload'], identity, seq)
+        validate_payload(payload['kind'], payload['payload'], payload['cache_identity'] if isolated else identity, seq)
         return payload
     if 'mode' in payload and payload['mode'] not in {'plan', 'execute'}:
         raise ValueError('结构化模式无效')
@@ -123,6 +155,13 @@ def validate_payload(kind: str, payload, identity: str, seq: int) -> dict:
     return payload
 
 
+def workspace_value(value):
+    if (not isinstance(value, str) or not PurePosixPath(value).is_absolute()
+            or str(PurePosixPath(value)) != value or '..' in PurePosixPath(value).parts):
+        raise ValueError('子工作根身份无效')
+    return PurePosixPath(value)
+
+
 def activations_value(values):
     """只接受显式、有序描述；正文、旧工具结果不参与恢复。"""
     if not isinstance(values, list):
@@ -155,12 +194,23 @@ def build_projection(records: list[dict], warnings: list[str]) -> Projection:
     projection = Projection(last_activity=timestamp(records[0]['timestamp']))
     checkpoint = None
     children, returned = {}, set()
+    main_commits = set()
     for record in records:
         if activity(record):
             projection.last_activity = max(projection.last_activity, timestamp(record['timestamp']))
         payload = record['payload']
+        if record['kind'] == 'history_commit':
+            main_commits.add(record['seq'])
+        if record['kind'] == 'worktree_event':
+            projection.worktrees[payload['run_id']] = payload
+            projection.cache_paths.update(payload['cache_mappings'].values())
+            if payload['stage'] == 'returned' and payload.get('history_commit_seq') in main_commits:
+                returned.add(payload['run_id'])
+            continue
         if record['kind'] == 'child_event':
             children[payload['run_id']] = payload
+            if 'cache_identity' in payload:
+                continue
             payload = payload['payload']
         elif payload.get('child_run_id'):
             returned.add(payload['child_run_id'])
@@ -181,7 +231,8 @@ def build_projection(records: list[dict], warnings: list[str]) -> Projection:
             checkpoint = record
     for run_id, child in children.items():
         if run_id not in returned:
-            warnings.append(f'独立 Skill {child["skill"]}（{run_id}）主回流未完成；'
+            label = '独立 Agent ' + child['skill'][6:] if child['skill'].startswith('agent:') else '独立 Skill ' + child['skill']
+            warnings.append(f'{label}（{run_id}）主回流未完成；'
                             '请核查存档 child_event 的实际证据及可能副作用，不自动重跑。')
     start = 0
     if checkpoint:

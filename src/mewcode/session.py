@@ -110,10 +110,12 @@ class ChatSession:
         self.prompt_state = PromptState(root, custom_instructions=instructions.text)
         from .hooks.runtime import create_runtime
         self.hooks = create_runtime(root, self.permissions, lambda: self.mode)
+        from .worktrees.cleanup import WorktreeCleaner
+        self.worktree_cleaner = WorktreeCleaner(root, lambda: self.mode, self.warnings)
         self.agent = Agent(provider, self.executor, max_iterations=max_iterations, prompt_state=self.prompt_state,
                            config=config, journal=self.journal, before_request=self._before_request,
                            allowed_tools=self.effective_tools, hooks=self.hooks,
-                           on_request_sent=self._consume_results,
+                           on_request_sent=self._consume_results, on_history_committed=self._confirm_results,
                            request_state=lambda: {'prompt_state': self.prompt_state, 'active_skills': self.skills.active,
                                                  'skill_catalog': self.skills.catalog})
         self.context = self.agent.context
@@ -240,7 +242,20 @@ class ChatSession:
         self.prompt_state.task_results = (json.dumps(self._prepared_results, ensure_ascii=False)
                                           if self._prepared_results else '')
 
+    def _confirm_results(self, commit_seq):
+        """只在包含本次结果的主历史持久提交后确认回流。"""
+        if self.journal:
+            for report in getattr(self, '_sent_results', ()):
+                info = report.get('worktree')
+                if info and info.get('workspace_root'):
+                    self.journal.append('worktree_event', {
+                        'parent_task_id': report['parent_task_id'], 'run_id': report['task_id'],
+                        'stage': 'returned', 'workspace_root': info['workspace_root'],
+                        'worktree': info, 'cache_mappings': {}, 'history_commit_seq': commit_seq})
+        self._sent_results = ()
+
     def _consume_results(self):
+        self._sent_results = self._prepared_results
         self.tasks.inbox.consume(self._prepared_results)
         self._prepared_results = ()
         self.hooks.prompts.consume(getattr(self, '_startup_injections', ()))
@@ -409,6 +424,7 @@ class ChatSession:
         if self.journal:
             self.journal.append('mode_changed', {'mode': 'plan'})
         self.mode = "plan"
+        self.worktree_cleaner.suspend()
         self.prompt_state.enter_mode("plan")
 
     @serialized_turn
@@ -526,6 +542,7 @@ class ChatSession:
         """终端初始化或首次无界面调用后开始；恢复准备不会重复。"""
         if self.resumed and not self._restore_prepared:
             await self.prepare_restore(cancel_event=cancel_event)
+        self.worktree_cleaner.start()
         await self.hooks.start(source='resume' if self.resumed else 'new',
                                cancel_event=cancel_event, archive_session_id=self.session_id)
 
@@ -558,6 +575,7 @@ class ChatSession:
             return
         previous = self.mode
         if mode == 'plan':
+            await self.worktree_cleaner.pause()
             self.tasks.paused = True
             for parent in self.tasks.parents.values():
                 if any(self.tasks.get(child).mode == 'execute' and self.tasks.get(child).state in {'queued', 'running'}
@@ -581,6 +599,7 @@ class ChatSession:
         if self.journal:
             self.journal.append('mode_changed', {'mode': 'execute'})
         self.mode = "execute"
+        self.worktree_cleaner.resume()
         self.prompt_state.enter_mode("execute")
 
     def context_status(self) -> str:
@@ -601,6 +620,7 @@ class ChatSession:
 
     def close(self) -> None:
         """释放私有句柄；产品存档的缓存随存档保留。"""
+        self.worktree_cleaner.stop()
         if (hasattr(self, 'hooks') and self.hooks.snapshot.rules and not self.hooks.closed) or self.tasks.records:
             try:
                 loop = asyncio.get_running_loop()
@@ -610,6 +630,13 @@ class ChatSession:
                 if not getattr(self, '_hook_close_task', None):
                     self._hook_close_task = loop.create_task(self.aclose())
             return
+        if self.worktree_cleaner.task is not None and not self.worktree_cleaner.task.done():
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                asyncio.run(self.worktree_cleaner.close())
+            else:
+                loop.create_task(self.worktree_cleaner.close())
         self._close_handles()
 
     def _close_handles(self):
@@ -623,6 +650,7 @@ class ChatSession:
     async def aclose(self):
         """后台任务停止后才释放存档，供应商由应用随后关闭。"""
         try:
+            await self.worktree_cleaner.close()
             await self.tasks.aclose()
             if hasattr(self, 'hooks'):
                 await self.hooks.close(archive_session_id=self.session_id)

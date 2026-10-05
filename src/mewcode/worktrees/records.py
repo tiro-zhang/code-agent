@@ -13,7 +13,7 @@ from uuid import uuid4
 
 from ..tools.base import ToolError
 from .paths import directory_fd, read_file
-from .config import relative_path, WorktreeConfig
+from .config import relative_path, regenerable_pattern
 
 
 def private_directory(path):
@@ -57,8 +57,7 @@ def load_record(path):
     if not isinstance(regen, list) or len(regen) > 512:
         raise ValueError('产物规则无效')
     for pattern in regen:
-        if pattern not in WorktreeConfig().regenerable_paths:
-            relative_path(pattern, pattern=True)
+        regenerable_pattern(pattern)
     return data
 
 

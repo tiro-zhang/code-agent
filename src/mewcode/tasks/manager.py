@@ -2,10 +2,11 @@
 
 import asyncio
 from collections import deque
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 import json
 from uuid import uuid4
 
+from ..async_utils import protected
 from ..skills.budget import TaskBudget
 from ..tools.base import OUTPUT_LIMIT, ToolError, utf8_prefix
 from ..types import TokenUsage
@@ -21,6 +22,7 @@ class TaskOutcome:
     usage: TokenUsage = TokenUsage()
     request_usage: tuple = ()
     side_effects: str = "unknown"
+    worktree: dict | None = None
 
 
 @dataclass
@@ -58,7 +60,20 @@ class TaskRecord:
         report = self.receipt()
         if self.outcome is None:
             return report
-        body = json.dumps({"text": self.outcome.text, "evidence": self.outcome.evidence}, ensure_ascii=False, allow_nan=False)
+        evidence = self.outcome.evidence
+        if limit is not None and (self.outcome.worktree or {}).get('archive') == 'complete':
+            from ..context.spill import _reference
+            from ..tools.base import ToolResult
+            from ..types import Message
+            compact = []
+            for item in evidence:
+                if item.get('cache_path'):
+                    message = Message('tool', tool_call_id=item['call_id'], id=item['source'],
+                                      tool_result=ToolResult.from_dict(item['result']))
+                    item = dict(item, result=_reference(message, item['cache_path'], item['tool_name']).tool_result.to_dict())
+                compact.append(item)
+            evidence = compact
+        body = json.dumps({"text": self.outcome.text, "evidence": evidence}, ensure_ascii=False, allow_nan=False)
         raw = body.encode("utf-8")
         truncated = limit is not None and len(raw) > limit
         if truncated:
@@ -68,8 +83,14 @@ class TaskRecord:
         usage["incomplete_fields"] = sorted(self.outcome.usage.incomplete_fields)
         report.update(reason=self.outcome.reason, content=body, truncated=truncated,
                       usage=usage, side_effects=self.outcome.side_effects)
+        if (self.outcome.worktree or {}).get('archive') == 'complete':
+            report['cache_paths'] = list(dict.fromkeys(
+                item['cache_path'] for item in self.outcome.evidence if item.get('cache_path')))[:512]
         report['request_usage'] = [dict(asdict(item), incomplete_fields=sorted(item.incomplete_fields))
                                    for item in self.outcome.request_usage]
+        if self.outcome.worktree is not None:
+            report['worktree'] = self.outcome.worktree
+            report['child_run_id'] = self.task_id
         return report
 
 
@@ -85,6 +106,7 @@ class TaskManager:
         self._active, self._queued, self._runners = set(), deque(), {}
         self._retained = []
         self._closed = False
+        self._close_operation = None
         self.paused = False
         self.foreground_task_id = None
         self.inbox = ResultInbox()
@@ -186,6 +208,12 @@ class TaskManager:
 
     def _finish(self, record, outcome):
         if record.outcome is not None:
+            if outcome.worktree is not None:
+                # 提前展示的取消不重发结果；真实收尾仍补齐目录与证据状态。
+                record.outcome = replace(record.outcome, worktree=outcome.worktree,
+                                         evidence=outcome.evidence, usage=outcome.usage,
+                                         request_usage=outcome.request_usage, side_effects=outcome.side_effects)
+                self._notice(record)
             return
         record.outcome = outcome
         record.state = "completed" if outcome.reason == "model_done" else "cancelled" if outcome.reason == "cancelled" else "failed"
@@ -276,10 +304,16 @@ class TaskManager:
             self._retained.append(resource)
 
     async def aclose(self):
-        if self._closed:
-            return
-        self._closed = True
+        if self._close_operation is None:
+            self._closed = True
+            self._close_operation = asyncio.create_task(self._close())
+        await protected(self._close_operation)
+
+    async def _close(self):
         await asyncio.gather(*(self.cancel_parent(parent) for parent in self.parents))
+        handles = tuple(record.handle for record in self.records.values() if record.handle is not None)
+        # 展示取消可以有期限；缓存、存档和共享客户端必须等真实运行收尾。
+        await protected(asyncio.gather(*handles, return_exceptions=True))
         for resource in self._retained:
             resource.close()
         self._retained.clear()

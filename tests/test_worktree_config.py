@@ -58,3 +58,30 @@ def test_config_rejects_ancestor_symlink(tmp_path):
     (outside/'worktrees.yaml').write_text('version: 1\n')
     (tmp_path/'.mewcode').symlink_to(outside,target_is_directory=True)
     with pytest.raises(ToolError): api().load_config(tmp_path)
+
+
+@pytest.mark.parametrize('pattern',['**/*','**/*.py','*/**/*'])
+def test_regenerable_patterns_cannot_classify_arbitrary_project_files(tmp_path,pattern):
+    from mewcode.worktrees.config import load_config
+    from mewcode.tools.base import ToolError
+    (tmp_path/'.mewcode').mkdir()
+    (tmp_path/'.mewcode/worktrees.yaml').write_text(f'version: 1\nregenerable-paths: ["{pattern}"]\n')
+    with pytest.raises(ToolError): load_config(tmp_path)
+
+
+def test_regenerable_default_rules_can_be_written_explicitly(tmp_path):
+    from mewcode.worktrees.config import load_config,WorktreeConfig
+    import yaml
+    (tmp_path/'.mewcode').mkdir()
+    (tmp_path/'.mewcode/worktrees.yaml').write_text(yaml.safe_dump({'version':1,'regenerable-paths':list(WorktreeConfig().regenerable_paths)}))
+    assert load_config(tmp_path).regenerable_paths==WorktreeConfig().regenerable_paths
+
+
+@pytest.mark.parametrize('pattern',['outputs/*','outputs/?*','outputs/[*?]*'])
+def test_regenerable_patterns_need_specific_file_limit(tmp_path,pattern):
+    from mewcode.worktrees.config import load_config
+    from mewcode.tools.base import ToolError
+    import yaml
+    (tmp_path/'.mewcode').mkdir()
+    (tmp_path/'.mewcode/worktrees.yaml').write_text(yaml.safe_dump({'regenerable-paths':[pattern]}))
+    with pytest.raises(ToolError): load_config(tmp_path)

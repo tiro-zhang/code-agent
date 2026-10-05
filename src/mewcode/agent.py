@@ -35,7 +35,7 @@ class Agent:
                  config=None, journal=None, before_request=None, allowed_tools=None, hooks=None,
                  system_prompt=None, declared_tools=None, preserve_first_prefix=False,
                  request_state=None, owns_cache=True, on_request_sent=None,
-                 system_passthrough=True) -> None:
+                 system_passthrough=True, on_history_committed=None) -> None:
         if isinstance(max_iterations, bool) or not isinstance(max_iterations, int) or max_iterations <= 0:
             raise ValueError("max_iterations 必须是正整数")
         self.provider, self.executor, self.max_iterations = provider, executor, max_iterations
@@ -49,6 +49,7 @@ class Agent:
         self.request_state = request_state
         self.owns_cache = owns_cache
         self.on_request_sent = on_request_sent
+        self.on_history_committed = on_history_committed
         self.system_passthrough = system_passthrough
         if context_manager is None and config is None:
             raise ValueError('必须提供含 context_window 的配置或上下文管理器')
@@ -176,6 +177,8 @@ class Agent:
             messages = group(message, results)
             if saved and self.journal:
                 record('history_commit', {'interaction_id': interaction_id, 'messages': encoded(messages)})
+                if self.on_history_committed:
+                    self.on_history_committed(self.journal.seq)
             history.extend(messages)
             committed = True
             self.prompt_state.commit(context)

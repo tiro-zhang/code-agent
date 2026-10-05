@@ -1,0 +1,1005 @@
+{
+  "session_id": "20261005-233052-f96d",
+  "model": "ark-code-latest",
+  "project_root": "/private/tmp/mewcode-worktree-e2e",
+  "parent_shared_py": "value = 'parent dirty'",
+  "parent_head": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+  "children": [
+    {
+      "task_id": "agent_c5721c791ea946329954f28dfa6a286a",
+      "tools": [
+        {
+          "call_id": "call_djqxby7v5206ue93k4iv5p95",
+          "ok": true,
+          "code": null,
+          "exit_code": null,
+          "truncated": false,
+          "tool_name": "read_file"
+        },
+        {
+          "call_id": "call_4wog36aec1qsb8jrbqthhywb",
+          "ok": true,
+          "code": null,
+          "exit_code": null,
+          "truncated": false,
+          "tool_name": "edit_file"
+        },
+        {
+          "call_id": "call_e32o6ecrtdwnog4i7gxc5n1p",
+          "ok": true,
+          "code": null,
+          "exit_code": 0,
+          "truncated": false,
+          "tool_name": "execute_command",
+          "command": "pwd"
+        },
+        {
+          "call_id": "call_q7lqeuy10dpu8rzs5b7nkd1a",
+          "ok": true,
+          "code": null,
+          "exit_code": null,
+          "truncated": false,
+          "tool_name": "read_file"
+        },
+        {
+          "call_id": "call_nark0g9teyorjvnr4aidjxu1",
+          "ok": true,
+          "code": null,
+          "exit_code": 0,
+          "truncated": false,
+          "tool_name": "execute_command",
+          "command": "python -m unittest -q"
+        }
+      ],
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+      "model_reason": "model_done",
+      "worktree": {
+        "name": "agent_c5721c791ea946329954f28dfa6a286a",
+        "task_id": "agent_c5721c791ea946329954f28dfa6a286a",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+        "branch": "mewcode/worktree/1fbb9b9fffec84d4b77cf13dc94b988d1c1cb3a7ffe28cac7d822999681df45f",
+        "base_commit": "87a98005882717427782093d72199a47398b2c62",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+        "initialization": "ready",
+        "archive": "complete",
+        "state": "retained",
+        "branch_state": "retained",
+        "reason": "存在暂存或未暂存修改"
+      },
+      "record": {
+        "stage": "stopped",
+        "ready": true,
+        "evidence_protected": false,
+        "base_commit": "87a98005882717427782093d72199a47398b2c62",
+        "branch": "mewcode/worktree/1fbb9b9fffec84d4b77cf13dc94b988d1c1cb3a7ffe28cac7d822999681df45f"
+      },
+      "directory_exists": true,
+      "git_status": "M shared.py",
+      "head": "87a98005882717427782093d72199a47398b2c62",
+      "shared_py": "value = 'one'",
+      "cancel_start": false,
+      "cancel_end": false,
+      "lease_released": true,
+      "tool_outputs": [
+        {
+          "call_id": "call_djqxby7v5206ue93k4iv5p95",
+          "content": "value = 'frozen'\n"
+        },
+        {
+          "call_id": "call_e32o6ecrtdwnog4i7gxc5n1p",
+          "exit_code": 0,
+          "stdout": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c5721c791ea946329954f28dfa6a286a\n",
+          "stderr": ""
+        },
+        {
+          "call_id": "call_q7lqeuy10dpu8rzs5b7nkd1a",
+          "content": "value = 'one'\n"
+        },
+        {
+          "call_id": "call_nark0g9teyorjvnr4aidjxu1",
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nOK\n"
+        }
+      ]
+    },
+    {
+      "task_id": "agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+      "tools": [
+        {
+          "call_id": "call_cvxof1alk8pzuc9g5z07fnpc",
+          "ok": true,
+          "code": null,
+          "exit_code": null,
+          "truncated": false,
+          "tool_name": "read_file"
+        },
+        {
+          "call_id": "call_dc6au94s1lfw8zm1zex2wa5c",
+          "ok": true,
+          "code": null,
+          "exit_code": null,
+          "truncated": false,
+          "tool_name": "edit_file"
+        },
+        {
+          "call_id": "call_1ir9bkyfxyj2n01xdmslraoi",
+          "ok": true,
+          "code": null,
+          "exit_code": 0,
+          "truncated": false,
+          "tool_name": "execute_command",
+          "command": "pwd"
+        },
+        {
+          "call_id": "call_pf2muekqt2uppqo0udpcwhhb",
+          "ok": true,
+          "code": null,
+          "exit_code": 0,
+          "truncated": false,
+          "tool_name": "execute_command",
+          "command": "python -m unittest -q"
+        },
+        {
+          "call_id": "call_ve9ovwjxyc88zuds91cz4rsc",
+          "ok": true,
+          "code": null,
+          "exit_code": null,
+          "truncated": false,
+          "tool_name": "read_file"
+        }
+      ],
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+      "model_reason": "model_done",
+      "worktree": {
+        "name": "agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "task_id": "agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "branch": "mewcode/worktree/412775ce5245857380d2e68cb9f3e9d705520942aaefa96afb25d880a98a8ce7",
+        "base_commit": "87a98005882717427782093d72199a47398b2c62",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "initialization": "ready",
+        "archive": "complete",
+        "state": "retained",
+        "branch_state": "retained",
+        "reason": "存在暂存或未暂存修改"
+      },
+      "record": {
+        "stage": "stopped",
+        "ready": true,
+        "evidence_protected": false,
+        "base_commit": "87a98005882717427782093d72199a47398b2c62",
+        "branch": "mewcode/worktree/412775ce5245857380d2e68cb9f3e9d705520942aaefa96afb25d880a98a8ce7"
+      },
+      "directory_exists": true,
+      "git_status": "M shared.py",
+      "head": "87a98005882717427782093d72199a47398b2c62",
+      "shared_py": "value = 'two'",
+      "cancel_start": false,
+      "cancel_end": false,
+      "lease_released": true,
+      "tool_outputs": [
+        {
+          "call_id": "call_cvxof1alk8pzuc9g5z07fnpc",
+          "content": "value = 'frozen'\n"
+        },
+        {
+          "call_id": "call_1ir9bkyfxyj2n01xdmslraoi",
+          "exit_code": 0,
+          "stdout": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a\n",
+          "stderr": ""
+        },
+        {
+          "call_id": "call_pf2muekqt2uppqo0udpcwhhb",
+          "exit_code": 0,
+          "stdout": "",
+          "stderr": "----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nOK\n"
+        },
+        {
+          "call_id": "call_ve9ovwjxyc88zuds91cz4rsc",
+          "content": "value = 'two'\n"
+        }
+      ]
+    },
+    {
+      "task_id": "agent_873655cf0b3e470886ef6f7c80a716bf",
+      "tools": [
+        {
+          "call_id": "call_6wfhojwm4n9b6a41lpaqil1a",
+          "ok": false,
+          "code": "approval_required",
+          "exit_code": null,
+          "truncated": false,
+          "tool_name": "read_file"
+        },
+        {
+          "call_id": "call_ubmaxh7738j7wmmt1hwfjyrk",
+          "ok": true,
+          "code": null,
+          "exit_code": null,
+          "truncated": true,
+          "tool_name": "read_file"
+        },
+        {
+          "call_id": "call_ai392wfghvhld99m9p9erk6t",
+          "ok": true,
+          "code": null,
+          "exit_code": 0,
+          "truncated": false,
+          "tool_name": "execute_command",
+          "command": "pwd"
+        }
+      ],
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+      "model_reason": "model_done",
+      "worktree": {
+        "name": "agent_873655cf0b3e470886ef6f7c80a716bf",
+        "task_id": "agent_873655cf0b3e470886ef6f7c80a716bf",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+        "branch": "mewcode/worktree/94f68e5adc80116d732e69cd4dfc763a8caf0481213c47304d428d20d6c08fe9",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+        "initialization": "ready",
+        "archive": "complete",
+        "state": "removed",
+        "branch_state": "removed",
+        "reason": "无文件或提交成果且证据已归档"
+      },
+      "record": {
+        "stage": "removed",
+        "ready": false,
+        "evidence_protected": false,
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "branch": "mewcode/worktree/94f68e5adc80116d732e69cd4dfc763a8caf0481213c47304d428d20d6c08fe9"
+      },
+      "directory_exists": false,
+      "lease_released": true,
+      "tool_outputs": [
+        {
+          "call_id": "call_6wfhojwm4n9b6a41lpaqil1a",
+          "content": null
+        },
+        {
+          "call_id": "call_ai392wfghvhld99m9p9erk6t",
+          "exit_code": 0,
+          "stdout": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf\n",
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "task_id": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+      "tools": [
+        {
+          "call_id": "call_eivrooyvv3naygt4nfeasbtt",
+          "ok": false,
+          "code": "approval_required",
+          "exit_code": null,
+          "truncated": false,
+          "tool_name": "read_file"
+        },
+        {
+          "call_id": "call_pl61ihej464qeh034dsrw2gg",
+          "ok": true,
+          "code": null,
+          "exit_code": null,
+          "truncated": true,
+          "tool_name": "read_file"
+        },
+        {
+          "call_id": "call_drjb3ntzp2j99vk6onictciu",
+          "ok": true,
+          "code": null,
+          "exit_code": 0,
+          "truncated": false,
+          "tool_name": "execute_command",
+          "command": "pwd"
+        }
+      ],
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+      "model_reason": "model_done",
+      "worktree": {
+        "name": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "task_id": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "branch": "mewcode/worktree/8f394039e5367112474dc9fe23369cfa96ea6e6c038860cea82f274e8ed9895d",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "initialization": "ready",
+        "archive": "complete",
+        "state": "removed",
+        "branch_state": "removed",
+        "reason": "无文件或提交成果且证据已归档"
+      },
+      "record": {
+        "stage": "removed",
+        "ready": false,
+        "evidence_protected": false,
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "branch": "mewcode/worktree/8f394039e5367112474dc9fe23369cfa96ea6e6c038860cea82f274e8ed9895d"
+      },
+      "directory_exists": false,
+      "lease_released": true,
+      "tool_outputs": [
+        {
+          "call_id": "call_eivrooyvv3naygt4nfeasbtt",
+          "content": null
+        },
+        {
+          "call_id": "call_drjb3ntzp2j99vk6onictciu",
+          "exit_code": 0,
+          "stdout": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12\n",
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "task_id": "agent_d0942b0d8f91417688ae78d85413669e",
+      "tools": [
+        {
+          "call_id": "call_7n5rg935o18k81jn0lkwo3qe",
+          "ok": false,
+          "code": "cancelled",
+          "exit_code": null,
+          "truncated": false,
+          "tool_name": "execute_command",
+          "command": "python -c \"import pathlib,time;pathlib.Path('cancel-start').touch();time.sleep(30);pathlib.Path('cancel-end').touch()\""
+        }
+      ],
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+      "model_reason": "cancelled",
+      "worktree": {
+        "name": "agent_d0942b0d8f91417688ae78d85413669e",
+        "task_id": "agent_d0942b0d8f91417688ae78d85413669e",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "branch": "mewcode/worktree/c3565f91f4b84b2b977548bd467658f0087d4036dc3712a745cbb6a13c21dffe",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "initialization": "ready",
+        "archive": "complete",
+        "state": "retained",
+        "branch_state": "retained",
+        "reason": "存在未追踪或未知忽略成果"
+      },
+      "record": {
+        "stage": "stopped",
+        "ready": true,
+        "evidence_protected": false,
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "branch": "mewcode/worktree/c3565f91f4b84b2b977548bd467658f0087d4036dc3712a745cbb6a13c21dffe"
+      },
+      "directory_exists": true,
+      "git_status": "?? cancel-start",
+      "head": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+      "shared_py": "value = 'frozen'",
+      "cancel_start": true,
+      "cancel_end": false,
+      "lease_released": true,
+      "tool_outputs": [
+        {
+          "call_id": "call_7n5rg935o18k81jn0lkwo3qe",
+          "exit_code": null,
+          "stdout": "",
+          "stderr": ""
+        }
+      ]
+    },
+    {
+      "task_id": "agent_dffec7575f8a466984713c1fce259376",
+      "tools": [
+        {
+          "call_id": "call_40xuibqghmchu6ftdbvb13k8",
+          "ok": false,
+          "code": "approval_required",
+          "exit_code": null,
+          "truncated": false,
+          "tool_name": "execute_command",
+          "command": "git commit --allow-empty -m worktree-e2e; echo \"EXIT_CODE=$?\""
+        },
+        {
+          "call_id": "call_01ipjeu1cnpzgys439pr1xem",
+          "ok": true,
+          "code": null,
+          "exit_code": 0,
+          "truncated": false,
+          "tool_name": "execute_command",
+          "command": "git commit --allow-empty -m worktree-e2e"
+        },
+        {
+          "call_id": "call_s1leku6yl4z1f2agbf3wg1ad",
+          "ok": true,
+          "code": null,
+          "exit_code": 0,
+          "truncated": false,
+          "tool_name": "execute_command",
+          "command": "git rev-parse HEAD"
+        }
+      ],
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_dffec7575f8a466984713c1fce259376",
+      "model_reason": "model_done",
+      "worktree": {
+        "name": "agent_dffec7575f8a466984713c1fce259376",
+        "task_id": "agent_dffec7575f8a466984713c1fce259376",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_dffec7575f8a466984713c1fce259376",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_dffec7575f8a466984713c1fce259376",
+        "branch": "mewcode/worktree/33011bfa825cff4b62dd1e9743182fb543de48e2c3e17246e4db3e77c97d6d47",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_dffec7575f8a466984713c1fce259376",
+        "initialization": "ready",
+        "archive": "complete",
+        "state": "retained",
+        "branch_state": "retained",
+        "reason": "存在提交成果或分支已改变"
+      },
+      "record": {
+        "stage": "stopped",
+        "ready": true,
+        "evidence_protected": false,
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "branch": "mewcode/worktree/33011bfa825cff4b62dd1e9743182fb543de48e2c3e17246e4db3e77c97d6d47"
+      },
+      "directory_exists": true,
+      "git_status": "",
+      "head": "b24240feb360d0356068374b94087003a75e09a9",
+      "shared_py": "value = 'frozen'",
+      "cancel_start": false,
+      "cancel_end": false,
+      "lease_released": true,
+      "tool_outputs": [
+        {
+          "call_id": "call_40xuibqghmchu6ftdbvb13k8",
+          "exit_code": null,
+          "stdout": null,
+          "stderr": null
+        },
+        {
+          "call_id": "call_01ipjeu1cnpzgys439pr1xem",
+          "exit_code": 0,
+          "stdout": "[mewcode/worktree/33011bfa825cff4b62dd1e9743182fb543de48e2c3e17246e4db3e77c97d6d47 b24240f] worktree-e2e\n",
+          "stderr": ""
+        },
+        {
+          "call_id": "call_s1leku6yl4z1f2agbf3wg1ad",
+          "exit_code": 0,
+          "stdout": "b24240feb360d0356068374b94087003a75e09a9\n",
+          "stderr": ""
+        }
+      ]
+    }
+  ],
+  "worktree_events": [
+    {
+      "seq": 15,
+      "parent_task_id": "parent_1a92ae06a7144d14a9d5b67156dc0647",
+      "run_id": "agent_c5721c791ea946329954f28dfa6a286a",
+      "stage": "created",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+      "worktree": {
+        "name": "agent_c5721c791ea946329954f28dfa6a286a",
+        "task_id": "agent_c5721c791ea946329954f28dfa6a286a",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+        "branch": "mewcode/worktree/1fbb9b9fffec84d4b77cf13dc94b988d1c1cb3a7ffe28cac7d822999681df45f",
+        "base_commit": "87a98005882717427782093d72199a47398b2c62",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_c5721c791ea946329954f28dfa6a286a"
+      },
+      "cache_mappings": {}
+    },
+    {
+      "seq": 30,
+      "parent_task_id": "parent_1a92ae06a7144d14a9d5b67156dc0647",
+      "run_id": "agent_c5721c791ea946329954f28dfa6a286a",
+      "stage": "archived",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+      "worktree": {
+        "name": "agent_c5721c791ea946329954f28dfa6a286a",
+        "task_id": "agent_c5721c791ea946329954f28dfa6a286a",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+        "branch": "mewcode/worktree/1fbb9b9fffec84d4b77cf13dc94b988d1c1cb3a7ffe28cac7d822999681df45f",
+        "base_commit": "87a98005882717427782093d72199a47398b2c62",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+        "initialization": "ready",
+        "archive": "complete"
+      },
+      "cache_mappings": {}
+    },
+    {
+      "seq": 31,
+      "parent_task_id": "parent_1a92ae06a7144d14a9d5b67156dc0647",
+      "run_id": "agent_c5721c791ea946329954f28dfa6a286a",
+      "stage": "finished",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+      "worktree": {
+        "name": "agent_c5721c791ea946329954f28dfa6a286a",
+        "task_id": "agent_c5721c791ea946329954f28dfa6a286a",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+        "branch": "mewcode/worktree/1fbb9b9fffec84d4b77cf13dc94b988d1c1cb3a7ffe28cac7d822999681df45f",
+        "base_commit": "87a98005882717427782093d72199a47398b2c62",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_c5721c791ea946329954f28dfa6a286a",
+        "initialization": "ready",
+        "archive": "complete",
+        "state": "retained",
+        "branch_state": "retained",
+        "reason": "存在暂存或未暂存修改"
+      },
+      "cache_mappings": {}
+    },
+    {
+      "seq": 34,
+      "parent_task_id": "parent_1a92ae06a7144d14a9d5b67156dc0647",
+      "run_id": "agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+      "stage": "created",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+      "worktree": {
+        "name": "agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "task_id": "agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "branch": "mewcode/worktree/412775ce5245857380d2e68cb9f3e9d705520942aaefa96afb25d880a98a8ce7",
+        "base_commit": "87a98005882717427782093d72199a47398b2c62",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a"
+      },
+      "cache_mappings": {}
+    },
+    {
+      "seq": 51,
+      "parent_task_id": "parent_1a92ae06a7144d14a9d5b67156dc0647",
+      "run_id": "agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+      "stage": "archived",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+      "worktree": {
+        "name": "agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "task_id": "agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "branch": "mewcode/worktree/412775ce5245857380d2e68cb9f3e9d705520942aaefa96afb25d880a98a8ce7",
+        "base_commit": "87a98005882717427782093d72199a47398b2c62",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "initialization": "ready",
+        "archive": "complete"
+      },
+      "cache_mappings": {}
+    },
+    {
+      "seq": 52,
+      "parent_task_id": "parent_1a92ae06a7144d14a9d5b67156dc0647",
+      "run_id": "agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+      "stage": "finished",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+      "worktree": {
+        "name": "agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "task_id": "agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "branch": "mewcode/worktree/412775ce5245857380d2e68cb9f3e9d705520942aaefa96afb25d880a98a8ce7",
+        "base_commit": "87a98005882717427782093d72199a47398b2c62",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_c3cf73f0c6cf471e9c54fbb0aca6265a",
+        "initialization": "ready",
+        "archive": "complete",
+        "state": "retained",
+        "branch_state": "retained",
+        "reason": "存在暂存或未暂存修改"
+      },
+      "cache_mappings": {}
+    },
+    {
+      "seq": 64,
+      "parent_task_id": "parent_5272c5abf43c411fb61147338054829a",
+      "run_id": "agent_873655cf0b3e470886ef6f7c80a716bf",
+      "stage": "created",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+      "worktree": {
+        "name": "agent_873655cf0b3e470886ef6f7c80a716bf",
+        "task_id": "agent_873655cf0b3e470886ef6f7c80a716bf",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+        "branch": "mewcode/worktree/94f68e5adc80116d732e69cd4dfc763a8caf0481213c47304d428d20d6c08fe9",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf"
+      },
+      "cache_mappings": {}
+    },
+    {
+      "seq": 77,
+      "parent_task_id": "parent_5272c5abf43c411fb61147338054829a",
+      "run_id": "agent_873655cf0b3e470886ef6f7c80a716bf",
+      "stage": "archived",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+      "worktree": {
+        "name": "agent_873655cf0b3e470886ef6f7c80a716bf",
+        "task_id": "agent_873655cf0b3e470886ef6f7c80a716bf",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+        "branch": "mewcode/worktree/94f68e5adc80116d732e69cd4dfc763a8caf0481213c47304d428d20d6c08fe9",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+        "initialization": "ready",
+        "archive": "complete"
+      },
+      "cache_mappings": {
+        "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf/.mewcode/context/agent_873655cf0b3e470886ef6f7c80a716bf/3a9474aa51654fd6abdccecc171c63a0.jsonl": ".mewcode/context/20261005-233052-f96d/agent_873655cf0b3e470886ef6f7c80a716bf_906b65fac5b243c499dcda557510455b.jsonl"
+      }
+    },
+    {
+      "seq": 78,
+      "parent_task_id": "parent_5272c5abf43c411fb61147338054829a",
+      "run_id": "agent_873655cf0b3e470886ef6f7c80a716bf",
+      "stage": "finished",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+      "worktree": {
+        "name": "agent_873655cf0b3e470886ef6f7c80a716bf",
+        "task_id": "agent_873655cf0b3e470886ef6f7c80a716bf",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+        "branch": "mewcode/worktree/94f68e5adc80116d732e69cd4dfc763a8caf0481213c47304d428d20d6c08fe9",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+        "initialization": "ready",
+        "archive": "complete",
+        "state": "removed",
+        "branch_state": "removed",
+        "reason": "无文件或提交成果且证据已归档"
+      },
+      "cache_mappings": {
+        "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf/.mewcode/context/agent_873655cf0b3e470886ef6f7c80a716bf/3a9474aa51654fd6abdccecc171c63a0.jsonl": ".mewcode/context/20261005-233052-f96d/agent_873655cf0b3e470886ef6f7c80a716bf_906b65fac5b243c499dcda557510455b.jsonl"
+      }
+    },
+    {
+      "seq": 112,
+      "parent_task_id": "parent_450d7a550493473988ae9ea28fa918a7",
+      "run_id": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+      "stage": "created",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+      "worktree": {
+        "name": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "task_id": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "branch": "mewcode/worktree/8f394039e5367112474dc9fe23369cfa96ea6e6c038860cea82f274e8ed9895d",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12"
+      },
+      "cache_mappings": {}
+    },
+    {
+      "seq": 123,
+      "parent_task_id": "parent_450d7a550493473988ae9ea28fa918a7",
+      "run_id": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+      "stage": "archived",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+      "worktree": {
+        "name": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "task_id": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "branch": "mewcode/worktree/8f394039e5367112474dc9fe23369cfa96ea6e6c038860cea82f274e8ed9895d",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "initialization": "ready",
+        "archive": "complete"
+      },
+      "cache_mappings": {
+        "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12/.mewcode/context/agent_ac3c91227ec54556bf8a6dc7e1c57e12/6c61b873733c4099be1d0c3060cb0adf.jsonl": ".mewcode/context/20261005-233052-f96d/agent_ac3c91227ec54556bf8a6dc7e1c57e12_4379ed4e2f604d1fa8e5386ae86f15f8.jsonl"
+      }
+    },
+    {
+      "seq": 124,
+      "parent_task_id": "parent_450d7a550493473988ae9ea28fa918a7",
+      "run_id": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+      "stage": "finished",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+      "worktree": {
+        "name": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "task_id": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "branch": "mewcode/worktree/8f394039e5367112474dc9fe23369cfa96ea6e6c038860cea82f274e8ed9895d",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+        "initialization": "ready",
+        "archive": "complete",
+        "state": "removed",
+        "branch_state": "removed",
+        "reason": "无文件或提交成果且证据已归档"
+      },
+      "cache_mappings": {
+        "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12/.mewcode/context/agent_ac3c91227ec54556bf8a6dc7e1c57e12/6c61b873733c4099be1d0c3060cb0adf.jsonl": ".mewcode/context/20261005-233052-f96d/agent_ac3c91227ec54556bf8a6dc7e1c57e12_4379ed4e2f604d1fa8e5386ae86f15f8.jsonl"
+      }
+    },
+    {
+      "seq": 140,
+      "parent_task_id": "parent_8d62852945eb432aa97429fb801e2e07",
+      "run_id": "agent_d0942b0d8f91417688ae78d85413669e",
+      "stage": "created",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+      "worktree": {
+        "name": "agent_d0942b0d8f91417688ae78d85413669e",
+        "task_id": "agent_d0942b0d8f91417688ae78d85413669e",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "branch": "mewcode/worktree/c3565f91f4b84b2b977548bd467658f0087d4036dc3712a745cbb6a13c21dffe",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_d0942b0d8f91417688ae78d85413669e"
+      },
+      "cache_mappings": {}
+    },
+    {
+      "seq": 148,
+      "parent_task_id": "parent_8d62852945eb432aa97429fb801e2e07",
+      "run_id": "agent_d0942b0d8f91417688ae78d85413669e",
+      "stage": "archived",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+      "worktree": {
+        "name": "agent_d0942b0d8f91417688ae78d85413669e",
+        "task_id": "agent_d0942b0d8f91417688ae78d85413669e",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "branch": "mewcode/worktree/c3565f91f4b84b2b977548bd467658f0087d4036dc3712a745cbb6a13c21dffe",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "initialization": "ready",
+        "archive": "complete"
+      },
+      "cache_mappings": {}
+    },
+    {
+      "seq": 149,
+      "parent_task_id": "parent_8d62852945eb432aa97429fb801e2e07",
+      "run_id": "agent_d0942b0d8f91417688ae78d85413669e",
+      "stage": "finished",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+      "worktree": {
+        "name": "agent_d0942b0d8f91417688ae78d85413669e",
+        "task_id": "agent_d0942b0d8f91417688ae78d85413669e",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "branch": "mewcode/worktree/c3565f91f4b84b2b977548bd467658f0087d4036dc3712a745cbb6a13c21dffe",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "initialization": "ready",
+        "archive": "complete",
+        "state": "retained",
+        "branch_state": "retained",
+        "reason": "存在未追踪或未知忽略成果"
+      },
+      "cache_mappings": {}
+    },
+    {
+      "seq": 154,
+      "parent_task_id": "parent_8d62852945eb432aa97429fb801e2e07",
+      "run_id": "agent_d0942b0d8f91417688ae78d85413669e",
+      "stage": "returned",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+      "worktree": {
+        "name": "agent_d0942b0d8f91417688ae78d85413669e",
+        "task_id": "agent_d0942b0d8f91417688ae78d85413669e",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "branch": "mewcode/worktree/c3565f91f4b84b2b977548bd467658f0087d4036dc3712a745cbb6a13c21dffe",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_d0942b0d8f91417688ae78d85413669e",
+        "initialization": "ready",
+        "archive": "complete",
+        "state": "retained",
+        "branch_state": "retained",
+        "reason": "存在未追踪或未知忽略成果"
+      },
+      "cache_mappings": {},
+      "history_commit_seq": 153
+    },
+    {
+      "seq": 165,
+      "parent_task_id": "parent_6a9eb9ae850b42eea1abe241b27e7687",
+      "run_id": "agent_dffec7575f8a466984713c1fce259376",
+      "stage": "created",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_dffec7575f8a466984713c1fce259376",
+      "worktree": {
+        "name": "agent_dffec7575f8a466984713c1fce259376",
+        "task_id": "agent_dffec7575f8a466984713c1fce259376",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_dffec7575f8a466984713c1fce259376",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_dffec7575f8a466984713c1fce259376",
+        "branch": "mewcode/worktree/33011bfa825cff4b62dd1e9743182fb543de48e2c3e17246e4db3e77c97d6d47",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_dffec7575f8a466984713c1fce259376"
+      },
+      "cache_mappings": {}
+    },
+    {
+      "seq": 178,
+      "parent_task_id": "parent_6a9eb9ae850b42eea1abe241b27e7687",
+      "run_id": "agent_dffec7575f8a466984713c1fce259376",
+      "stage": "archived",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_dffec7575f8a466984713c1fce259376",
+      "worktree": {
+        "name": "agent_dffec7575f8a466984713c1fce259376",
+        "task_id": "agent_dffec7575f8a466984713c1fce259376",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_dffec7575f8a466984713c1fce259376",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_dffec7575f8a466984713c1fce259376",
+        "branch": "mewcode/worktree/33011bfa825cff4b62dd1e9743182fb543de48e2c3e17246e4db3e77c97d6d47",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_dffec7575f8a466984713c1fce259376",
+        "initialization": "ready",
+        "archive": "complete"
+      },
+      "cache_mappings": {}
+    },
+    {
+      "seq": 179,
+      "parent_task_id": "parent_6a9eb9ae850b42eea1abe241b27e7687",
+      "run_id": "agent_dffec7575f8a466984713c1fce259376",
+      "stage": "finished",
+      "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_dffec7575f8a466984713c1fce259376",
+      "worktree": {
+        "name": "agent_dffec7575f8a466984713c1fce259376",
+        "task_id": "agent_dffec7575f8a466984713c1fce259376",
+        "origin_root": "/private/tmp/mewcode-worktree-e2e",
+        "checkout_root": "/private/tmp/mewcode-worktree-e2e",
+        "common_git_dir": "/private/tmp/mewcode-worktree-e2e/.git",
+        "worktree_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_dffec7575f8a466984713c1fce259376",
+        "workspace_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_dffec7575f8a466984713c1fce259376",
+        "branch": "mewcode/worktree/33011bfa825cff4b62dd1e9743182fb543de48e2c3e17246e4db3e77c97d6d47",
+        "base_commit": "3dbad3929207ff95940fc37ac2fb07c72c6ca6ee",
+        "git_dir": "/private/tmp/mewcode-worktree-e2e/.git/worktrees/agent_dffec7575f8a466984713c1fce259376",
+        "initialization": "ready",
+        "archive": "complete",
+        "state": "retained",
+        "branch_state": "retained",
+        "reason": "存在提交成果或分支已改变"
+      },
+      "cache_mappings": {}
+    }
+  ],
+  "archive_headers": [
+    {
+      "source_path": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf/.mewcode/context/agent_873655cf0b3e470886ef6f7c80a716bf/3a9474aa51654fd6abdccecc171c63a0.jsonl",
+      "parent_cache_path": ".mewcode/context/20261005-233052-f96d/agent_873655cf0b3e470886ef6f7c80a716bf_906b65fac5b243c499dcda557510455b.jsonl",
+      "header": {
+        "format": "mewcode-result-v1",
+        "source": "96e2a9cee0074babbbcf1321223abe4e",
+        "tool_call_id": "call_ubmaxh7738j7wmmt1hwfjyrk",
+        "tool_name": "read_file",
+        "characters": 21966,
+        "read": "用 read_file 的 start_line/max_lines 分页；依次拼接每行 chunk 后解析 JSON 可恢复完整结果。仅保存采集层实际返回内容。",
+        "provenance": {
+          "task_id": "agent_873655cf0b3e470886ef6f7c80a716bf",
+          "source_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+          "source_path": ".mewcode/context/agent_873655cf0b3e470886ef6f7c80a716bf/3a9474aa51654fd6abdccecc171c63a0.jsonl"
+        }
+      },
+      "exists": true
+    },
+    {
+      "source_path": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf/.mewcode/context/agent_873655cf0b3e470886ef6f7c80a716bf/3a9474aa51654fd6abdccecc171c63a0.jsonl",
+      "parent_cache_path": ".mewcode/context/20261005-233052-f96d/agent_873655cf0b3e470886ef6f7c80a716bf_906b65fac5b243c499dcda557510455b.jsonl",
+      "header": {
+        "format": "mewcode-result-v1",
+        "source": "96e2a9cee0074babbbcf1321223abe4e",
+        "tool_call_id": "call_ubmaxh7738j7wmmt1hwfjyrk",
+        "tool_name": "read_file",
+        "characters": 21966,
+        "read": "用 read_file 的 start_line/max_lines 分页；依次拼接每行 chunk 后解析 JSON 可恢复完整结果。仅保存采集层实际返回内容。",
+        "provenance": {
+          "task_id": "agent_873655cf0b3e470886ef6f7c80a716bf",
+          "source_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_873655cf0b3e470886ef6f7c80a716bf",
+          "source_path": ".mewcode/context/agent_873655cf0b3e470886ef6f7c80a716bf/3a9474aa51654fd6abdccecc171c63a0.jsonl"
+        }
+      },
+      "exists": true
+    },
+    {
+      "source_path": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12/.mewcode/context/agent_ac3c91227ec54556bf8a6dc7e1c57e12/6c61b873733c4099be1d0c3060cb0adf.jsonl",
+      "parent_cache_path": ".mewcode/context/20261005-233052-f96d/agent_ac3c91227ec54556bf8a6dc7e1c57e12_4379ed4e2f604d1fa8e5386ae86f15f8.jsonl",
+      "header": {
+        "format": "mewcode-result-v1",
+        "source": "27f24cbd1d044192be3b49f6e6c88075",
+        "tool_call_id": "call_pl61ihej464qeh034dsrw2gg",
+        "tool_name": "read_file",
+        "characters": 21966,
+        "read": "用 read_file 的 start_line/max_lines 分页；依次拼接每行 chunk 后解析 JSON 可恢复完整结果。仅保存采集层实际返回内容。",
+        "provenance": {
+          "task_id": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+          "source_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+          "source_path": ".mewcode/context/agent_ac3c91227ec54556bf8a6dc7e1c57e12/6c61b873733c4099be1d0c3060cb0adf.jsonl"
+        }
+      },
+      "exists": true
+    },
+    {
+      "source_path": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12/.mewcode/context/agent_ac3c91227ec54556bf8a6dc7e1c57e12/6c61b873733c4099be1d0c3060cb0adf.jsonl",
+      "parent_cache_path": ".mewcode/context/20261005-233052-f96d/agent_ac3c91227ec54556bf8a6dc7e1c57e12_4379ed4e2f604d1fa8e5386ae86f15f8.jsonl",
+      "header": {
+        "format": "mewcode-result-v1",
+        "source": "27f24cbd1d044192be3b49f6e6c88075",
+        "tool_call_id": "call_pl61ihej464qeh034dsrw2gg",
+        "tool_name": "read_file",
+        "characters": 21966,
+        "read": "用 read_file 的 start_line/max_lines 分页；依次拼接每行 chunk 后解析 JSON 可恢复完整结果。仅保存采集层实际返回内容。",
+        "provenance": {
+          "task_id": "agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+          "source_root": "/private/tmp/mewcode-worktree-e2e/.mewcode/worktrees/agent_ac3c91227ec54556bf8a6dc7e1c57e12",
+          "source_path": ".mewcode/context/agent_ac3c91227ec54556bf8a6dc7e1c57e12/6c61b873733c4099be1d0c3060cb0adf.jsonl"
+        }
+      },
+      "exists": true
+    }
+  ]
+}

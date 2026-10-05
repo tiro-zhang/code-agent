@@ -417,3 +417,26 @@
 - [ ] 真实外部 MCP 远端：本次未执行；本地 SDK/HTTP fixture 覆盖身份、白名单、规划及单请求取消，不能证明远端副作用停止。
 
 共享文件系统、团队编排和跨会话后台持久化按批准范围不实现。主规格已同步，变更已归档至 `openspec/changes/archive/2026-10-05-add-subagent-delegation/`。
+
+## Worktree 隔离（add-worktree-isolation，2026-10-06 本次验证）
+
+使用本次完整回归 **1423 passed**、构建、严格规格校验、独立只读代码复审与真实模型 tmux 的新证据。详见 [验收报告](docs/validation/worktree-isolation.md)、[106 场景核对](docs/validation/worktree-isolation/spec-audit.md)、[脱敏终端](docs/validation/worktree-isolation/terminal-evidence.txt) 和 [实际产物审计](docs/validation/worktree-isolation/artifact-audit.json)。基线 MCP 取消计数竞态已记录，未修改其实现；最终完整回归通过。
+
+- [x] 原生 Git 多目录、独立分支和准确根身份；私有非追踪管理目录、严格名称／路径边界、双向关联及已有目标零 Git／零写入恢复。
+- [x] 接受时冻结 HEAD／角色／配置，排队取消不创建；真实父 dirty 不进入子目录，首请求与精简提醒明确子 cwd、分支和基线。
+- [x] 严格 version 1 初始化、复制预算／枚举上限、依赖目录链接、专属 Git hooks、ready 最后发布；批准、会话、记忆及项目外启动密钥不迁移。
+- [x] ToolContext 显式 cwd 和绝对目录状态；同名文件、指令、Skill、项目记忆与缓存独立，用户域与共享服务保持既有合同，未声明角色和 Fork 兼容。
+- [x] 父当前规则上限、子进一步收紧、热更新与故障拒绝；文件／命令／MCP 批准不跨根重绑，真实缺许可返回 approval_required、不请求父审批。
+- [x] 子命令／Hook 实际收尾前租约保持；取消展示超时不提前关闭真实 handle，证据／用量／副作用随后补齐且不重复投递。
+- [x] 缓存先归档到父、持久来源与受限映射保留；长正文独立索引、工具截断事实保持，失败留原目录，主回流只在历史提交后确认。
+- [x] 成果默认保护覆盖文件状态、忽略内容、初始化摘要／模式／链接及新提交；HEAD 不同基线即保留，包括已推送 fixture；部分分支删除准确报告。
+- [x] 会话启动及定期三层过滤、严格 TTL、真实锁／证据保护、锁内活动复查；规划暂停、关闭等待、异常记录诊断，未引入 daemon、force 或 prune。
+- [x] 本次真实两个 editor 分别写 one／two、子 pwd 和 unittest 通过，父 dirty 保持；实际并发由本次集成测试验证，人工审批时两个真实 editor 未重叠。
+- [x] 本次真实 reader 大结果归档、无成果目录／分支清理、父与恢复后读取归档；首次正文过大回流失败已修复并复验，不隐去失败。
+- [x] 本次真实取消留下 cancel-start、无 cancel-end、命令进程退出、租约释放、成果保留；下一任务空提交成功且干净目录因新提交保留。
+- [x] 本次恢复不重建队列／重放工具／迁移批准；新回流有主提交关联，旧缺确认记录继续提示而不伪造成功。
+- [x] README、任务清单和本次报告同步；源码包／wheel 含新增模块和既有内置角色，git diff --check 与 OpenSpec strict 通过，复审无剩余 Critical／Important。
+- [ ] 本次真实等待 30 天 TTL 或稳定制造抢锁竞争：未执行，使用本次可控时钟与真实锁自动化；不把测试时钟结果称为真实定时清理。
+- [ ] 本次官方 Anthropic、多远端模型或外部 MCP 实机：未执行，只有现有授权 OpenAI 兼容服务；两协议及本地 SDK 回归重跑，不证明远端副作用停止。
+
+本章实现 Git 工作副本及默认工具目录隔离；shell、依赖、Git 公共版本库和 MCP 不构成操作系统沙箱。自动合并、跨目录同步和团队编排不在范围内。

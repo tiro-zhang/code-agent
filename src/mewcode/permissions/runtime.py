@@ -74,18 +74,23 @@ class PermissionManager:
         self.noninteractive = noninteractive
         self._prompt_lock = asyncio.Lock()
         self.mcp_tools = {}
+        self.ceiling = None
 
     def bind_mcp_tools(self, tools):
         self.mcp_tools = {tool.name: tool for tool in tools}
 
-    def fork(self, role_mode: str = "inherit"):
+    def fork(self, role_mode: str = "inherit", *, root: Path | None = None):
         """冻结会话批准和启动模式，拒绝把角色配置当作提权。"""
         modes = ("bypass", "default", "strict")
         if role_mode != "inherit" and role_mode not in modes:
             raise ValueError("角色权限模式无效")
         mode = self.mode if role_mode == "inherit" else modes[max(modes.index(self.mode), modes.index(role_mode))]
-        child = PermissionManager(self.root, mode=mode, user_path=self.config.paths[0], noninteractive=True)
-        child.grants = self.grants.copy_for(child.config)
+        child = PermissionManager(root or self.root, mode=mode, user_path=self.config.paths[0], noninteractive=True)
+        if child.root == self.root:
+            child.grants = self.grants.copy_for(child.config)
+            child.ceiling = self.ceiling
+        else:
+            child.ceiling = self
         child.mcp_tools = self.mcp_tools.copy()
         return child
 
@@ -125,7 +130,10 @@ class PermissionManager:
         elif tool in {"read_file", "write_file", "edit_file"}:
             path = checked_path(arguments["path"], self.context)
             values = (str(path),)
-            if tool in {"write_file", "edit_file"} and path in self.config.protected_paths():
+            if tool in {"write_file", "edit_file"} and (
+                path in self.config.protected_paths()
+                or path.is_relative_to(self.root / ".mewcode/worktree-state")
+            ):
                 raise ToolError("permission_denied", "权限配置只能通过可信管理入口修改",
                                 source="protected_config", not_started=True)
         else:
@@ -143,6 +151,24 @@ class PermissionManager:
                                      allow_subject=subject,
                                      glob_allow=analysis.simple if analysis else True)
             effect = apply_mode(evaluation.effect, self.mode)
+            ceiling = self.ceiling
+            while ceiling is not None:
+                if kind == "path":
+                    mapped = checked_path(subject, ceiling.context)
+                    if tool in {"write_file", "edit_file"} and mapped in ceiling.config.protected_paths():
+                        raise ToolError("permission_denied", "父项目保护此配置", not_started=True)
+                parent = merge_rules(ceiling._snapshot().rules, tool,
+                                     analysis.subjects if analysis else (subject,),
+                                     allow_subject=subject,
+                                     glob_allow=analysis.simple if analysis else True)
+                parent_effect = apply_mode(parent.effect, self.mode)
+                if parent_effect == "deny" or effect == "deny":
+                    effect = "deny"
+                elif parent_effect == "ask":
+                    effect = "ask"
+                elif evaluation.effect is None and self.mode != "strict":
+                    effect = parent_effect
+                ceiling = ceiling.ceiling
             if effect == "deny" or value in rejected:
                 denied.append(value)
                 if not search:
