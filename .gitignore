@@ -19,3 +19,6 @@ dist/
 .mewcode/memory/
 
 .codex/
+
+# 隔离开发工作目录
+.worktrees/
