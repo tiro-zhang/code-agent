@@ -31,12 +31,13 @@ class ToolRegistry:
 
     def definitions(self, *, allowed_tools: frozenset[str] | None = None) -> tuple[ToolDefinition, ...]:
         return tuple(ToolDefinition(t.name, t.description, t.input_schema, bool(getattr(t, "read_only", False)))
-                     for t in self._tools.values() if allowed_tools is None or t.name in allowed_tools)
+                     for t in self._tools.values() if allowed_tools is None or t.name in allowed_tools
+                     or getattr(t, "system", False))
 
     def prepare(self, name: str, raw: str, *, allowed_tools: frozenset[str] | None = None) -> tuple[Tool, dict[str, Any]]:
         tool = self.get(name)
-        if allowed_tools is not None and name not in allowed_tools:
-            raise ToolError("tool_not_allowed", "当前模式禁止使用此工具", name=name)
+        if allowed_tools is not None and name not in allowed_tools and not getattr(tool, "system", False):
+            raise ToolError("tool_not_allowed", "当前模式或 Skill 工具范围禁止使用此工具", name=name, not_started=True)
         try:
             if len(raw.encode("utf-8")) > ARGUMENT_LIMIT:
                 raise ToolError("input_too_large", "工具参数超过 2 MiB 上限")

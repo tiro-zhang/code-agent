@@ -223,7 +223,7 @@ async def test_permission_result_source_and_pairing_survive_both_protocols(tmp_p
         body = json.loads(block["content"])
         exported = anthropic_tools(definitions)
         assert all(set(tool) == {"name", "description", "input_schema"} for tool in exported)
-    assert {tool["name"] for tool in exported} == {"read_file", "write_file", "edit_file", "execute_command", "glob_files", "search_code"}
+    assert {tool["name"] for tool in exported} == {"read_file", "write_file", "edit_file", "execute_command", "glob_files", "search_code", "load_skill"}
     assert body["error"]["code"] == "permission_denied"
     assert body["error"]["details"] == {"source": "rule", "not_started": True}
 

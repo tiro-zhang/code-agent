@@ -6,5 +6,6 @@ def default_registry():
     from .files import EditFile, ReadFile, WriteFile
     from .registry import ToolRegistry
     from .search import GlobFiles, SearchCode
+    from ..skills.tool import LoadSkill
 
-    return ToolRegistry([ReadFile(), WriteFile(), EditFile(), ExecuteCommand(), GlobFiles(), SearchCode()])
+    return ToolRegistry([ReadFile(), WriteFile(), EditFile(), ExecuteCommand(), GlobFiles(), SearchCode(), LoadSkill()])

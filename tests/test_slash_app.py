@@ -27,14 +27,17 @@ def test_review_expands_once_and_preserves_target(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     provider = ScriptedProvider([answer('审查一'), answer('审查二'), answer('计划')])
     target = '/clear  "A B.py"  X'
-    _, shown = invoke(tmp_path, provider, '/review\n/review ' + target + '\n/plan 任务\n/do\n/exit\n')
+    _, shown = invoke(tmp_path, provider, '/permission mode bypass\n/review\n/review ' + target + '\n/plan 任务\n/do\n/exit\n')
     assert len(provider.requests) == 3
     first = [m.content for m in provider.requests[0][0] if m.role == 'user'][-1]
     second = [m.content for m in provider.requests[1][0] if m.role == 'user'][-1]
-    assert 'Git' in first and '未提交' in first and '不自动修改' in first
-    assert second.endswith(target) and '证据' in second
+    assert first.startswith('执行 Skill review')
+    first_context = provider.requests[0][0][-1].content
+    assert 'Git' in first_context and '未提交' in first_context and '不自动修改' in first_context
+    assert second.endswith(target)
+    assert target in provider.requests[1][0][-1].content
     assert [m.content for m in provider.requests[2][0] if m.role == 'user'][-1] == '任务'
-    assert len(provider.requests[2][1]['tools']) == 3
+    assert len(provider.requests[2][1]['tools']) == 4
 
 
 def test_disabled_memory_show_is_complete_and_safe(tmp_path, monkeypatch):
@@ -63,7 +66,7 @@ def test_conflicting_registry_fails_before_resources(tmp_path, monkeypatch):
     from mewcode.commands import CommandRegistry
     from mewcode.commands.builtins import builtin_definitions
     definitions = builtin_definitions()
-    def broken():
+    def broken(catalog=None):
         return CommandRegistry((*definitions, replace(definitions[0], name='hidden', aliases=('HELP',), hidden=True)))
     monkeypatch.setattr(app, 'build_registry', broken)
     def forbidden(*args, **kwargs):

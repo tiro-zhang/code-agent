@@ -1,0 +1,36 @@
+{"step": "intersection", "input": "/skills active", "before": 6, "after": 6, "seconds": 0.65}
+{"step": "refused-write", "input": "请创建 forbidden.txt 写入42。如果当前工具范围不允许，直接说明未执行，不要加载别的能力。", "before": 6, "after": 7, "seconds": 2.78}
+{"step": "clear", "input": "/clear", "before": 7, "after": 7, "seconds": 0.65}
+{"step": "clear-preserved", "input": "/skills active", "before": 7, "after": 7, "seconds": 0.64}
+{"step": "deactivate", "input": "/skills deactivate --all", "before": 7, "after": 7, "seconds": 0.64}
+{"step": "isolated-test", "input": "/test 只运行 python3 -m unittest test_calc.py 并报告实际结果，不修改代码", "before": 7, "after": 9, "seconds": 5.41}
+{"step": "history-seed-one", "input": "记住本轮标记 HISTORY_MARKER_17，只回复记住了，不使用工具。", "before": 9, "after": 10, "seconds": 2.77}
+{"step": "history-seed-two", "input": "记住本轮标记 HISTORY_MARKER_29，只回复记住了，不使用工具。", "before": 10, "after": 11, "seconds": 1.7}
+{"step": "history-one", "input": "/historyone TOKEN_ONE", "before": 11, "after": 13, "seconds": 5.95}
+{"step": "history-zero", "input": "/historyzero TOKEN_ZERO", "before": 13, "after": 15, "seconds": 5.93}
+{"step": "history-all", "input": "/historyall TOKEN_ALL", "before": 15, "after": 16, "seconds": 2.81}
+{"step": "pack-success", "input": "/pack 请读取能力包 reference.txt 并报告内容", "before": 16, "after": 18, "seconds": 3.83}
+{"step": "pack-boundary", "input": "请用 load_skill 读取 pack 的 ../outside.txt，只尝试一次并说明实际错误。", "before": 18, "after": 20, "seconds": 3.85}
+{"step": "pack-off", "input": "/skills deactivate --all", "before": 20, "after": 20, "seconds": 0.65}
+{"step": "guide-args", "input": "/guide 原始  参数42", "before": 20, "after": 22, "seconds": 4.33}
+{"step": "hot-new-help", "input": "/help newcmd", "before": 22, "after": 22, "seconds": 0.65}
+{"step": "hot-body", "input": "请按当前指南再报告一次固定验收标记和当前参数。", "before": 22, "after": 24, "seconds": 5.42}
+{"step": "hot-bad-preserved", "input": "/skills active", "before": 24, "after": 24, "seconds": 0.65}
+{"step": "hot-bad-body", "input": "请只报告当前指南固定标记，不能重新加载。", "before": 24, "after": 25, "seconds": 2.22}
+{"step": "new-help", "input": "/help", "before": 25, "after": 25, "seconds": 0.65}
+{"step": "hot-deleted", "input": "/skills active", "before": 25, "after": 25, "seconds": 0.65}
+{"step": "parent-loaded", "input": "/parent 只回复 PARENT_STATE_42", "before": 25, "after": 26, "seconds": 2.79}
+{"step": "fixed-resume-active", "input": "/skills active", "before": 26, "after": 26, "seconds": 0.63}
+{"step": "fixed-bypass", "input": "/permission mode bypass", "before": 26, "after": 26, "seconds": 0.63}
+{"step": "history-zero-fixed", "input": "/historyzero TOKEN_ZERO_FIXED", "before": 26, "after": 27, "seconds": 2.7}
+{"step": "history-all-fixed", "input": "/historyall TOKEN_ALL_FIXED", "before": 27, "after": 28, "seconds": 2.21}
+{"step": "child-cancelled", "input": null, "before": 29, "after": 29, "seconds": 0.53}
+{"step": "parent-after-cancel", "input": "/skills active", "before": 29, "after": 29, "seconds": 0.65}
+{"step": "after-cancel", "input": "只回复 AFTER_CANCEL_OK，不调用任何工具。", "before": 29, "after": 30, "seconds": 1.72}
+{"step": "reset", "input": "/reset", "before": 30, "after": 30, "seconds": 0.65}
+{"step": "reset-active", "input": "/skills active", "before": 30, "after": 30, "seconds": 0.65}
+{"step": "reset-status", "input": "/status", "before": 30, "after": 30, "seconds": 0.65}
+{"step": "reset-restored", "input": null, "before": 30, "after": 30, "seconds": 0.01}
+{"step": "reset-restored-active", "input": "/skills active", "before": 30, "after": 30, "seconds": 0.65}
+{"step": "plain-bypass", "input": "/permission mode bypass", "before": 30, "after": 30, "seconds": 0.64}
+{"step": "plain-child", "input": "/historyzero TOKEN_PLAIN", "before": 30, "after": 31, "seconds": 2.24}

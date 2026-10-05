@@ -1,0 +1,10 @@
+[DEFAULT] 执行 · 权限 default · 启动中 · 暂无任务记录
+Ctrl+C 取消启动
+MewCode · claude-demo · 权限 default · /help 查看帮助
+会话> 20261005-012336-9b3a · 已恢复 · 46 条工作消息 · 等待新输入
+parent · 保留主会话验收状态 · shared · project:/private/tmp/mewcode-skills-e2e/.mewcode/skills/parent.md · 已激活
+普通工具：edit_file, execute_command, glob_files, read_file, search_code, write_file
+系统入口：load_skill；/skills deactivate <name|--all> 停用；/reset 清空对话与激活。
+[DEFAULT] 执行 · 权限 default · 空闲 · 暂无任务记录
+你>
+Enter 发送 · Esc+Enter 换行 · /help 帮助 · Tab 补全 · Ctrl+C 退出

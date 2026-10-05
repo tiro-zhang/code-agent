@@ -1,6 +1,7 @@
 """从单个 .env 文件读取供应商配置。"""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
+import json
 from pathlib import Path
 import re
 from urllib.parse import urlsplit
@@ -23,6 +24,44 @@ class ProviderConfig:
     max_iterations: int = 20
     context_window: int = field(kw_only=True)
     max_output_tokens: int = 8192
+    skill_models: tuple[tuple[str, int, int], ...] = ()
+
+    def for_skill(self, model: str | None):
+        """仅覆盖同一服务的模型及其显式预算。"""
+        if model is None or model == self.model:
+            return self
+        for name, window, output in self.skill_models:
+            if name == model:
+                return replace(self, model=name, context_window=window, max_output_tokens=output)
+        raise ConfigError(f'skill_models 未配置模型 {model} 的窗口')
+
+
+def _skill_models(raw, output):
+    def mapping(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError('重复 JSON 字段')
+            result[key] = value
+        return result
+    try:
+        value = json.loads(raw, object_pairs_hook=mapping,
+                           parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))
+        if not isinstance(value, dict):
+            raise ValueError
+        result = []
+        for name, limits in value.items():
+            if (not name or any(c.isspace() or not c.isprintable() for c in name)
+                    or not isinstance(limits, dict) or 'context_window' not in limits
+                    or not set(limits) <= {'context_window', 'max_output_tokens'}):
+                raise ValueError
+            window, maximum = limits['context_window'], limits.get('max_output_tokens', output)
+            if type(window) is not int or type(maximum) is not int or maximum <= 0 or window <= maximum + 13000:
+                raise ValueError
+            result.append((name, window, maximum))
+        return tuple(result)
+    except (ValueError, TypeError, RecursionError):
+        raise ConfigError('skill_models 必须是无重复字段的模型预算 JSON 映射，每项窗口须大于输出额度 + 13000') from None
 
 
 def load_config(path: str | Path) -> ProviderConfig:
@@ -73,5 +112,6 @@ def load_config(path: str | Path) -> ProviderConfig:
         api_key=values["api_key"].strip(),
         thinking=thinking,
         max_iterations=int(budget),
+        skill_models=_skill_models(values['skill_models'], limits['max_output_tokens']) if 'skill_models' in values else (),
         **limits,
     )

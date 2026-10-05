@@ -44,6 +44,10 @@ class ToolScheduler:
 
             async def notify(notification):
                 fields = {}
+                if notification["kind"] == "skill_loaded":
+                    fields = {"text": notification.get("text", ""), "phase": "skill"}
+                elif notification["kind"] == "skill_event":
+                    fields = {"child_event": notification['event']}
                 if notification["kind"].startswith("permission_"):
                     fields = {"permission_request": notification.get("request"),
                               "permission_decision": notification.get("decision", ""),
@@ -54,7 +58,8 @@ class ToolScheduler:
                 result = unstarted()
             else:
                 try:
-                    self.executor.registry.prepare(call.name, call.arguments, allowed_tools=allowed_tools)
+                    current = allowed_tools() if callable(allowed_tools) else allowed_tools
+                    self.executor.registry.prepare(call.name, call.arguments, allowed_tools=current)
                 except ToolError as error:
                     result = error.result()
                 else:
@@ -66,6 +71,9 @@ class ToolScheduler:
                     except asyncio.CancelledError:
                         cancel.set()
                         result = await protected(operation, cancel_event=cancel)
+                    except OSError as error:
+                        self.storage_error = error
+                        result = ToolResult.failure('storage_error', '执行过程存档失败，停止后续工作；已完成操作保留')
                     except Exception:
                         result = ToolResult.failure("execution_error", "工具执行入口异常结束")
             if self.on_result and self.storage_error is None:

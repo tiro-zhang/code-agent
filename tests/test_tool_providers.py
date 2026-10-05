@@ -119,7 +119,7 @@ async def test_multi_result_order_and_local_metadata_are_preserved(protocol):
         provider = AnthropicProvider(anthropic_config(), client=client)
     await collect(provider.stream(history, tools=definitions))
     request = client.chat.completions.request if protocol == "openai" else client.messages.request
-    assert len(request["tools"]) == 3
+    assert len(request["tools"]) == 4
     assert "read_only" not in json.dumps(request["tools"])
     if protocol == "openai":
         assert [m["tool_call_id"] for m in request["messages"][-3:]] == ["a", "b", "c"]
@@ -134,7 +134,7 @@ async def test_openai_interleaved_call_fragments_and_request_controls():
     assert received[0].message.tool_calls == (ToolCall('a', 'read_file', '{"path":"x"}'), ToolCall('b', 'glob_files', '{"pattern":"*.py"}'))
     request = client.chat.completions.request
     assert request['parallel_tool_calls'] is True and request['tool_choice'] == 'auto'
-    assert len(request['tools']) == 6
+    assert len(request['tools']) == 7
     assert request['tools'][0]['function']['parameters'] == DEFINITIONS[0].input_schema
 
 @pytest.mark.parametrize('calls,finish', [([fragment(0, None, 'read_file', '{}')], 'tool_calls'), ([fragment(0, 'a', None, '{}')], 'tool_calls'), ([fragment(0, 'a', 'read_file', '{}'), fragment(1, 'a', 'read_file', '{}')], 'tool_calls'), ([fragment(0, 'a', 'read_file', '{}')], 'length'), ([fragment(0, 'a', 'read_file', '{}')], 'stop')])

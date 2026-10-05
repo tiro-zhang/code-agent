@@ -44,11 +44,18 @@ class _Renderer:
     usage_text = staticmethod(usage_text)
 
     def show(self, event: AgentEvent):
+        if event.kind == 'skill_event':
+            event = event.child_event
+            if event is None:
+                return
+            if event.kind not in {'text_delta', 'thinking_delta'}:
+                self.line(f'Skill> {self.safe(event.skill_name, 80)} · 子运行 {self.safe(event.run_id, 40)} · 当前项目')
         if event.kind in {"text_delta", "thinking_delta"} and event.text:
             if event.kind != self.section:
                 if self.section is not None:
                     self.output.write("\n")
-                self.output.write("思考> " if event.kind == "thinking_delta" else "MewCode> ")
+                label = f'Skill {self.safe(event.skill_name, 80)}> ' if event.skill_name else 'MewCode> '
+                self.output.write("思考> " if event.kind == "thinking_delta" else label)
                 self.section = event.kind
             self.output.write(terminal_text(event.text, self.secret, multiline=True))
             self.output.flush()
@@ -82,6 +89,8 @@ class _Renderer:
             self.line(f"用量> {label} Token · {self.usage_text(event.usage)}")
         elif event.kind == 'memory_update':
             self.line(f'记忆> {self.safe(event.text, 400)}')
+        elif event.kind == 'skill_loaded':
+            self.line(f'Skill> {self.safe(event.text, 800)}')
         elif event.kind in {"tool_call", "tool_started", "tool_result"}:
             name = self.safe(event.tool_name, 60)
             id = self.safe(event.tool_call_id, 60)
@@ -107,7 +116,8 @@ class _Renderer:
                     suffix += f" · 搜索范围受限，跳过 {result.data.get('skipped_files', 0)} 个文件"
                 self.line(f"{prefix} · {status}{suffix}")
         elif event.kind == "finished":
-            label = "结束" if event.reason == "model_done" else "本轮未完成"
+            label = ("子任务结束" if event.reason == "model_done" else "子任务未完成") if event.skill_name else (
+                "结束" if event.reason == "model_done" else "本轮未完成")
             self.line(f"{label}> {event.reason} · {self.safe(event.text, 300)} · 请求 {event.iteration}/{event.max_iterations}")
             self.line(f"用量> 累计已知 Token · {self.usage_text(event.usage)}")
 
@@ -116,8 +126,10 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                permission_mode="default", approval_responder=None, input_reader=None, resume=None,
                persistent=True, memory_enabled=True, user_root=None):
     try:
-        registry = build_registry()
-    except RegistrationError as error:
+        from .skills.catalog import discover_skills
+        catalog = discover_skills(Path.cwd(), user_root=user_root)
+        registry = build_registry(catalog)
+    except (ValueError, ToolError) as error:
         error_stream.write(f"启动失败：{terminal_text(str(error), config.api_key)}\n")
         return 2
     provider = factory(config)
@@ -150,7 +162,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                     renderer.show(event)
             session = ChatSession(provider, max_iterations=config.max_iterations, permission_mode=permission_mode,
                 config=config, persistent=persistent, resume=resume, memory_enabled=memory_enabled,
-                user_root=user_root, notify=maintenance)
+                user_root=user_root, notify=maintenance, skill_catalog=catalog, provider_factory=factory)
             session.permissions.config.load()
             terminal = TerminalController(reader, output_stream, secret=config.api_key,
                 root=session.executor.context.root, on_interrupt=interrupt, allow_enhanced=input_reader is None, registry=registry)
@@ -173,6 +185,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
         session.permissions.bind_mcp_tools(mcp.tools)
         terminal.state.bind_tools(mcp.tools)
         try:
+            session.validate_skills()
             await session.prepare_restore(cancel_event=active_cancel)
         except (ValueError, OSError) as error:
             error_stream.write(f'恢复失败：{renderer.safe(error, 400)}\n')
@@ -199,6 +212,17 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             if question is None:
                 renderer.line("")
                 return 0
+            if question.strip():
+                try:
+                    updated, diagnostics = session.refresh_skills()
+                    if updated is not None:
+                        registry = context.registry = updated
+                        terminal.replace_registry(updated)
+                    for diagnostic in diagnostics:
+                        renderer.line('提示> ' + renderer.safe(diagnostic, 500))
+                except OSError as error:
+                    renderer.line('提示> ' + renderer.safe(error, 400))
+                    continue
             parsed = parse_command(question)
             result = await dispatch(parsed, registry, context)
             if result.kind == 'exit':
@@ -215,6 +239,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             terminal.sync_session(session)
             active_cancel = asyncio.Event()
             source = (session.compact(cancel_event=active_cancel) if maintenance else
+                      session.run_skill(result.skill_name, result.text, cancel_event=active_cancel) if result.kind == 'skill' else
                       session.ask(result.text, cancel_event=active_cancel))
             try:
                 async for event in source:

@@ -1,0 +1,31 @@
+[DEFAULT] 执行 · 权限 default · 启动中 · 暂无任务记录
+Ctrl+C 取消启动
+MewCode · claude-demo · 权限 default · /help 查看帮助
+会话> 20261005-012336-9b3a · 已恢复 · 10 条工作消息 · 等待新输入
+guide · 读取本项目 README 并报告启动和测试步骤，附固定验收标记。 · shared · project:/private/tmp/mewcode-skills-e2e/.mewcode/skills/guide.md · 已激活
+普通工具：glob_files, read_file
+系统入口：load_skill；/skills deactivate <name|--all> 停用；/reset 清空对话与激活。
+[DEFAULT] 执行 · 权限 default · 等待授权 · 请求 0/20 · 已用 0.5s
+工具> [#1] 等待授权 · load_skill · 校验参数
+审阅 1/1 页 · summary · [cc0298c6fa3a4f5cb88372acf1ae9983]
+操作> 调用扩展工具 load_skill
+授权> 1 拒绝 [默认] / 2 本次 / 3 会话 / 4 永久
+取消> 回车／1 拒绝本次操作，本轮可继续；Ctrl+C 取消整轮。
+关联标识> cc0298c6fa3a4f5cb88372acf1ae9983
+工具> load_skill · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-skills-e2e
+授权对象数量> 1（本次完整 JSON 参数，见参数详情）
+范围> 本次绑定当前调用、完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定此根目录、工具与本次完整 JSON 参数；参数改变即失效，不扩展到其他参数或工具。
+保存> 永久批准会将完整调用参数保存在项目本地权限文件。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+详情> targets 查看全部目标／命令／外部身份；arguments 查看完整参数；content 查看完整写入内容／编辑差异。next／back 翻页，all 查看全部；查看详情不批准
+。
+
+
+
+
+授权>
+1/回车 拒绝 · 2 本次 · 3 会话 · 4 永久 · Ctrl+C 取消整轮
+targets/arguments/content/summary/results · next/back/all · PgUp/PgDn

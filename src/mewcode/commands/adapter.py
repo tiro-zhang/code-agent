@@ -39,6 +39,16 @@ class SessionCommandContext:
         except ToolError as error:
             raise ValueError(str(error)) from error
 
+    def skills_text(self, args):
+        try:
+            return self.session.skills_text(args)
+        except ToolError as error:
+            raise ValueError(str(error)) from error
+
+    def reset_session(self):
+        self.session.reset()
+        self.terminal.state.reset_task()
+
     def session_text(self, *, listing):
         if not listing:
             count = sum(message.role != 'context' for message in self.session.history)

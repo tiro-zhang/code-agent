@@ -1,0 +1,707 @@
+{
+  "session_id": "20261005-012336-9b3a",
+  "requests": [
+    {
+      "request": 1,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "write_file",
+        "edit_file",
+        "execute_command",
+        "glob_files",
+        "search_code",
+        "load_skill"
+      ],
+      "active": [],
+      "full_reminder": true,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 2,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "write_file",
+        "edit_file",
+        "execute_command",
+        "glob_files",
+        "search_code",
+        "load_skill"
+      ],
+      "active": [],
+      "full_reminder": false,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 3,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "write_file",
+        "edit_file",
+        "execute_command",
+        "glob_files",
+        "search_code",
+        "load_skill"
+      ],
+      "active": [],
+      "full_reminder": false,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 4,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "glob_files",
+        "load_skill"
+      ],
+      "active": [
+        "guide"
+      ],
+      "full_reminder": false,
+      "guide_v1": true,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 5,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "glob_files",
+        "load_skill"
+      ],
+      "active": [
+        "guide"
+      ],
+      "full_reminder": false,
+      "guide_v1": true,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 6,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "load_skill"
+      ],
+      "active": [
+        "guide",
+        "narrow"
+      ],
+      "full_reminder": true,
+      "guide_v1": true,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 7,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "load_skill"
+      ],
+      "active": [
+        "guide",
+        "narrow"
+      ],
+      "full_reminder": false,
+      "guide_v1": true,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 8,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "execute_command",
+        "glob_files",
+        "search_code",
+        "load_skill"
+      ],
+      "active": [
+        "test"
+      ],
+      "full_reminder": true,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 563,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 9,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "execute_command",
+        "glob_files",
+        "search_code",
+        "load_skill"
+      ],
+      "active": [
+        "test"
+      ],
+      "full_reminder": false,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 563,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 10,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "write_file",
+        "edit_file",
+        "execute_command",
+        "glob_files",
+        "search_code",
+        "load_skill"
+      ],
+      "active": [],
+      "full_reminder": false,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 11,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "write_file",
+        "edit_file",
+        "execute_command",
+        "glob_files",
+        "search_code",
+        "load_skill"
+      ],
+      "active": [],
+      "full_reminder": false,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 12,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "load_skill"
+      ],
+      "active": [
+        "historyone"
+      ],
+      "full_reminder": true,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 275,
+      "background_marker_17": false,
+      "background_marker_29": true
+    },
+    {
+      "request": 13,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "load_skill"
+      ],
+      "active": [
+        "historyone"
+      ],
+      "full_reminder": false,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 275,
+      "background_marker_17": false,
+      "background_marker_29": true
+    },
+    {
+      "request": 14,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "load_skill"
+      ],
+      "active": [
+        "historyzero"
+      ],
+      "full_reminder": true,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 15,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "load_skill"
+      ],
+      "active": [
+        "historyzero"
+      ],
+      "full_reminder": false,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 16,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "load_skill"
+      ],
+      "active": [
+        "historyall"
+      ],
+      "full_reminder": true,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 6379,
+      "background_marker_17": true,
+      "background_marker_29": true
+    },
+    {
+      "request": 17,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "load_skill"
+      ],
+      "active": [
+        "pack"
+      ],
+      "full_reminder": false,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 18,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "load_skill"
+      ],
+      "active": [
+        "pack"
+      ],
+      "full_reminder": true,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 19,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "load_skill"
+      ],
+      "active": [
+        "pack"
+      ],
+      "full_reminder": false,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 20,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "load_skill"
+      ],
+      "active": [
+        "pack"
+      ],
+      "full_reminder": false,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 21,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "glob_files",
+        "load_skill"
+      ],
+      "active": [
+        "guide"
+      ],
+      "full_reminder": false,
+      "guide_v1": true,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": true,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 22,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "glob_files",
+        "load_skill"
+      ],
+      "active": [
+        "guide"
+      ],
+      "full_reminder": false,
+      "guide_v1": true,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": true,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 23,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "glob_files",
+        "load_skill"
+      ],
+      "active": [
+        "guide"
+      ],
+      "full_reminder": true,
+      "guide_v1": false,
+      "guide_v2": true,
+      "rejected_body": false,
+      "literal_args": true,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 24,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "glob_files",
+        "load_skill"
+      ],
+      "active": [
+        "guide"
+      ],
+      "full_reminder": false,
+      "guide_v1": false,
+      "guide_v2": true,
+      "rejected_body": false,
+      "literal_args": true,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 25,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "glob_files",
+        "load_skill"
+      ],
+      "active": [
+        "guide"
+      ],
+      "full_reminder": false,
+      "guide_v1": false,
+      "guide_v2": true,
+      "rejected_body": false,
+      "literal_args": true,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 26,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "write_file",
+        "edit_file",
+        "execute_command",
+        "glob_files",
+        "search_code",
+        "load_skill"
+      ],
+      "active": [
+        "parent"
+      ],
+      "full_reminder": false,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 27,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "load_skill"
+      ],
+      "active": [
+        "historyzero"
+      ],
+      "full_reminder": true,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 28,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "load_skill"
+      ],
+      "active": [
+        "historyall"
+      ],
+      "full_reminder": true,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 11027,
+      "background_marker_17": true,
+      "background_marker_29": true
+    },
+    {
+      "request": 29,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "execute_command",
+        "load_skill"
+      ],
+      "active": [
+        "slow"
+      ],
+      "full_reminder": true,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 30,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "read_file",
+        "write_file",
+        "edit_file",
+        "execute_command",
+        "glob_files",
+        "search_code",
+        "load_skill"
+      ],
+      "active": [
+        "parent"
+      ],
+      "full_reminder": true,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    },
+    {
+      "request": 31,
+      "model": "deepseek-v4-pro",
+      "tools": [
+        "load_skill"
+      ],
+      "active": [
+        "historyzero"
+      ],
+      "full_reminder": true,
+      "guide_v1": false,
+      "guide_v2": false,
+      "rejected_body": false,
+      "literal_args": false,
+      "background_chars": 0,
+      "background_marker_17": false,
+      "background_marker_29": false
+    }
+  ],
+  "children": [
+    {
+      "skill": "test",
+      "run_id": "f709d64fdd2e45d7a2953b31bfdb0f1c",
+      "parent_task_id": "bd15a40c2f0941719f7ccd6e71fdfc52",
+      "reason": "model_done",
+      "total_input_tokens": 5822,
+      "output_tokens": 208,
+      "usage_counted_once": true
+    },
+    {
+      "skill": "historyone",
+      "run_id": "6c2bd06d337e472c979338714234a47e",
+      "parent_task_id": "f1c01d523e5b40dc8938f80779f1546d",
+      "reason": "model_done",
+      "total_input_tokens": 3745,
+      "output_tokens": 224,
+      "usage_counted_once": true
+    },
+    {
+      "skill": "historyzero",
+      "run_id": "24835edc4b08411e9f6e5190ad4b49d7",
+      "parent_task_id": "7dd735a2676545558950b129a78bce0f",
+      "reason": "model_done",
+      "total_input_tokens": 3471,
+      "output_tokens": 376,
+      "usage_counted_once": true
+    },
+    {
+      "skill": "historyall",
+      "run_id": "e014ac7e85ff467baf4f34d304c487b3",
+      "parent_task_id": "a4413a4ea1d34c1a9c05e2cb2a669f25",
+      "reason": "model_done",
+      "total_input_tokens": 4344,
+      "output_tokens": 55,
+      "usage_counted_once": true
+    },
+    {
+      "skill": "historyzero",
+      "run_id": "c16a451464c54b4183a1bd1053e70d31",
+      "parent_task_id": "cd270e1052dc4179bf3519d336d20b13",
+      "reason": "model_done",
+      "total_input_tokens": 1577,
+      "output_tokens": 29,
+      "usage_counted_once": true
+    },
+    {
+      "skill": "historyall",
+      "run_id": "a89f2314675f492a98807fca739c352c",
+      "parent_task_id": "179c5885cb984daf94830f673a2d67ef",
+      "reason": "model_done",
+      "total_input_tokens": 6374,
+      "output_tokens": 33,
+      "usage_counted_once": true
+    },
+    {
+      "skill": "slow",
+      "run_id": "4e32acd534bf41e6979424eb3a89c6c8",
+      "parent_task_id": "4e7d4ae6109941e39af3766144ac121e",
+      "reason": "cancelled",
+      "total_input_tokens": 1717,
+      "output_tokens": 81,
+      "usage_counted_once": true
+    },
+    {
+      "skill": "historyzero",
+      "run_id": "13add4cf8a6d4da593c02bca71b52aed",
+      "parent_task_id": "64ad54849cfe476c8b256b74684e8953",
+      "reason": "model_done",
+      "total_input_tokens": 1571,
+      "output_tokens": 43,
+      "usage_counted_once": true
+    }
+  ],
+  "reset": {
+    "before_messages": 74,
+    "after_messages": 0,
+    "after_active": []
+  },
+  "artifacts": {
+    "started": true,
+    "leaked": false,
+    "forbidden.txt": false,
+    "__pycache__": true
+  }
+}

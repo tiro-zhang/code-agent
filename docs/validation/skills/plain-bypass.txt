@@ -1,0 +1,8 @@
+MewCode · claude-demo · 权限 default · /help 查看帮助
+会话> 20261005-012336-9b3a · 已恢复 · 0 条工作消息 · 等待新输入
+你> /skills active
+普通工具：edit_file, execute_command, glob_files, read_file, search_code, write_file
+系统入口：load_skill；/skills deactivate <name|--all> 停用；/reset 清空对话与激活。
+你> /permission mode bypass
+权限模式> 已切换为 bypass
+你>

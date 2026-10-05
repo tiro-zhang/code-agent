@@ -1,0 +1,20 @@
+[DEFAULT] 执行 · 权限 default · 启动中 · 暂无任务记录
+Ctrl+C 取消启动
+MewCode · claude-demo · 权限 default · /help 查看帮助
+会话> 20261005-012336-9b3a · 已恢复 · 10 条工作消息 · 等待新输入
+guide · 读取本项目 README 并报告启动和测试步骤，附固定验收标记。 · shared · project:/private/tmp/mewcode-skills-e2e/.mewcode/skills/guide.md · 已激活
+普通工具：glob_files, read_file
+系统入口：load_skill；/skills deactivate <name|--all> 停用；/reset 清空对话与激活。
+工具> [#1] 权限拒绝 · permission_denied：权限规则或用户决定禁止此操作 · 未启动 · load_skill · 校验参数
+本轮未完成> stream_error · Skill 未完成；已完成操作保留 · 请求 0/20
+[DEFAULT] 执行 · 权限 default · 空闲 · 请求 0/20 · 已用 34.3s · 停止原因 stream_error
+最近请求 Token · 未知，尚无用量记录
+累计已知 Token · 入未知（基础输入 未知） 出未知 命中 未知 未命中 未知 写入 未知 命中率未知 统计不完整/缓存统计不完整
+guide · 读取本项目 README 并报告启动和测试步骤，附固定验收标记。 · shared · project:/private/tmp/mewcode-skills-e2e/.mewcode/skills/guide.md · 已激活
+普通工具：glob_files, read_file
+系统入口：load_skill；/skills deactivate <name|--all> 停用；/reset 清空对话与激活。
+[DEFAULT] 执行 · 权限 default · 空闲 · 请求 0/20 · 已用 34.3s · 停止原因 stream_error
+最近请求 Token · 未知，尚无用量记录
+累计已知 Token · 入未知（基础输入 未知） 出未知 命中 未知 未命中 未知 写入 未知 命中率未知 统计不完整/缓存统计不完整
+你>
+Enter 发送 · Esc+Enter 换行 · /help 帮助 · Tab 补全 · Ctrl+C 退出

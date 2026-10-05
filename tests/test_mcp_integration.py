@@ -66,7 +66,7 @@ def test_app_starts_discovers_calls_twice_and_closes(tmp_path, monkeypatch):
     assert code == 0
     assert "已注册 2 个工具" in output.getvalue()
     assert "完成二" in output.getvalue()
-    assert all(len(options["tools"]) == 8 for _, options in provider.requests)
+    assert all(len(options["tools"]) == 9 for _, options in provider.requests)
     messages = [json.loads(line) for line in (tmp_path / "a.jsonl").read_text().splitlines()]
     assert sum(e["method"] == "tools/call" for e in messages) == 2
     assert sum(e["method"] == "PROCESS_START" for e in messages) == 1
@@ -95,7 +95,7 @@ def test_plan_excludes_mcp_and_do_restores_tools_without_approval(tmp_path, monk
     output = StringIO()
     assert run(config_file(tmp_path), stdin=StringIO("/plan 测试\n/do\n执行任务\n/exit\n"), stdout=output,
                provider_factory=lambda _: provider) == 0
-    assert [len(options["tools"]) for _, options in provider.requests] == [3, 3, 8, 8]
+    assert [len(options["tools"]) for _, options in provider.requests] == [4, 4, 9, 9]
     assert "tool_not_allowed" in output.getvalue() and "permission_denied" in output.getvalue()
     assert '"method": "tools/call"' not in (tmp_path / "a.jsonl").read_text()
 

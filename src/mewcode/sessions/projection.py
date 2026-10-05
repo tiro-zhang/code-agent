@@ -11,7 +11,7 @@ from .codec import decode_message, decode_messages, encode_message, json_value
 
 KINDS = {'session_created', 'session_resumed', 'task_started', 'task_finished', 'mode_changed',
          'maintenance_finished', 'interaction_started', 'tool_result', 'history_commit',
-         'history_checkpoint', 'checkpoint'}
+         'history_checkpoint', 'checkpoint', 'skills_changed', 'child_event'}
 STATE_KEYS = {'version', 'failures', 'quotes', 'summary_files', 'cache_paths', 'circuit_open',
               'history_version', 'summary_version'}
 
@@ -22,6 +22,7 @@ class Projection:
     mode: str = 'execute'
     state: dict = field(default_factory=dict)
     cache_paths: set[str] = field(default_factory=set)
+    active_skills: list[dict] = field(default_factory=list)
     last_activity: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -64,10 +65,20 @@ def validate_payload(kind: str, payload, identity: str, seq: int) -> dict:
     if kind not in KINDS or not isinstance(payload, dict):
         raise ValueError('记录类型或数据无效')
     payload = json_value(payload)
+    if kind == 'child_event':
+        if (set(payload) != {'parent_task_id', 'run_id', 'skill', 'kind', 'payload'}
+                or any(not isinstance(payload[key], str) or not payload[key] for key in ('parent_task_id', 'run_id', 'skill'))
+                or payload['kind'] not in {'task_started', 'task_finished', 'interaction_started', 'tool_result',
+                                           'history_commit', 'history_checkpoint', 'skills_changed'}):
+            raise ValueError('子运行关联记录无效')
+        validate_payload(payload['kind'], payload['payload'], identity, seq)
+        return payload
     if 'mode' in payload and payload['mode'] not in {'plan', 'execute'}:
         raise ValueError('结构化模式无效')
     if 'state' in payload:
         state_value(payload['state'], identity)
+    if 'active_skills' in payload or kind == 'skills_changed':
+        activations_value(payload.get('active_skills'))
     if kind == 'task_started':
         if not isinstance(payload.get('input'), str):
             raise ValueError('真实任务输入无效')
@@ -111,8 +122,27 @@ def validate_payload(kind: str, payload, identity: str, seq: int) -> dict:
     return payload
 
 
+def activations_value(values):
+    """只接受显式、有序描述；正文、旧工具结果不参与恢复。"""
+    if not isinstance(values, list):
+        raise ValueError('激活描述必须是列表')
+    seen = set()
+    for order, item in enumerate(values):
+        if (not isinstance(item, dict) or set(item) != {'name', 'args', 'order', 'fingerprint'}
+                or not isinstance(item['name'], str)
+                or not re.fullmatch(r'[a-z][a-z0-9_-]{0,63}', item['name'])
+                or not isinstance(item['args'], str) or type(item['order']) is not int
+                or item['order'] != order or not isinstance(item['fingerprint'], str)
+                or not re.fullmatch(r'[a-f0-9]{64}', item['fingerprint']) or item['name'] in seen):
+            raise ValueError('激活描述字段或顺序无效')
+        seen.add(item['name'])
+    return values
+
+
 def activity(record) -> bool:
-    if record['kind'] in {'session_created', 'session_resumed', 'task_started', 'task_finished', 'mode_changed'}:
+    if record['kind'] in {'session_created', 'session_resumed', 'task_started', 'task_finished', 'mode_changed', 'skills_changed'}:
+        return True
+    if record['kind'] == 'history_checkpoint' and record['payload'].get('reset'):
         return True
     payload = record['payload']
     return (record['kind'] == 'maintenance_finished'
@@ -123,19 +153,35 @@ def activity(record) -> bool:
 def build_projection(records: list[dict], warnings: list[str]) -> Projection:
     projection = Projection(last_activity=timestamp(records[0]['timestamp']))
     checkpoint = None
+    children, returned = {}, set()
     for record in records:
         if activity(record):
             projection.last_activity = max(projection.last_activity, timestamp(record['timestamp']))
         payload = record['payload']
+        if record['kind'] == 'child_event':
+            children[payload['run_id']] = payload
+            payload = payload['payload']
+        elif payload.get('child_run_id'):
+            returned.add(payload['child_run_id'])
         messages = payload.get('messages', payload.get('history', []))
-        if record['kind'] == 'tool_result':
+        inner_kind = record['payload']['kind'] if record['kind'] == 'child_event' else record['kind']
+        if inner_kind == 'tool_result':
             messages = [payload['message']]
+        if record['kind'] != 'child_event':
+            for message in messages:
+                data = (message.get('tool_result') or {}).get('data')
+                if isinstance(data, dict) and isinstance(data.get('child_run_id'), str):
+                    returned.add(data['child_run_id'])
         projection.cache_paths.update(message['cache_path'] for message in messages if message.get('cache_path'))
         state = payload.get('state', {})
         projection.cache_paths.update(state.get('cache_paths', []))
         projection.cache_paths.update(state.get('summary_files', []))
         if record['kind'] in {'checkpoint', 'history_checkpoint'}:
             checkpoint = record
+    for run_id, child in children.items():
+        if run_id not in returned:
+            warnings.append(f'独立 Skill {child["skill"]}（{run_id}）主回流未完成；'
+                            '请核查存档 child_event 的实际证据及可能副作用，不自动重跑。')
     start = 0
     if checkpoint:
         projection.history = decode_messages(checkpoint['payload']['history'])
@@ -147,6 +193,8 @@ def build_projection(records: list[dict], warnings: list[str]) -> Projection:
                 break
             if 'mode' in record['payload']:
                 projection.mode = record['payload']['mode']
+            if 'active_skills' in record['payload']:
+                projection.active_skills = record['payload']['active_skills']
     known = {message.id: encode_message(message) for message in projection.history}
     pending = None
     committed_batches = {}
@@ -183,6 +231,8 @@ def build_projection(records: list[dict], warnings: list[str]) -> Projection:
         if record['seq'] <= start:
             continue
         payload, kind = record['payload'], record['kind']
+        if kind == 'child_event':
+            continue
         try:
             if kind == 'interaction_started':
                 if pending and payload['interaction_id'] == pending['id']:
@@ -230,6 +280,8 @@ def build_projection(records: list[dict], warnings: list[str]) -> Projection:
                 projection.mode = payload['mode']
             if 'state' in payload:
                 projection.state.update(payload['state'])
+            if 'active_skills' in payload:
+                projection.active_skills = payload['active_skills']
         except ValueError as error:
             if pending:
                 projection.mode, projection.state = pending['mode'], pending['state']

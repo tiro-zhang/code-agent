@@ -72,7 +72,7 @@ class CollectedResponse:
 @dataclass(frozen=True)
 class AgentEvent:
     kind: Literal["thinking_delta", "text_delta", "tool_call", "tool_started", "tool_result",
-                  "permission_requested", "permission_resolved", "usage", "progress", "history_trimmed", "context_compaction", "memory_update", "finished"]
+                  "permission_requested", "permission_resolved", "usage", "progress", "history_trimmed", "context_compaction", "memory_update", "skill_loaded", "skill_event", "finished"]
     run_id: str = ""
     iteration: int = 0
     mode: AgentMode = "execute"
@@ -96,6 +96,9 @@ class AgentEvent:
     spilled: int = 0
     failures: int = 0
     circuit_open: bool = False
+    skill_name: str = ''
+    parent_run_id: str = ''
+    child_event: 'AgentEvent | None' = None
 
 
 class Provider(Protocol):

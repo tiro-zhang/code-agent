@@ -177,7 +177,7 @@ async def test_completion_menu_survives_resize_and_hides_hidden_aliases():
             pipe.send_text('/s\t')
             await asyncio.sleep(.1)
             state = backend.chat.complete_state
-            assert {item.text for item in state.completions} == {'/session', '/status'}
+            assert {item.text for item in state.completions} == {'/session', '/skills', '/status'}
             for size in [Size(rows=8, columns=25), Size(rows=30, columns=110)]:
                 screen.size = size
                 backend.application.invalidate()

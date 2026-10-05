@@ -2,7 +2,7 @@
 
 from collections import deque
 from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import json
 import time
 
@@ -70,6 +70,12 @@ class TerminalState:
         """允许控制器展示启动、聊天或退出等输入阶段。"""
         self.phase = phase
         self._base_phase = phase
+
+    def reset_task(self):
+        """显式重置清掉旧任务展示，保留工具身份映射。"""
+        identities = self._tool_identities
+        self.__init__(self.secret)
+        self._tool_identities = identities
 
     def bind_tools(self, tools: Iterable[object]) -> None:
         """登记外部工具的真实展示身份，不保存连接配置或凭据。"""
@@ -154,6 +160,13 @@ class TerminalState:
 
     def update(self, event: AgentEvent) -> list[str]:
         """返回新终态和权限警告；正文、用量及结束日志由控制器处理。"""
+        if event.kind == 'skill_event':
+            child = event.child_event
+            if child is None or child.kind == 'finished':
+                return []
+            identity = child.run_id + ':' + child.tool_call_id if child.tool_call_id else ''
+            return self.update(replace(child, run_id=event.run_id, tool_call_id=identity,
+                call=replace(child.call, id=identity) if child.call else None))
         if self.run_id is None:
             if event.run_id in self._seen_runs:
                 return []

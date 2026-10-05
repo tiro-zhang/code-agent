@@ -124,9 +124,11 @@ class ResultCache:
         message = Message("tool", tool_result=ToolResult.success({"files": sorted(paths)}))
         return self.save(message, "context_result_index", _index=True)
 
-    def save(self, message, tool_name: str, *, _index=False) -> str:
+    def save(self, message, tool_name: str, *, _index=False, namespace='') -> str:
+        if namespace and not re.fullmatch(r'[a-zA-Z0-9_-]+', namespace):
+            raise ValueError('缓存命名空间无效')
         self._open()
-        name = 'results-index.jsonl' if _index else uuid4().hex + '.jsonl'
+        name = (namespace + '_' if namespace else '') + ('results-index.jsonl' if _index else uuid4().hex + '.jsonl')
         temporary = uuid4().hex + '.tmp'
         raw = message.tool_result.to_json()
         header = {'format': 'mewcode-result-v1', 'source': message.id,

@@ -18,7 +18,7 @@ from ..mcp.permissions import validate_grant
 from ..tools.base import strict_json
 
 
-TOOLS = frozenset(("read_file", "write_file", "edit_file", "execute_command", "glob_files", "search_code"))
+TOOLS = frozenset(("read_file", "write_file", "edit_file", "execute_command", "glob_files", "search_code", "load_skill"))
 
 
 class PermissionConfigError(ValueError):
@@ -72,7 +72,7 @@ def _approval(value, path: Path) -> Approval:
             target = validate_grant(tool, target)
         except (ValueError, TypeError, RecursionError):
             _fail(path, "外部工具批准身份或参数无效")
-    elif tool == "execute_command":
+    elif tool in {"execute_command", "load_skill"}:
         if kind != "command":
             _fail(path, "命令工具批准必须使用精确 command 范围")
     elif kind != "path" or not _absolute_normal(target) or not Path(target).is_relative_to(Path(value["root"])):

@@ -41,7 +41,7 @@ async def test_plan_filters_api_and_execution_for_all_side_effect_tools(tmp_path
     assert chat.mode == "plan" and not (tmp_path / "x").exists() and not (tmp_path / "shell").exists()
     assert (tmp_path / "a").read_text() == "old"
     for _, options in provider.requests:
-        assert {d.name for d in options["tools"]} == {"read_file", "glob_files", "search_code"}
+        assert {d.name for d in options["tools"]} == {"read_file", "glob_files", "search_code", "load_skill"}
         assert "目标" in options["system_prompt"] and "验证" in options["system_prompt"]
 
 
@@ -58,7 +58,7 @@ async def test_do_switches_only_and_next_explicit_task_uses_all_tools(tmp_path):
     assert chat.mode == "execute" and chat.prompt_state.request_sequence == 0
     events = await collect(chat.ask("请执行任务B"))
     assert events[-1].reason == "model_done" and (tmp_path / "b").read_text() == "done"
-    assert len(provider.requests[2][1]["tools"]) == 6
+    assert len(provider.requests[2][1]["tools"]) == 7
     assert [m.content for m in provider.requests[2][0] if m.role == "user"][-1] == "请执行任务B"
     sequence = chat.prompt_state.request_sequence
     chat.enter_execute()
@@ -105,7 +105,7 @@ async def test_enter_plan_restarts_period_and_recovery_still_uses_read_tools(tmp
     _, earlier = history_for_task()
     chat.history[:0] = earlier
     await collect(chat.ask("计划2"))
-    assert len(provider.requests) == 4 and [len(o["tools"]) for _, o in provider.requests] == [3, 3, 0, 3]
+    assert len(provider.requests) == 4 and [len(o["tools"]) for _, o in provider.requests] == [4, 4, 0, 4]
     fresh, _ = session(tmp_path, [])
     assert fresh.mode == "execute" and fresh.history == []
     fresh.enter_execute()

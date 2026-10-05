@@ -11,7 +11,7 @@ from .agent import Agent
 from .async_utils import protected
 from .prompts import PromptState, build_system_prompt
 from .tools import default_registry
-from .tools.base import ToolContext, strict_json
+from .tools.base import ToolContext, ToolError, strict_json
 from .tools.executor import ToolExecutor
 from .types import AgentEvent, AgentMode, Message, Provider, ToolCall
 
@@ -21,6 +21,8 @@ def operation_summary(call: ToolCall) -> str:
     try:
         arguments = strict_json(call.arguments)
         if isinstance(arguments, dict):
+            if call.name == 'load_skill' and isinstance(arguments.get('name'), str):
+                return f'Skill {arguments["name"]}' + (f' · 资源 {arguments["resource"]}' if 'resource' in arguments else '')
             for key in ("path", "command", "pattern"):
                 if isinstance(arguments.get(key), str):
                     return arguments[key]
@@ -34,8 +36,12 @@ class ChatSession:
     def __init__(self, provider: Provider, *, executor: ToolExecutor | None = None,
                  max_iterations: int = 20, permission_mode: str = "default",
                  approval_responder=None, config=None, persistent=False, resume=None,
-                 user_root=None, memory_enabled=True, notify=None) -> None:
+                 user_root=None, memory_enabled=True, notify=None, skill_catalog=None, provider_factory=None) -> None:
         self.provider = provider
+        from .providers import make_provider
+        self.provider_factory = provider_factory or make_provider
+        self._task_budget = None
+        self._task_question = ''
         self.config = config or getattr(provider, 'config', None)
         self.journal = None
         self.memory = None
@@ -60,6 +66,16 @@ class ChatSession:
         self.mode: AgentMode = "execute"
         root = self.executor.context.root
         self.user_root = Path(user_root) if user_root is not None else Path.home() / ".mewcode"
+        from .skills.catalog import discover_skills
+        from .skills.runtime import SkillRuntime
+        from .skills.service import SkillService
+        self.skills = SkillRuntime(skill_catalog or discover_skills(root, user_root=self.user_root))
+        self.warnings.extend(self.skills.catalog.warnings)
+        self.skill_service = SkillService(self.skills, self.effective_tools, run_isolated=self._run_isolated,
+                                         timeout=getattr(self.executor, 'timeout', 30))
+        if not hasattr(self.executor, 'system_handlers'):
+            self.executor.system_handlers = {}
+        self.executor.system_handlers['load_skill'] = self.skill_service
         from .instructions import load_instructions
         instructions = load_instructions(root, user_root)
         self.warnings.extend(instructions.warnings)
@@ -72,8 +88,10 @@ class ChatSession:
             self.warnings.extend(self.journal.warnings)
         self.prompt_state = PromptState(root, custom_instructions=instructions.text)
         self.agent = Agent(provider, self.executor, max_iterations=max_iterations, prompt_state=self.prompt_state,
-                           config=config, journal=self.journal, before_request=self.refresh_memory)
+                           config=config, journal=self.journal, before_request=self._before_request,
+                           allowed_tools=self.effective_tools)
         self.context = self.agent.context
+        self.skills.commit = self._save_skills
         try:
             if self.journal:
                 from .context.spill import ResultCache
@@ -84,6 +102,7 @@ class ChatSession:
                     projection = self.journal.projection
                     self.history[:] = projection.history
                     self.mode = projection.mode
+                    self.warnings.extend(self.skills.restore(projection.active_skills))
                     self.prompt_state.enter_mode(self.mode)
                     self.context.restore_state(projection.state)
                     self.context.cache.reopen(projection.cache_paths)
@@ -117,14 +136,102 @@ class ChatSession:
     def _checkpoint(self, history, state):
         from .sessions import encode_message
         try:
-            self.journal.append('history_checkpoint', {'history': [encode_message(m) for m in history], 'state': state})
+            self.journal.append('history_checkpoint', {'history': [encode_message(m) for m in history],
+                'state': state, 'active_skills': self.skills.descriptors()})
         except OSError:
             self.agent.storage_blocked = True
             raise
 
+    def _save_skills(self, descriptors):
+        if self.agent.storage_blocked:
+            raise OSError('存档已不可安全继续')
+        if self.journal:
+            try:
+                self.journal.append('skills_changed', {'active_skills': descriptors})
+            except OSError:
+                self.agent.storage_blocked = True
+                raise
+
+    def reset(self):
+        """原子保存空投影；保留会话、模式、长期记忆和所有历史证据。"""
+        from .context.manager import ContextManager
+        if self.agent.storage_blocked:
+            raise OSError('存档已不可安全继续')
+        fresh = ContextManager(self.executor.context.root, context_window=self.context.window,
+                               max_output_tokens=self.context.output, protocol=self.context.estimator.protocol)
+        fresh.cache = self.context.cache
+        fresh.checkpoint = self.context.checkpoint
+        if self.journal:
+            try:
+                self.journal.append('history_checkpoint', {'history': [], 'active_skills': [],
+                    'state': fresh.state(), 'mode': self.mode, 'reset': True})
+            except OSError:
+                self.agent.storage_blocked = True
+                raise
+        self.history.clear()
+        self.skills.active = ()
+        self.context = self.agent.context = fresh
+        self.agent.last_task = None
+        self.agent.current_user = None
+        self.agent.task_budget = self._task_budget = None
+        self._task_question = ''
+        self.prompt_state.enter_mode(self.mode)
+        self._before_request()
+
     def refresh_memory(self):
         if self.memory:
             self.prompt_state.update_memory(self.memory.refresh())
+
+    def effective_tools(self):
+        return self.skills.allowed_tools(self.executor.registry.names(), mode=self.mode)
+
+    def _before_request(self):
+        self.refresh_memory()
+        self.prompt_state.active_skills = self.skills.render_active()
+        self.prompt_state.skill_index = self.skills.catalog.index_text()
+        self.prompt_state.allowed_tools = self.effective_tools()
+
+    def validate_skills(self):
+        self.skills.catalog.validate_tools(self.executor.registry.names())
+
+    async def _run_isolated(self, skill, args, history, **options):
+        from .skills.runner import run_isolated
+        return await run_isolated(self, skill, args, history, **options)
+
+    def run_skill(self, name, args='', *, cancel_event=None):
+        from .skills.invocation import run_skill
+        return run_skill(self, name, args, cancel_event=cancel_event)
+
+    def refresh_skills(self):
+        """空闲输入边界先验证完整候选，再共同发布目录和激活。"""
+        from .commands.builtins import build_registry
+        from .skills.catalog import discover_skills
+        try:
+            candidate = discover_skills(self.executor.context.root, user_root=self.user_root)
+            if candidate == self.skills.catalog:
+                return None, []
+            registry = build_registry(candidate)
+            candidate.validate_tools(self.executor.registry.names())
+            warnings = [*candidate.warnings, *self.skills.replace_catalog(candidate)]
+            self._before_request()
+            return registry, warnings
+        except (ValueError, ToolError) as error:
+            return None, [f'Skill 刷新失败，保留上一完整快照：{error}']
+
+    def skills_text(self, args=''):
+        parts = args.split()
+        if parts[:1] == ['deactivate'] and len(parts) == 2:
+            self.skills.deactivate(parts[1])
+            self._before_request()
+        elif parts not in ([], ['list'], ['active']):
+            raise ValueError('用法：/skills [list|active]；/skills deactivate <name|--all>')
+        active = {a.skill.name for a in self.skills.active}
+        selected = [s for s in self.skills.catalog.skills if parts != ['active'] or s.name in active]
+        lines = [f'{s.name} · {s.description} · {s.mode} · {s.layer}:{s.path} · '
+                 + ('已激活' if s.name in active else '未激活') for s in selected]
+        lines.append('普通工具：' + (', '.join(sorted(self.effective_tools() - {'load_skill'})) or '无'))
+        lines.append('系统入口：load_skill；/skills deactivate <name|--all> 停用；/reset 清空对话与激活。')
+        return '\n'.join(lines)
 
     def _memory_notification(self, notification):
         kind = notification.get('kind')
@@ -173,8 +280,13 @@ class ChatSession:
         self.prompt_state.enter_mode("plan")
 
     async def ask(self, question: str, *, cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
+        self.validate_skills()
+        from .skills.budget import TaskBudget
+        self._task_budget = TaskBudget(self.agent.max_iterations, uuid4().hex)
+        self._task_question = question
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
-        source = self.agent.run(question, history=self.history, mode=self.mode, cancel_event=cancel)
+        source = self.agent.run(question, history=self.history, mode=self.mode, cancel_event=cancel,
+                                budget=self._task_budget, run_id=self._task_budget.root_run_id)
         try:
             async for event in source:
                 if event.kind == 'finished' and event.reason == 'model_done' and self.memory:
@@ -183,6 +295,7 @@ class ChatSession:
                 yield event
         finally:
             await protected(source.aclose(), cancel_event=cancel)
+            self._task_budget = None
 
     def enter_execute(self) -> None:
         """只切换模式；重复切换不重置当前请求周期。"""
@@ -194,7 +307,8 @@ class ChatSession:
         self.prompt_state.enter_mode("execute")
 
     def context_status(self) -> str:
-        allowed = self.executor.registry.names(read_only=True) if self.mode == 'plan' else self.executor.registry.names()
+        self._before_request()
+        allowed = self.effective_tools()
         self.context.estimate([*self.history, self.prompt_state.peek_request()], build_system_prompt(),
                               self.executor.registry.definitions(allowed_tools=allowed))
         identity = f'会话> {self.session_id or "未启用存档"} · {"显式恢复" if self.resumed else "新建"}\n'
@@ -229,8 +343,8 @@ class ChatSession:
         """当前 MCP 工具确定后，仅一次独立恢复摘要，不执行历史任务。"""
         if not self.resumed:
             return
-        self.refresh_memory()
-        allowed = self.executor.registry.names(read_only=True) if self.mode == 'plan' else self.executor.registry.names()
+        self._before_request()
+        allowed = self.effective_tools()
         tools = self.executor.registry.definitions(allowed_tools=allowed)
         system = build_system_prompt()
         reminder = self.prompt_state.peek_request(force_full=True)
@@ -290,7 +404,8 @@ class ChatSession:
             yield event('context_compaction', phase='spill_failed', text=warning)
         yield event('context_compaction', phase='summary', spilled=spilled, text='正在准备手动摘要（最多一次请求）')
         user = next((m for m in reversed(self.history) if m.role == 'user'), None)
-        allowed = self.executor.registry.names(read_only=True) if self.mode == 'plan' else self.executor.registry.names()
+        self._before_request()
+        allowed = self.effective_tools()
         def started():
             nonlocal iteration
             iteration = 1

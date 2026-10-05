@@ -114,6 +114,16 @@ class TerminalController:
         if self.backend:
             self.backend.application.invalidate()
 
+    def replace_registry(self, registry):
+        """发布整代命令；帮助、分发和当前补全共用同一对象。"""
+        self.registry = registry
+        if self.backend:
+            from .input import CommandCompleter
+            self.backend.registry = registry
+            self.backend.chat.completer = CommandCompleter(registry)
+            self.backend.chat.cancel_completion()
+            self.backend.application.invalidate()
+
     def write(self, text, *, review=False):
         if self.approval_active and not review:
             self._deferred.append(text)

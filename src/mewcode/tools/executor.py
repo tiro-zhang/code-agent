@@ -64,17 +64,19 @@ def _cleanup(process, grouped: bool) -> None:
 
 class ToolExecutor:
     def __init__(self, registry: ToolRegistry, context: ToolContext, *, timeout: float = 30,
-                 permissions: PermissionManager | None = None, mcp=None) -> None:
+                 permissions: PermissionManager | None = None, mcp=None, system_handlers=None) -> None:
         if os.name != "posix":
             raise ValueError("工具执行目前需要 macOS 或 Linux 等 POSIX 环境")
         self.registry, self.context, self.timeout = registry, context, timeout
         self.permissions = permissions if permissions is not None else PermissionManager(context.root)
         self.mcp = mcp
+        self.system_handlers = dict(system_handlers or {})
 
     async def execute(self, name: str, raw: str, *, allowed_tools: frozenset[str] | None = None,
                       cancel_event: asyncio.Event | None = None, on_event=None) -> ToolResult:
         try:
-            tool, arguments = self.registry.prepare(name, raw, allowed_tools=allowed_tools)
+            current = allowed_tools() if callable(allowed_tools) else allowed_tools
+            tool, arguments = self.registry.prepare(name, raw, allowed_tools=current)
         except ToolError as error:
             return error.result()
         cancel_event = cancel_event if cancel_event is not None else asyncio.Event()
@@ -90,12 +92,17 @@ class ToolExecutor:
             context = replace(self.context, authorized_paths=authorization.targets,
                               permission_skipped_files=authorization.skipped_files)
             raw = json.dumps(authorization.arguments, ensure_ascii=False)
+            # 授权等待后仍按当前状态检查，批准不扩大工具范围。
+            current = allowed_tools() if callable(allowed_tools) else allowed_tools
+            self.registry.prepare(name, raw, allowed_tools=current)
         except ToolError as error:
             return error.result()
         except asyncio.CancelledError:
             cancel_event.set()
             return ToolResult.failure("cancelled", "任务取消，工具未启动", details={"not_started": True})
         # 人工审批不消耗工具的执行时间预算。
+        if getattr(tool, "system", False):
+            return await self._execute_system(name, authorization.arguments, cancel_event, on_event)
         from ..mcp.tools import MCPTool
         if isinstance(tool, MCPTool):
             if self.mcp is None:
@@ -163,3 +170,35 @@ class ToolExecutor:
             truncated |= any(value[1] for value in decoded.values())
         details = {"side_effects_may_have_occurred": mutating}
         return ToolResult.failure(failure, detail, details=details, data=data, truncated=truncated)
+
+    async def _execute_system(self, name, arguments, cancel, on_event):
+        handler = self.system_handlers.get(name)
+        if handler is None:
+            return ToolResult.failure("skill_unavailable", "系统加载服务未初始化", details={"not_started": True})
+        timeout = handler.timeout_for(arguments) if hasattr(handler, "timeout_for") else self.timeout
+        operation = asyncio.create_task(handler(arguments, cancel_event=cancel, on_event=on_event))
+        watcher = asyncio.create_task(cancel.wait())
+        try:
+            if on_event:
+                await on_event({"kind": "tool_started"})
+            done, _ = await asyncio.wait((operation, watcher), timeout=timeout, return_when=asyncio.FIRST_COMPLETED)
+            if operation in done:
+                return operation.result()
+            operation.cancel()
+            results = await protected(asyncio.gather(operation, return_exceptions=True), cancel_event=cancel)
+            if isinstance(results[0], ToolResult):
+                return results[0]
+            return ToolResult.failure("cancelled" if cancel.is_set() else "timeout",
+                                      "系统加载已取消" if cancel.is_set() else "系统加载超时")
+        except ToolError as error:
+            return error.result()
+        except asyncio.CancelledError:
+            cancel.set()
+            operation.cancel()
+            results = await protected(asyncio.gather(operation, return_exceptions=True), cancel_event=cancel)
+            if isinstance(results[0], ToolResult):
+                return results[0]
+            return ToolResult.failure("cancelled", "系统加载取消，已完成操作保留")
+        finally:
+            watcher.cancel()
+            await asyncio.gather(watcher, return_exceptions=True)

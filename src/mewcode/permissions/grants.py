@@ -26,7 +26,7 @@ class GrantStore:
             return validate_grant(tool, value)
         if tool not in TOOLS or not isinstance(value, str) or not value.strip() or "\x00" in value:
             raise ValueError("授权工具或精确目标无效")
-        if tool == "execute_command":
+        if tool in {"execute_command", "load_skill"}:
             if kind != "command":
                 raise ValueError("命令授权必须使用精确 command")
             return value

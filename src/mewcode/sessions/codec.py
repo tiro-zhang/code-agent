@@ -7,7 +7,7 @@ from ..types import Message, ToolCall
 
 MESSAGE_FIELDS = {'id', 'role', 'content', 'context_kind', 'tool_calls', 'tool_call_id',
                   'tool_result', 'provider_content', 'cache_path'}
-CONTEXT_KINDS = {'', 'runtime', 'summary', 'boundary', 'resume'}
+CONTEXT_KINDS = {'', 'runtime', 'summary', 'boundary', 'resume', 'skill_background'}
 
 
 def json_value(value):

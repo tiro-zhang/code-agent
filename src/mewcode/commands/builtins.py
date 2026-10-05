@@ -4,13 +4,6 @@ import re
 from .ports import CommandContext, CommandResult, CommandUsageError
 from .registry import CommandRegistry, CommandSpec
 
-REVIEW_PROMPT = (
-    '请审查以下目标，按严重程度报告有证据支持的问题，给出文件位置、影响和验证依据。'
-    '说明已检查的范围、验证结果与无法验证的限制；没有发现时明确说明。'
-    '遵守当前模式及权限，不自动修改或修复文件。\n审查目标：'
-)
-
-
 async def help_command(args: str, context: CommandContext) -> CommandResult:
     context.show_message(context.registry.help_text(enhanced=context.enhanced))
     return CommandResult()
@@ -77,8 +70,23 @@ async def status_command(args: str, context: CommandContext) -> CommandResult:
     return CommandResult()
 
 
-async def review_command(args: str, context: CommandContext) -> CommandResult:
-    return CommandResult('message', REVIEW_PROMPT + (args or '当前 Git 工作区的未提交改动（含暂存、未暂存及未跟踪文件）。'))
+async def skills_command(args: str, context: CommandContext) -> CommandResult:
+    context.show_message(context.skills_text(args))
+    context.refresh_status()
+    return CommandResult()
+
+
+async def reset_command(args: str, context: CommandContext) -> CommandResult:
+    context.reset_session()
+    context.refresh_status()
+    context.show_message('对话历史和激活 Skill 已清空；会话身份、模式、权限、长期记忆和存档证据保留。')
+    return CommandResult()
+
+
+def skill_command(name):
+    async def invoke(args: str, context: CommandContext) -> CommandResult:
+        return CommandResult('skill', args, name)
+    return invoke
 
 
 async def exit_command(args: str, context: CommandContext) -> CommandResult:
@@ -108,11 +116,23 @@ def builtin_definitions() -> tuple[CommandSpec, ...]:
                     '/permission [mode strict|default|bypass | revoke session|permanent]', 'state', permission_command,
                     argument_hint='任务模式与权限模式相互独立', accepts_arguments=True, argument_choices=PERMISSION_CHOICES),
         CommandSpec('status', (), '查看模式、上下文估算及实际 Token 用量', '/status', 'local', status_command),
-        CommandSpec('review', (), '将固定审查提示词交给 AI', '/review [目标]', 'prompt', review_command,
-                    argument_hint='默认当前 Git 未提交改动；可提供路径或关注点', accepts_arguments=True),
+        CommandSpec('reset', (), '清空模型历史和激活 Skill，保留会话与证据', '/reset', 'state', reset_command),
+        CommandSpec('skills', (), '查看或停用已激活 Skill', '/skills [list|active|deactivate <name|--all>]',
+                    'state', skills_command, accepts_arguments=True,
+                    argument_choices=(('list',), ('active',), ('deactivate', '--all'))),
         CommandSpec('exit', (), '受控退出并保留存档', '/exit', 'state', exit_command),
     )
 
 
-def build_registry() -> CommandRegistry:
-    return CommandRegistry(builtin_definitions()).freeze()
+def build_registry(catalog=None) -> CommandRegistry:
+    if catalog is None:
+        from pathlib import Path
+        from ..skills.catalog import discover_skills
+        catalog = discover_skills(Path.cwd())
+    registry = CommandRegistry(builtin_definitions())
+    catalog.validate_names({name for d in registry.definitions for name in (d.name, *d.aliases)})
+    for skill in catalog.skills:
+        registry.register(CommandSpec(skill.name, (), f'{skill.description}（{skill.mode}）',
+            f'/{skill.name} [参数]', 'prompt', skill_command(skill.name),
+            argument_hint='参数原文传给 Skill SOP；遵守当前模式和权限', accepts_arguments=True))
+    return registry.freeze()

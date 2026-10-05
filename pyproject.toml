@@ -27,5 +27,8 @@ dev = ["pytest"]
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"mewcode.skills" = ["builtin/*.md", "builtin/**/*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

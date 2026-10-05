@@ -32,7 +32,7 @@ def _total_usage(records: list[TokenUsage]) -> TokenUsage:
 class Agent:
     def __init__(self, provider: Provider, executor: ToolExecutor, *, max_iterations: int = 20,
                  prompt_state: PromptState | None = None, context_manager: ContextManager | None = None,
-                 config=None, journal=None, before_request=None) -> None:
+                 config=None, journal=None, before_request=None, allowed_tools=None) -> None:
         if isinstance(max_iterations, bool) or not isinstance(max_iterations, int) or max_iterations <= 0:
             raise ValueError("max_iterations 必须是正整数")
         self.provider, self.executor, self.max_iterations = provider, executor, max_iterations
@@ -45,28 +45,43 @@ class Agent:
         self.journal, self.before_request = journal, before_request
         self.last_task = None
         self.storage_blocked = False
+        self.allowed_tools = allowed_tools
+        self.prompt_state.allowed_tools = self.effective_tools(self.prompt_state.mode)
+
+    def effective_tools(self, mode):
+        if self.allowed_tools:
+            return self.allowed_tools()
+        names = self.executor.registry.names()
+        if mode == 'plan':
+            names &= {'read_file', 'glob_files', 'search_code'}
+        return names | ({"load_skill"} if "load_skill" in self.executor.registry.names() else set())
 
     async def run(self, question: str, *, history: list[Message], mode: AgentMode,
-                  cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
+                  cancel_event: asyncio.Event | None = None, budget=None, run_id=None) -> AsyncIterator[AgentEvent]:
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
-        run_id, iteration, unknown_count = uuid4().hex, 0, 0
+        from .skills.budget import TaskBudget
+        run_id = run_id or uuid4().hex
+        budget = budget or TaskBudget(self.max_iterations, run_id)
+        self.task_budget = budget
+        iteration, unknown_count = budget.used, 0
         if self.prompt_state.mode != mode:
             self.prompt_state.enter_mode(mode)
         context = None
         committed = False
         force_compaction = recovered = False
         user = Message("user", question)
+        self.current_user = user
         usage_records: list[TokenUsage] = []
         reason: StopReason = "max_iterations"
         detail = "达到模型请求上限，任务停止"
-        allowed = self.executor.registry.names(read_only=True) if mode == "plan" else self.executor.registry.names()
+        allowed = lambda: self.effective_tools(mode)
 
         def event(kind, **fields):
-            return AgentEvent(kind, run_id=run_id, iteration=iteration, mode=mode,
+            return AgentEvent(kind, run_id=run_id, iteration=budget.used, mode=mode,
                               permission_mode=getattr(getattr(self.executor, "permissions", None), "mode", "default"),
-                              max_iterations=self.max_iterations, **fields)
+                              max_iterations=budget.limit, **fields)
 
-        tools = self.executor.registry.definitions(allowed_tools=allowed)
+        tools = self.executor.registry.definitions(allowed_tools=allowed())
         system = build_system_prompt()
 
         interaction_id = None
@@ -103,9 +118,11 @@ class Agent:
             if self.storage_blocked:
                 raise OSError('存档已不可安全继续')
             record('task_started', {'task_id': run_id, 'input': question, 'mode': mode, 'user_id': user.id})
-            while iteration < self.max_iterations and not cancel.is_set():
+            while budget.remaining > 0 and not cancel.is_set():
                 if self.before_request:
                     self.before_request()
+                tools = self.executor.registry.definitions(allowed_tools=allowed())
+                self.prompt_state.allowed_tools = allowed()
                 spilled, warnings = self.context.spill(history)
                 for warning in warnings:
                     yield event('context_compaction', phase='spill_failed', text=warning)
@@ -123,11 +140,13 @@ class Agent:
                                 text='正在准备结构化摘要')
                     def started():
                         nonlocal iteration
-                        iteration += 1
+                        budget.take()
+                        iteration = budget.used
                     result = await self.context.compact(self.provider, history, user, tools, system,
                         self.prompt_state.peek_request(force_full=True), cancel, on_start=started)
                     if result.called:
                         usage_records.append(result.usage)
+                        budget.usage.append(result.usage)
                         yield event('usage', usage=result.usage, purpose='summary')
                     yield event('context_compaction', phase='success' if result.success else 'cancelled' if result.cancelled else 'failed',
                                 purpose='summary', text=result.text, estimated_before=result.before,
@@ -139,7 +158,7 @@ class Agent:
                         self.prompt_state.history_trimmed()
                         recovered |= force_compaction
                         force_compaction = False
-                    elif iteration >= self.max_iterations:
+                    elif not budget.remaining:
                         break
                     elif not result.called or result.overflow or result.blocked or self.context.circuit_open:
                         reason, detail = 'context_blocked', result.text + '；可使用 /compact 或核对窗口配置'
@@ -147,17 +166,18 @@ class Agent:
                     else:
                         force_compaction = True
                     continue
-                yield AgentEvent("progress", run_id=run_id, iteration=iteration + 1, mode=mode,
+                yield AgentEvent("progress", run_id=run_id, iteration=budget.used + 1, mode=mode,
                                  permission_mode=getattr(getattr(self.executor, "permissions", None), "mode", "default"),
-                                 phase="model", max_iterations=self.max_iterations)
+                                 phase="model", max_iterations=budget.limit)
                 if cancel.is_set():
                     break
-                iteration += 1
                 request_snapshot = None
                 async def request():
-                    nonlocal context, request_snapshot
+                    nonlocal context, request_snapshot, iteration
                     if cancel.is_set():
                         return
+                    budget.take()
+                    iteration = budget.used
                     context = self.prompt_state.begin_request()
                     messages = [*history, *(() if committed else (user,)), context]
                     request_snapshot = self.context.estimator.snapshot(messages, system, tools)
@@ -171,7 +191,7 @@ class Agent:
                             await close()
 
                 collector = StreamCollector(request())
-                source = collector.events(run_id=run_id, iteration=iteration, mode=mode)
+                source = collector.events(run_id=run_id, iteration=budget.used + 1, mode=mode)
                 failure = None
                 displayed = False
                 try:
@@ -192,12 +212,13 @@ class Agent:
                 finally:
                     await protected(source.aclose(), cancel_event=cancel)
                 usage_records.append(collector.usage)
+                budget.usage.append(collector.usage)
                 yield event("usage", usage=collector.usage)
                 if cancel.is_set():
                     break
                 if failure is not None:
                     if isinstance(failure, ContextLimitError) and not displayed:
-                        if iteration >= self.max_iterations:
+                        if not budget.remaining:
                             break
                         if recovered:
                             reason, detail = 'context_blocked', '摘要恢复后的工作请求仍超限，请核对 context_window 与 max_output_tokens'
@@ -256,7 +277,7 @@ class Agent:
             reason, detail = 'context_blocked', '会话存档写入失败，已完成操作可能有副作用；停止后续工具和模型请求，请检查磁盘'
         if cancel.is_set():
             reason, detail = "cancelled", "用户取消任务；已完成的操作和结果保留，请按需检查实际状态"
-        total = _total_usage(usage_records)
+        total = _total_usage(budget.usage if run_id == budget.root_run_id else usage_records)
         try:
             usage = asdict(total)
             usage['incomplete_fields'] = sorted(total.incomplete_fields)
