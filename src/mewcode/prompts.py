@@ -79,7 +79,7 @@ class PromptState:
     def history_trimmed(self) -> None:
         self.full_pending = True
 
-    def peek_request(self, *, force_full=False) -> Message:
+    def peek_request(self, *, force_full=False, injections=()) -> Message:
         """预算预览不消耗工作请求序号。"""
         full = force_full or self.full_pending or self.request_sequence % 5 == 0
         if self.mode == 'plan':
@@ -97,10 +97,12 @@ class PromptState:
             if 'load_skill' in self.allowed_tools:
                 mode += '；系统入口：load_skill。普通操作仍须遵守权限规则和有效授权。'
         content = '\n\n'.join([*pinned, *([self.environment, *self.supplements] if full else []), mode])
+        if injections:
+            content += '\n\n## 生命周期 Hook 补充\n' + '\n\n'.join(item.text for item in injections)
         return Message('context', f'<mewcode-context>\n{content}\n</mewcode-context>', context_kind='runtime')
 
-    def begin_request(self) -> Message:
-        self._candidate = self.peek_request()
+    def begin_request(self, *, injections=()) -> Message:
+        self._candidate = self.peek_request(injections=injections)
         self._candidate_full = self.full_pending or self.request_sequence % 5 == 0
         self.request_sequence += 1
         if self._candidate_full:

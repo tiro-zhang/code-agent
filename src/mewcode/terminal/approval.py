@@ -32,6 +32,8 @@ class ApprovalView:
         external = getattr(request, "external", None)
         self._external = tuple(str(value) for value in external) if external else None
         self._connection = str(getattr(request, "connection_description", ""))
+        origin = getattr(request, 'origin', None)
+        self._origin = tuple(str(value) for value in origin) if origin else None
         self._root, self._secret = str(root), secret
 
     @property
@@ -41,6 +43,8 @@ class ApprovalView:
 
     def identity(self) -> str:
         """翻到任意页面时仍可辨认当前操作对象。"""
+        if self._origin:
+            return self._field(f'Hook {self._origin[0]} · {self._origin[1]} · {self._tool}')
         if self._external:
             return self._field(f'{self._external[0]} / {self._external[1]}')
         count = f' · {len(self._targets)} 个目标' if self._tool in FILE_TOOLS else ''
@@ -97,6 +101,8 @@ class ApprovalView:
         scope = ("精确外部身份及完整参数" if self._external else "完整精确命令" if self._tool == "execute_command"
                  else "列出的真实文件（未来内容可变）" if self._tool in FILE_TOOLS else "完整 JSON 参数")
         lines = [f"操作> {operation}", f"范围> 本次仅当前调用；会话／永久绑定当前项目及{scope}。"]
+        if self._origin:
+            lines.insert(0, f'来源> {self.identity()}')
         if self._external:
             lines.append(self.detail('arguments'))
         elif self._tool in {'write_file', 'edit_file'}:

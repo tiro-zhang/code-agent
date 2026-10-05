@@ -1,0 +1,24 @@
+add-lifecycle-hooks 独立只读代码审查（2026-10-05）
+
+范围：原目录未提交实现、OpenSpec 四类文档、Hook 模块与全部集成改动、测试、README、依赖。
+审查者：独立 final_review Agent；未参与实现。没有请求提交、合并或归档。
+
+初审发现：
+1. Important：受保护的进程创建窗口中，Hook 自身超时被误记为父任务取消。
+   修复：命令内部使用自己的取消事件；真正任务取消仍清理进程组并向外传播。
+   RED：test_own_timeout_during_spawn_does_not_set_parent_cancel 复现。
+2. Important：控制命令的 Hook 审批后恢复 idle，导致执行尚未结束时 Ctrl+C 清草稿。
+   修复：控制指令使用 control 输入阶段，审批恢复到 control；取消清理结束后才 idle，不创建普通任务。
+   RED：test_enhanced_control_hook_keeps_input_closed_after_approval_until_cleanup 复现。
+3. 压缩 before Hook 在 try/finally 外，Task.cancel 后漏发 after。
+   初审列为 Minor；依据明确的成对通知规格，实施者将其按 Important 修复。
+   RED：test_task_cancel_during_compaction_before_emits_cancelled_after 复现。
+
+补充：未知／非法工具调用在实际启动前失败，原错误未标 not_started。两项 RED 回归后已修复。
+授权语义确认：Hook 来源用于不可变审批展示，不另建授权域；Hook allow 不批准目标工具。
+人工会话／永久批准仍按既有项目根与完整精确命令复用；README 和 design 明确这一点。
+
+实施者修复后定向回归：39 passed in 7.72s。
+同一审查者逐点复核：7 passed in 4.26s；另 3 项未知／非法／规划工具回归 passed in 0.40s。
+最终结论：原三项均修复，未发现新的 Critical 或 Important，可进入最终全量测试和 tmux 验收。
+全量测试、构建、真实模型及清单结论见 README.md 和对应独立日志，不把审查意见当作运行证据。

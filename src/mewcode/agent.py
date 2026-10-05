@@ -32,7 +32,7 @@ def _total_usage(records: list[TokenUsage]) -> TokenUsage:
 class Agent:
     def __init__(self, provider: Provider, executor: ToolExecutor, *, max_iterations: int = 20,
                  prompt_state: PromptState | None = None, context_manager: ContextManager | None = None,
-                 config=None, journal=None, before_request=None, allowed_tools=None) -> None:
+                 config=None, journal=None, before_request=None, allowed_tools=None, hooks=None) -> None:
         if isinstance(max_iterations, bool) or not isinstance(max_iterations, int) or max_iterations <= 0:
             raise ValueError("max_iterations 必须是正整数")
         self.provider, self.executor, self.max_iterations = provider, executor, max_iterations
@@ -47,6 +47,12 @@ class Agent:
         self.storage_blocked = False
         self.allowed_tools = allowed_tools
         self.prompt_state.allowed_tools = self.effective_tools(self.prompt_state.mode)
+        if hooks is None:
+            from .hooks.runtime import create_runtime
+            from .permissions.runtime import PermissionManager
+            permissions = getattr(executor, 'permissions', None) or PermissionManager(executor.context.root)
+            hooks = create_runtime(executor.context.root, permissions, lambda: self.prompt_state.mode)
+        self.hooks = hooks
 
     def effective_tools(self, mode):
         if self.allowed_tools:
@@ -57,7 +63,51 @@ class Agent:
         return names | ({"load_skill"} if "load_skill" in self.executor.registry.names() else set())
 
     async def run(self, question: str, *, history: list[Message], mode: AgentMode,
-                  cancel_event: asyncio.Event | None = None, budget=None, run_id=None) -> AsyncIterator[AgentEvent]:
+                  cancel_event: asyncio.Event | None = None, budget=None, run_id=None,
+                  turn_owned=False, parent_run_id='') -> AsyncIterator[AgentEvent]:
+        """直接 Agent 调用也具备边界；会话和 Skill 可声明已有顶层所有者。"""
+        from .skills.budget import TaskBudget
+        cancel = cancel_event if cancel_event is not None else asyncio.Event()
+        run_id = run_id or uuid4().hex
+        budget = budget or TaskBudget(self.max_iterations, run_id)
+        if self.prompt_state.mode != mode:
+            self.prompt_state.enter_mode(mode)
+        fields = self.hook_fields(budget, run_id, parent_run_id)
+        if not turn_owned:
+            await protected(self.hooks.start(cancel_event=cancel), cancel_event=cancel)
+            await protected(self.hooks.emit('turn.start', **fields, message={'text': question}, cancel_event=cancel), cancel_event=cancel)
+            await protected(self.hooks.emit('message.user', **fields, message={'text': question, 'role': 'user'}, cancel_event=cancel), cancel_event=cancel)
+        source = self._run(question, history=history, mode=mode, cancel_event=cancel,
+                           budget=budget, run_id=run_id, parent_run_id=parent_run_id)
+        reason = None
+        try:
+            async for item in source:
+                if item.kind == 'finished':
+                    reason = item.reason
+                yield item
+        finally:
+            if reason is None:
+                cancel.set()
+            await protected(source.aclose(), cancel_event=cancel)
+            if not turn_owned:
+                await protected(self.hooks.emit('turn.end', **self.hook_fields(budget, run_id, parent_run_id), reason=reason or 'cancelled', cancel_event=cancel), cancel_event=cancel)
+
+    def hook_fields(self, budget, run_id, parent_run_id=''):
+        fields = {'turn_id': budget.root_run_id, 'run_id': run_id,
+                  'budget': {'used': budget.used, 'max_iterations': budget.limit}}
+        if parent_run_id:
+            fields['parent_run_id'] = parent_run_id
+        if self.journal:
+            fields['archive_session_id'] = getattr(self.journal, 'id', '')
+        return fields
+
+    async def aclose(self):
+        await self.hooks.close()
+        self.context.cache.close()
+
+    async def _run(self, question: str, *, history: list[Message], mode: AgentMode,
+                   cancel_event: asyncio.Event | None = None, budget=None, run_id=None,
+                   parent_run_id='') -> AsyncIterator[AgentEvent]:
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
         from .skills.budget import TaskBudget
         run_id = run_id or uuid4().hex
@@ -87,6 +137,8 @@ class Agent:
         interaction_id = None
         tool_messages = {}
         evidence = []
+        request_id = None
+        hook_fields = lambda: self.hook_fields(budget, run_id, parent_run_id)
 
         def record(kind, payload):
             if self.journal:
@@ -119,6 +171,11 @@ class Agent:
                 raise OSError('存档已不可安全继续')
             record('task_started', {'task_id': run_id, 'input': question, 'mode': mode, 'user_id': user.id})
             while budget.remaining > 0 and not cancel.is_set():
+                if request_id is None:
+                    request_id = uuid4().hex
+                    await self.hooks.emit('message.before_request', **hook_fields(), request_id=request_id, message={'text': question, 'role': 'user'}, cancel_event=cancel)
+                if cancel.is_set():
+                    break
                 if self.before_request:
                     self.before_request()
                 tools = self.executor.registry.definitions(allowed_tools=allowed())
@@ -129,8 +186,9 @@ class Agent:
                 if spilled:
                     yield event('context_compaction', phase='spill', spilled=spilled,
                                 text=f'已将 {spilled} 项工具结果落盘，原文可按路径读取')
+                selected = self.hooks.prompts.snapshot()
                 estimate = self.context.estimate([*history, *(() if committed else (user,)),
-                                                  self.prompt_state.peek_request()], system, tools)
+                                                  self.prompt_state.peek_request(injections=selected)], system, tools)
                 if force_compaction or not self.context.fits(estimate):
                     if self.context.circuit_open:
                         reason, detail = 'context_blocked', '自动摘要已熔断，请使用 /compact 单次尝试或新建会话'
@@ -143,7 +201,8 @@ class Agent:
                         budget.take()
                         iteration = budget.used
                     result = await self.context.compact(self.provider, history, user, tools, system,
-                        self.prompt_state.peek_request(force_full=True), cancel, on_start=started)
+                        self.prompt_state.peek_request(force_full=True, injections=selected), cancel, on_start=started,
+                        hooks=self.hooks, hook_fields=hook_fields)
                     if result.called:
                         usage_records.append(result.usage)
                         budget.usage.append(result.usage)
@@ -172,13 +231,21 @@ class Agent:
                 if cancel.is_set():
                     break
                 request_snapshot = None
+                request_started = False
                 async def request():
-                    nonlocal context, request_snapshot, iteration
+                    nonlocal context, request_snapshot, iteration, request_started
                     if cancel.is_set():
                         return
+                    selected = self.hooks.prompts.snapshot()
+                    preview = self.prompt_state.peek_request(injections=selected)
+                    estimate = self.context.estimate([*history, *(() if committed else (user,)), preview], system, tools)
+                    if not self.context.fits(estimate):
+                        raise ContextLimitError('工作请求准备后超出上下文预算')
                     budget.take()
                     iteration = budget.used
-                    context = self.prompt_state.begin_request()
+                    context = self.prompt_state.begin_request(injections=selected)
+                    self.hooks.prompts.consume(selected)
+                    request_started = True
                     messages = [*history, *(() if committed else (user,)), context]
                     request_snapshot = self.context.estimator.snapshot(messages, system, tools)
                     stream = self.provider.stream(messages, tools=tools, tool_choice="auto", system_prompt=system)
@@ -211,6 +278,9 @@ class Agent:
                     failure = ProviderError("模型响应处理失败，请检查服务和运行环境")
                 finally:
                     await protected(source.aclose(), cancel_event=cancel)
+                if not request_started and isinstance(failure, ContextLimitError):
+                    force_compaction = True
+                    continue
                 usage_records.append(collector.usage)
                 budget.usage.append(collector.usage)
                 yield event("usage", usage=collector.usage)
@@ -224,11 +294,14 @@ class Agent:
                             reason, detail = 'context_blocked', '摘要恢复后的工作请求仍超限，请核对 context_window 与 max_output_tokens'
                             break
                         force_compaction = True
+                        request_id = None
                         continue
                     reason, detail = "stream_error", str(failure)
                     break
                 self.context.estimator.observe(request_snapshot, collector.usage)
                 response = collector.response.message
+                await self.hooks.emit('message.after_response', **hook_fields(), request_id=request_id, message={'text': response.content, 'role': 'assistant', 'tool_calls': [{'id': call.id, 'name': call.name, 'arguments': call.arguments} for call in response.tool_calls]}, cancel_event=cancel)
+                request_id = None
                 if not response.tool_calls:
                     commit(response)
                     reason, detail = "model_done", "模型已结束本次任务"
@@ -246,7 +319,7 @@ class Agent:
                     evidence.append(message)
                     if self.journal:
                         record('tool_result', {'interaction_id': interaction_id, 'message': encoded([message])[0]})
-                scheduler = ToolScheduler(self.executor, on_result=save_result)
+                scheduler = ToolScheduler(self.executor, on_result=save_result, hooks=self.hooks, hook_fields=hook_fields)
                 yield event("progress", phase="tools")
                 batch = scheduler.run(response.tool_calls, allowed_tools=allowed, run_id=run_id,
                                       iteration=iteration, mode=mode, cancel_event=cancel)

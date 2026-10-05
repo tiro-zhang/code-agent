@@ -64,6 +64,8 @@ class ChatSession:
                                                  responder=approval_responder)
         self.history: list[Message] = []
         self.mode: AgentMode = "execute"
+        self._hook_turn = None
+        self._restore_prepared = False
         root = self.executor.context.root
         self.user_root = Path(user_root) if user_root is not None else Path.home() / ".mewcode"
         from .skills.catalog import discover_skills
@@ -87,9 +89,11 @@ class ChatSession:
                             Journal.create(root, self.config.protocol, self.config.model))
             self.warnings.extend(self.journal.warnings)
         self.prompt_state = PromptState(root, custom_instructions=instructions.text)
+        from .hooks.runtime import create_runtime
+        self.hooks = create_runtime(root, self.permissions, lambda: self.mode)
         self.agent = Agent(provider, self.executor, max_iterations=max_iterations, prompt_state=self.prompt_state,
                            config=config, journal=self.journal, before_request=self._before_request,
-                           allowed_tools=self.effective_tools)
+                           allowed_tools=self.effective_tools, hooks=self.hooks)
         self.context = self.agent.context
         self.skills.commit = self._save_skills
         try:
@@ -198,9 +202,28 @@ class ChatSession:
         from .skills.runner import run_isolated
         return await run_isolated(self, skill, args, history, **options)
 
-    def run_skill(self, name, args='', *, cancel_event=None):
+    async def run_skill(self, name, args='', *, cancel_event=None, user_text=None):
         from .skills.invocation import run_skill
-        return run_skill(self, name, args, cancel_event=cancel_event)
+        from .skills.budget import TaskBudget
+        self.skills.catalog.get(name)
+        cancel = cancel_event if cancel_event is not None else asyncio.Event()
+        budget = TaskBudget(self.agent.max_iterations, uuid4().hex)
+        self._task_budget = budget
+        question = user_text if user_text is not None else f'/{name}' + (' ' + args if args else '')
+        await protected(self._begin_hook_turn(question, budget, cancel), cancel_event=cancel)
+        source = run_skill(self, name, args, cancel_event=cancel)
+        reason = None
+        try:
+            async for item in source:
+                if item.kind == 'finished':
+                    reason = item.reason
+                yield item
+        finally:
+            if reason is None:
+                cancel.set()
+            await protected(source.aclose(), cancel_event=cancel)
+            await self._end_hook_turn(budget, reason or 'cancelled', cancel)
+            self._task_budget = None
 
     def refresh_skills(self):
         """空闲输入边界先验证完整候选，再共同发布目录和激活。"""
@@ -282,20 +305,71 @@ class ChatSession:
     async def ask(self, question: str, *, cancel_event: asyncio.Event | None = None) -> AsyncIterator[AgentEvent]:
         self.validate_skills()
         from .skills.budget import TaskBudget
-        self._task_budget = TaskBudget(self.agent.max_iterations, uuid4().hex)
+        owns_turn = self._hook_turn is None
+        self._task_budget = self._task_budget if not owns_turn else TaskBudget(self.agent.max_iterations, uuid4().hex)
+        budget = self._task_budget
         self._task_question = question
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
+        if owns_turn:
+            await protected(self._begin_hook_turn(question, budget, cancel), cancel_event=cancel)
         source = self.agent.run(question, history=self.history, mode=self.mode, cancel_event=cancel,
-                                budget=self._task_budget, run_id=self._task_budget.root_run_id)
+                                budget=budget, run_id=budget.root_run_id, turn_owned=True)
+        reason = None
         try:
             async for event in source:
+                if event.kind == 'finished':
+                    reason = event.reason
                 if event.kind == 'finished' and event.reason == 'model_done' and self.memory:
                     if self.memory.enqueue(self.agent.last_task):
                         self.memory_tasks[event.run_id] = 'queued'
                 yield event
         finally:
+            if reason is None:
+                cancel.set()
             await protected(source.aclose(), cancel_event=cancel)
-            self._task_budget = None
+            if owns_turn:
+                await self._end_hook_turn(budget, reason or 'cancelled', cancel)
+                self._task_budget = None
+
+    async def start(self, *, cancel_event=None):
+        """终端初始化或首次无界面调用后开始；恢复准备不会重复。"""
+        if self.resumed and not self._restore_prepared:
+            await self.prepare_restore(cancel_event=cancel_event)
+        await self.hooks.start(source='resume' if self.resumed else 'new',
+                               cancel_event=cancel_event, archive_session_id=self.session_id)
+
+    async def _begin_hook_turn(self, question, budget, cancel):
+        await self.start(cancel_event=cancel)
+        fields = self.agent.hook_fields(budget, budget.root_run_id)
+        self._hook_turn = budget.root_run_id
+        await self.hooks.emit('turn.start', **fields, message={'text': question}, cancel_event=cancel)
+        await self.hooks.emit('message.user', **fields, message={'text': question, 'role': 'user'}, cancel_event=cancel)
+
+    async def _end_hook_turn(self, budget, reason, cancel):
+        try:
+            await protected(self.hooks.emit('turn.end', **self.agent.hook_fields(budget, budget.root_run_id), reason=reason, cancel_event=cancel), cancel_event=cancel)
+        finally:
+            self._hook_turn = None
+
+    async def set_mode(self, mode, *, cancel_event=None):
+        """可信控制入口先收尾副作用，再提交模式并派发事件。"""
+        if mode not in {'plan', 'execute'}:
+            raise ValueError('模式必须为 plan 或 execute')
+        if mode == self.mode:
+            if mode == 'plan' and (cancel_event is None or not cancel_event.is_set()):
+                self.enter_plan()
+            return
+        previous = self.mode
+        if mode == 'plan':
+            await self.hooks.quiesce(cancel_event=cancel_event)
+        try:
+            if cancel_event is not None and cancel_event.is_set():
+                return
+            self.enter_plan() if mode == 'plan' else self.enter_execute()
+        finally:
+            if self.mode == 'execute':
+                self.hooks.resume_mutations()
+        await self.hooks.emit('mode.changed', mode_change={'from': previous, 'to': self.mode}, cancel_event=cancel_event)
 
     def enter_execute(self) -> None:
         """只切换模式；重复切换不重置当前请求周期。"""
@@ -324,6 +398,18 @@ class ChatSession:
 
     def close(self) -> None:
         """释放私有句柄；产品存档的缓存随存档保留。"""
+        if hasattr(self, 'hooks') and self.hooks.snapshot.rules and not self.hooks.closed:
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                asyncio.run(self.aclose())
+            else:
+                if not getattr(self, '_hook_close_task', None):
+                    self._hook_close_task = loop.create_task(self.aclose())
+            return
+        self._close_handles()
+
+    def _close_handles(self):
         try:
             if hasattr(self, 'context'):
                 self.context.cache.close()
@@ -334,13 +420,21 @@ class ChatSession:
     async def aclose(self):
         """后台任务停止后才释放存档，供应商由应用随后关闭。"""
         try:
+            if hasattr(self, 'hooks'):
+                await self.hooks.close(archive_session_id=self.session_id)
             if self.memory:
                 await self.memory.aclose(wait_seconds=2)
         finally:
-            self.close()
+            self._close_handles()
 
     async def prepare_restore(self, *, cancel_event=None):
         """当前 MCP 工具确定后，仅一次独立恢复摘要，不执行历史任务。"""
+        if self._restore_prepared:
+            return
+        await self._prepare_restore(cancel_event=cancel_event)
+        self._restore_prepared = True
+
+    async def _prepare_restore(self, *, cancel_event=None):
         if not self.resumed:
             return
         self._before_request()
@@ -367,7 +461,8 @@ class ChatSession:
         manual_usage = self.context.manual_usage
         try:
             result = await self.context.compact(self.provider, self.history, user, tools, system, reminder,
-                                                 cancel, manual=True)
+                                                 cancel, manual=True, hooks=self.hooks,
+                                                 hook_fields={'archive_session_id': self.session_id}, purpose='restore')
         finally:
             # 恢复借用手动摘要的输入余量，用量仍归属于独立恢复用途。
             self.context.manual_usage = manual_usage
@@ -396,6 +491,11 @@ class ChatSession:
             return AgentEvent(kind, run_id=run_id, iteration=iteration, max_iterations=1,
                               mode=self.mode, permission_mode=self.permissions.mode, purpose='summary', **fields)
         if cancel.is_set():
+            fields = {'run_id': run_id, 'archive_session_id': self.session_id}
+            await self.hooks.emit('context.before_compact', **fields, context={'purpose': 'manual',
+                'estimated_tokens': self.context.last_estimate, 'threshold': self.context.window}, cancel_event=cancel)
+            await self.hooks.emit('context.after_compact', **fields, context={'purpose': 'manual', 'result': 'cancelled',
+                'reason': 'cancelled', 'estimated_tokens': self.context.last_estimate, 'threshold': self.context.window}, cancel_event=cancel)
             self._maintenance_record('summary')
             yield event('context_compaction', phase='cancelled', text='摘要已取消，历史保留')
             return
@@ -411,7 +511,8 @@ class ChatSession:
             iteration = 1
         result = await self.context.compact(self.provider, self.history, user,
             self.executor.registry.definitions(allowed_tools=allowed), build_system_prompt(),
-            self.prompt_state.peek_request(force_full=True), cancel, manual=True, on_start=started)
+            self.prompt_state.peek_request(force_full=True), cancel, manual=True, on_start=started,
+            hooks=self.hooks, hook_fields={'run_id': run_id, 'archive_session_id': self.session_id})
         self._maintenance_record('summary', result.usage, called=result.called)
         if result.called:
             yield event('usage', usage=result.usage)

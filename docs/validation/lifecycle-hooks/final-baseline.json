@@ -1,0 +1,6 @@
+{
+  "requests_before_plan": 15,
+  "timeout_actions_before_plan": 1,
+  "mode_started_before_plan_work": false,
+  "planfile_before": false
+}

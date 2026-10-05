@@ -1,5 +1,6 @@
 """静态内置命令；处理函数只调用能力接口或返回待消费结果。"""
 import re
+from inspect import isawaitable
 
 from .ports import CommandContext, CommandResult, CommandUsageError
 from .registry import CommandRegistry, CommandSpec
@@ -19,7 +20,9 @@ async def clear_command(args: str, context: CommandContext) -> CommandResult:
 
 
 async def plan_command(args: str, context: CommandContext) -> CommandResult:
-    context.set_mode('plan')
+    changed = context.set_mode('plan')
+    if isawaitable(changed):
+        await changed
     context.refresh_status()
     if args:
         return CommandResult('message', args)
@@ -28,7 +31,9 @@ async def plan_command(args: str, context: CommandContext) -> CommandResult:
 
 
 async def do_command(args: str, context: CommandContext) -> CommandResult:
-    context.set_mode('execute')
+    changed = context.set_mode('execute')
+    if isawaitable(changed):
+        await changed
     context.refresh_status()
     context.show_message('提示> 当前为 [DEFAULT] 执行模式，请输入要执行的任务。')
     return CommandResult()

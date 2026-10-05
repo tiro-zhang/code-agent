@@ -73,12 +73,13 @@ class ToolExecutor:
         self.system_handlers = dict(system_handlers or {})
 
     async def execute(self, name: str, raw: str, *, allowed_tools: frozenset[str] | None = None,
-                      cancel_event: asyncio.Event | None = None, on_event=None) -> ToolResult:
+                      cancel_event: asyncio.Event | None = None, on_event=None,
+                      hooks=None, hook_fields=None, hook_tool=None, call_id='') -> ToolResult:
         try:
             current = allowed_tools() if callable(allowed_tools) else allowed_tools
             tool, arguments = self.registry.prepare(name, raw, allowed_tools=current)
         except ToolError as error:
-            return error.result()
+            return ToolResult.failure(error.code, error.message, details={**error.details, 'not_started': True})
         cancel_event = cancel_event if cancel_event is not None else asyncio.Event()
         if cancel_event.is_set():
             return ToolResult.failure("cancelled", "任务取消，工具未启动", details={"not_started": True})
@@ -95,8 +96,24 @@ class ToolExecutor:
             # 授权等待后仍按当前状态检查，批准不扩大工具范围。
             current = allowed_tools() if callable(allowed_tools) else allowed_tools
             self.registry.prepare(name, raw, allowed_tools=current)
+            if hooks is not None:
+                from ..hooks.events import tool_snapshot
+                def fields_for_hook():
+                    data = tool_snapshot(self, call_id, name, raw, arguments=authorization.arguments)
+                    if hook_tool is not None:
+                        hook_tool.update(data)
+                    fields = hook_fields() if callable(hook_fields) else (hook_fields or {})
+                    return {**fields, 'tool': data}
+                decision = await hooks.emit('tool.before', fields=fields_for_hook, cancel_event=cancel_event)
+                if cancel_event.is_set():
+                    return ToolResult.failure('cancelled', '任务取消，工具未启动', details={'not_started': True})
+                if decision.decision == 'deny':
+                    return ToolResult.failure('hook_denied', decision.reason,
+                        details={'not_started': True, 'hook_source': decision.source})
+                current = allowed_tools() if callable(allowed_tools) else allowed_tools
+                self.registry.prepare(name, raw, allowed_tools=current)
         except ToolError as error:
-            return error.result()
+            return ToolResult.failure(error.code, error.message, details={**error.details, 'not_started': True})
         except asyncio.CancelledError:
             cancel_event.set()
             return ToolResult.failure("cancelled", "任务取消，工具未启动", details={"not_started": True})

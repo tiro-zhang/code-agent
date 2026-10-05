@@ -1,0 +1,27 @@
+{
+  "change": "add-lifecycle-hooks",
+  "schema": "spec-driven",
+  "archive": "/Users/tiro/workspace/code/vibecoding/mewcode-demo/openspec/changes/archive/2026-10-05-add-lifecycle-hooks",
+  "main_spec": "/Users/tiro/workspace/code/vibecoding/mewcode-demo/openspec/specs/lifecycle-hooks/spec.md",
+  "specs_synced": true,
+  "requirements": 15,
+  "scenarios": 40,
+  "tasks_complete": 28,
+  "tasks_remaining": 0,
+  "artifacts_complete": 4,
+  "source_files_preserved": 5,
+  "archive_files_sha256": {
+    ".openspec.yaml": "c956e2a907cf0aa23d948e300827f91e46ab77d64e288d98285dfe990bb0d989",
+    "tasks.md": "6f38be0a461b9d5b6b4bf0bfd95c0030a1b5e42532074f01f69caef1fba2c5cd",
+    "design.md": "2f56534b65a5b1f635cfb328d35cb59d2159c32119b2737ea85ab68aba915f82",
+    "proposal.md": "6e00729f05c401be632b9735c6069d1d2eb66d6bdc15780b5c021a3bb6c6b555",
+    "specs/lifecycle-hooks/spec.md": "352f5dd5eb26c4297c41433085303e00027e6e38daa79c9dda266b198c609b3f"
+  },
+  "specs_validation": {
+    "command": "openspec validate --specs --strict",
+    "passed": 21,
+    "failed": 0
+  },
+  "warnings": [],
+  "git_commit_created": false
+}

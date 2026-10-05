@@ -396,3 +396,96 @@ MCP 单次调用上限为 30 秒，审批等待不计入，远端参数中的 ti
 退出、EOF 或启动取消时分别清理每个 Server：总预算 5 秒，前 3 秒正常关闭，余下时间强制清理。无法确认回收时会明确报告失败；单个清理任务不能无限阻塞其他 Server 或模型客户端退出。HTTP 仅关闭客户端资源并按协议尝试结束会话，不停止远端服务或撤销已发生的操作。
 
 授权首页先展示实际读取目标、完整命令、写入内容或编辑 diff，操作范围与内容来自同一请求快照。决定栏仅一处：回车／1 拒绝、2 本次、3 会话、4 永久。用 `targets`、`arguments`、`content`、`scope`、`summary`、`results` 查看不同部分，PgUp/PgDn、↑/↓ 或 next/back 翻页；浏览不会批准。
+
+
+## 生命周期 Hook
+
+在启动项目的 `.mewcode/hooks.yaml` 声明固定动作。配置在启动时加载一次；修改后需重启。缺少文件表示关闭此功能，任一配置错误使整份文件停用并记录诊断，Agent 继续运行。
+
+```yaml
+version: 1
+hooks:
+  - event: message.before_request
+    once: true
+    action:
+      type: prompt
+      text: 修改前先读取文件，完成后运行相关检查。
+  - event: tool.before
+    if:
+      all:
+        - field: tool.name
+          match: exact
+          value: write_file
+        - field: tool.target_path
+          match: glob
+          value: protected/**
+    action:
+      type: command
+      command: python3 .mewcode/check_write.py
+      timeout_seconds: 5
+  - event: tool.after
+    if:
+      all:
+        - field: tool.name
+          match: exact
+          value: edit_file
+        - field: tool.result.ok
+          match: exact
+          value: true
+    action:
+      type: command
+      command: python3 .mewcode/format_changed.py
+  - event: turn.end
+    async: true
+    action:
+      type: http
+      url: https://hooks.example.com/events
+      method: POST
+      headers:
+        X-Project: demo
+```
+
+`event` 和 `action` 必填；省略 `if` 无条件触发。条件只接受非空的一层 `all`（全部满足）或 `any`（任一满足），不能嵌套或混用。原子条件使用 `field`、`match`、`value`，可加 `negate: true`：exact 按完整 JSON 值及类型比较，glob 区分大小写，regex 匹配整个字符串。三个本地文件工具的 `tool.arguments.path` 和真实目标 `tool.target_path` 使用权限规则的路径片段 glob（`*` 不跨目录、`**` 可跨目录）；其他字符串 glob 不按路径分段。不存在或类型不适用的字段即使反向也不匹配。条件不能访问列表下标。
+
+| 层级 | 事件 | 事件专有字段 |
+| --- | --- | --- |
+| 会话 | `session.start` / `session.end` | `source`（new/resume）/ `reason` |
+| 轮次 | `turn.start` / `turn.end` | `message.text` / `reason` |
+| 消息 | `message.user` / `message.before_request` | `message.text`、`message.role` |
+| 消息 | `message.after_response` | 上述字段及 `message.tool_calls`；只观察完整工作响应 |
+| 工具 | `tool.before` / `tool.after` | `tool.call_id`、`tool.name`、有效 `tool.arguments`、可用的 `tool.target_path`；after 增加实际 `tool.result` |
+| 系统 | `mode.changed` | `mode_change.from`、`mode_change.to` |
+| 系统 | `context.before_compact` / `context.after_compact` | `context.purpose`（auto/manual/restore）、`estimated_tokens`、`threshold`；after 增加 `result`、`reason`（success/failed/cancelled/noop） |
+
+所有事件包含 `event`、UTC `time`、本次运行的 `session_id`、`mode`、`permission_mode`。可用时还含存档 `archive_session_id`、顶层 `turn_id`、`run_id`、`parent_run_id`、工作意图 `request_id` 和 `budget.used/max_iterations`。字段缺失表示当前事件没有该信息。非法工具参数不作为已验证参数提供；真实目标是经过边界检查的项目相对路径，区别于调用中的原始路径。结果沿用工具格式，失败详情位于 `tool.result.error.details`。快照独立且不可变，动作不能修改工具参数。
+
+| 动作 type | 字段与执行约束 |
+| --- | --- |
+| `command` | 必填非空 `command`；`timeout_seconds` 默认 30，整数 1–120。固定 `/bin/sh -c`、真实项目 cwd，事件 JSON 从 stdin 传入，不做 shell 插值。stdout/stderr 各 32 KiB；超时及取消回收本地进程组 |
+| `prompt` | 必填非空 `text`，同步加入下一次实际工作请求的上下文，参与预算和压缩后复查；不改固定系统提示或权限 |
+| `http` | 必填固定绝对 HTTP(S) `url`，不允许 userinfo 或 fragment；可选 `method`（GET/HEAD/POST/PUT/PATCH/DELETE/OPTIONS，默认 POST）、字符串 `headers`。JSON 请求体为事件快照；30 秒总期限，响应 64 KiB，不重发或跟随重定向，不复制模型凭据 |
+| `subagent` | 必填非空 `agent` 和 `prompt`；本阶段只记录未实现诊断，不启动 Skill 或模型 |
+
+只有 `tool.before` 能拒绝实际工具。它在注册、参数、范围及权限检查通过后运行；command 成功退出或 HTTP 2xx 后，整个响应必须为 JSON 对象，例如 `{"decision":"deny","reason":"受保护文件，请选择替代目标"}`。也可返回 `{"decision":"allow"}` 或 `{}` 放行。非零退出、超时、无效／截断 JSON 仅记失败日志并放行，不构成拒绝。拒绝生成原调用 ID 的 `hook_denied` 工具结果，`error.details.not_started=true`，原因反馈给模型以调整操作。后置动作不修改已完成结果。Hook 动作不会递归触发工具 Hook。
+
+例如 `.mewcode/check_write.py` 可读取快照并返回决策：
+
+```python
+import json
+import sys
+
+event = json.load(sys.stdin)
+path = event.get("tool", {}).get("target_path", "")
+if path.startswith("protected/"):
+    print(json.dumps({"decision": "deny", "reason": "受保护目录，请选择其他目标"}))
+else:
+    print(json.dumps({"decision": "allow"}))
+```
+
+规则按声明顺序派发，拒绝短路本次前置检查。`once: true` 在本次会话首次实际提交动作时原子领取，失败也算；条件不匹配、规划跳过、后台等待授权或队列溢出不消耗。`/reset` 保留标记，重启或恢复进程重新开始，不持久化。`async: true` 使用独立取消归属的后台队列，最多 4 个运行、32 个待执行；溢出跳过并记日志。`tool.before` 和 prompt 禁止异步。同步 command/http 工具 Hook 会保守串行整个工具批次，确保格式化完成后才开始下一次读取。
+
+前台命令复用唯一授权界面，展示 Hook 规则位置和事件，审批等待不计入执行超时；批准后恢复所属启动、控制指令或任务阶段。控制指令等待期间关闭输入，直到动作和取消清理结束才恢复空闲，不重置最近任务。后台命令只用已有有效许可，不弹授权。命令保留明确 deny、shell 黑名单和现有授权范围。人工选择会话／永久批准仍绑定完整精确命令，相同命令可以复用；Hook 放行不顺带批准目标工具。规划模式跳过 command/http，prompt 仍可注入；切入规划先清理后台副作用。取消期间持续显示“正在停止”直到收尾完成，关闭先停止后台再释放客户端和会话句柄。HTTP 取消只结束本地等待，不承诺远端回滚。
+
+注入在工作请求开始后消费，失败请求也算；发送前取消、预览、摘要、恢复和记忆维护不消费。独立 Skill 继承同一 Hook 运行时、队列和 once，并携带父子关联；不会重复会话和顶层用户任务边界。
+
+Hook 自身失败通过 `mewcode.hooks` 日志记录安全类型、来源及事件，不记录完整 stdin、headers 或原始输出，也不中断 Agent。`hook_denied` 沿原工具异常通道即时展示；Hook 信息使用独立终端路由，不计入普通成功工具聚合、模型 usage、最近任务详情或记忆维护。后台通知不改变草稿、光标和当前授权。当前不提供自动成功通知或 Hook 专用看板；纯文本终端使用相同安全输出。子 Agent 真实动作、once 持久化及显式优先级留待后续章节。

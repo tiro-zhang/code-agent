@@ -49,7 +49,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
         cancel = active_cancel if active_cancel is not None else idle_cancel
         loop.call_soon_threadsafe(cancel.set)
         if terminal is not None and active_cancel is not None:
-            loop.call_soon_threadsafe(terminal.cancelling)
+            loop.call_soon_threadsafe(lambda: terminal.cancelling(force=True))
 
     if has_handler:
         signal.signal(signal.SIGINT, interrupt)
@@ -97,9 +97,12 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
         try:
             session.validate_skills()
             await session.prepare_restore(cancel_event=active_cancel)
+            await session.start(cancel_event=active_cancel)
         except (ValueError, OSError) as error:
             error_stream.write(f'恢复失败：{renderer.safe(error, 400)}\n')
             return 2
+        if active_cancel.is_set():
+            return 0
         for warning in session.warnings:
             renderer.line(f'提示> {renderer.safe(warning, 400)}')
         active_cancel = None
@@ -134,7 +137,22 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                     renderer.line('提示> ' + renderer.safe(error, 400))
                     continue
             parsed = parse_command(question)
-            result = await dispatch(parsed, registry, context)
+            control = parsed.kind == 'command' and parsed.name in {'plan', 'do'}
+            if control:
+                terminal.set_phase('control')
+            active_cancel = asyncio.Event()
+            context.cancel_event = active_cancel
+            try:
+                result = await dispatch(parsed, registry, context)
+                cancelled_control = active_cancel.is_set()
+            finally:
+                if active_cancel.is_set():
+                    terminal.discard_pending()
+                if control or active_cancel.is_set():
+                    terminal.set_phase('idle')
+                active_cancel = context.cancel_event = None
+            if cancelled_control:
+                continue
             if result.kind == 'exit':
                 return 0
             if result.kind == 'handled':
@@ -151,7 +169,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             terminal.sync_session(session)
             active_cancel = asyncio.Event()
             source = (session.compact(cancel_event=active_cancel) if maintenance else
-                      session.run_skill(result.skill_name, result.text, cancel_event=active_cancel) if result.kind == 'skill' else
+                      session.run_skill(result.skill_name, result.text, cancel_event=active_cancel, user_text=question) if result.kind == 'skill' else
                       session.ask(result.text, cancel_event=active_cancel))
             try:
                 async for event in source:
@@ -170,13 +188,13 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
     finally:
         active_cancel = asyncio.Event()
         try:
+            if terminal is not None:
+                terminal.set_phase("closing")
             if session is not None:
                 try:
                     await protected(session.aclose(), cancel_event=active_cancel)
                 except OSError:
                     renderer.line('提示> 会话句柄关闭失败，请检查 .mewcode；存档缓存保留')
-            if terminal is not None:
-                terminal.set_phase("closing")
             try:
                 if mcp is not None:
                     await protected(mcp.close(), cancel_event=active_cancel)

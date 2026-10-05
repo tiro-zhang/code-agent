@@ -1,0 +1,35 @@
+[DEFAULT] 执行 · 权限 default · 等待授权
+审阅 1/1 页 · summary · Hook /private/tmp/mewcode-hooks-e2e-20261005/.mewcode/hooks.yaml#hooks[0] · session.start · execute_comm…
+来源> Hook /private/tmp/mewcode-hooks-e2e-20261005/.mewcode/hooks.yaml#hooks[0] · session.start · execute_command
+操作> 执行命令
+范围> 本次仅当前调用；会话／永久绑定当前项目及完整精确命令。
+完整精确命令：
+/Users/tiro/workspace/code/vibecoding/mewcode-demo/.venv/bin/python hook_actions.py startup
+关联标识> 30653747c86e41a5bb62947ebb0fe118
+工具> execute_command · 等待授权 · default
+原因> 没有适用的放行规则
+工作根目录> /private/tmp/mewcode-hooks-e2e-20261005
+范围> 本次绑定当前调用、完整参数及目标，仅使用一次。
+范围> 会话／永久仅绑定此根目录、工具与本次完整精确命令；可在目标详情查看全文。
+期限> 会话在本次运行有效；永久保存于项目本地权限文件，可用 /permissions revoke 撤销。
+
+
+
+
+
+
+授权>
+授权> 1/回车 拒绝 · 2 本次 · 3 会话 · 4 永久 · Ctrl+C 取消整轮
+targets/arguments/content/scope/summary/results · next/back/all · PgUp/PgDn
+
+
+
+
+
+
+
+
+
+
+
+

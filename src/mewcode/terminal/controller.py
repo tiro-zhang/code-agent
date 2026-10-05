@@ -239,9 +239,9 @@ class TerminalController:
         self._plain_phase = ''
         self._plain_starts.clear()
 
-    def cancelling(self):
+    def cancelling(self, *, force=False):
         """取消已提出但清理尚未完成；不提前恢复输入。"""
-        if self.phase not in {'idle', 'closing', 'cancelling'}:
+        if self.phase not in {'closing', 'cancelling'} and (force or self.phase != 'idle'):
             self.set_phase('cancelling')
             if not self.enhanced:
                 self.write('状态> 正在停止，等待清理完成\n')
@@ -268,6 +268,7 @@ class TerminalController:
             # 此前队列先输出，然后建立当前唯一审批区域。
             self.finish_line()
             await self.drain()
+            owning_phase = self.phase
             self.approval_active = True
             self.phase = "approval"
             self.state.set_phase("approval")
@@ -280,8 +281,11 @@ class TerminalController:
                 self._decisions[request.id] = decision
                 return decision
             finally:
-                self.phase = "cancelling" if cancel.is_set() else "running"
+                self.phase = ("closing" if self.phase == 'closing' else
+                              "cancelling" if cancel.is_set() or self.phase == 'cancelling' else owning_phase)
                 self.state.set_phase(self.phase)
+                if self.backend:
+                    self.backend.set_phase(self.phase)
                 self._release_output()
                 await self.drain()
 

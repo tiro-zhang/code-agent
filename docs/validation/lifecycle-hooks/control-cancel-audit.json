@@ -1,0 +1,14 @@
+{
+  "mode_started": true,
+  "latest_phase_before_cancel": "control",
+  "control_hint_before_cancel": false,
+  "cleaning_visible": true,
+  "completed_after_seconds": 0.736,
+  "mode_done": false,
+  "work_requests_after_control": 17,
+  "turn_starts_after_control": 9,
+  "planfile_created": false,
+  "timeout_actions_after_plan": 1,
+  "control_hint_verified": true,
+  "raw_hint_detector_note": "原 control_hint_before_cancel=false 因驱动遗漏提示中的“当前”；实际 capture 和 control 阶段已独立核验。"
+}

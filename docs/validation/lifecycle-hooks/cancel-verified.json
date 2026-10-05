@@ -1,0 +1,8 @@
+{
+  "cancelled": true,
+  "after_call": "call_00_ET_soNBUDfUccyEBfiGjRc23338",
+  "not_started": true,
+  "cancel_leaked": false,
+  "timeout_leaked": false,
+  "raw_detector_note": "cancel-timing.json 的 cancelled=false 是驱动只识别结束>的误判，当前依据本轮未完成>及实际工具错误独立核验。"
+}

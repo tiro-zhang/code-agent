@@ -1,0 +1,95 @@
+
+
+
+
+[DEFAULT] 执行 · 权限 default · 启动中
+Ctrl+C 取消启动
+MewCode · claude-demo · 权限 default · /help 查看帮助
+会话> 20261005-132016-e02c · 新建存档
+本地> 权限模式> 已切换为 bypass
+
+你> 请使用 write_file 创建 format.txt，内容为 hello hooks，然后用 read_file 读取它，报告实际读到的内容。
+工具> 已读取 1 个文件（1 次调用）、已写入 1 个文件（1 次调用） · 成功 · #1、#2（F2 / /status 详情）
+MewCode> 已完成两个操作：
+
+1. **write_file**：创建 `format.txt`，写入内容 `hello hooks`（写入 11 字节）。
+2. **read_file**：读取 `format.txt`，实际读到的内容为：
+
+```
+HELLO HOOKS
+```
+
+注意：写入的内容是 `hello hooks`，但读取到的实际内容变成了大写 `HELLO HOOKS` 且末尾多了换行符，说明在写入后、读取前有 hook 对文件
+内容做了处理（转大写并追加换行）。我按实际工具结果如实报告上述读到内容。
+
+HOOK_CONTEXT_OK
+结束> model_done · 7.6s · 请求 3/20 · Token 输入 8022 / 输出 328
+Hook> e2e-notification-driver · turn.end · 后台 Hook 通知测试
+
+你> 草稿通知测/status试
+MewCode> 这条消息含义不明确，我无法确定需要执行什么操作。
+
+“草稿通知测/status试”可能是在测试某个 hook 或草稿通知功能，但没有给出具体任务。请明确：
+
+- 需要我创建/修改某个文件吗？文件名与内容是什么？
+- 还是仅需我复述或报告这条消息、触发某个状态检查？
+
+另外，本次回复我没有执行任何工具操作。如需我继续，请给出具体指令。
+
+HOOK_CONTEXT_OK
+结束> model_done · 4.3s · 请求 1/20 · Token 输入 3311 / 输出 314
+本地> 项目> /private/tmp/mewcode-hooks-e2e-20261005
+模型> deepseek-v4-pro
+模式> [DEFAULT] 执行 · 权限 bypass
+最近任务> c0522851fa7144469925f537f9e555ae
+[DEFAULT] 执行 · 权限 bypass · 空闲 · 请求 1/20 · 已用 4.3s · 停止原因 model_done
+最近请求 Token · 入3311 出314 命中 3072 未命中 239 写入 未知 命中率92.8% 完整含缓存
+累计已知 Token · 入3311 出314 命中 3072 未命中 239 写入 未知 命中率92.8% 完整含缓存
+累计已知 Token · 总输入 3311，输出 314 · 统计完整 · 命中 3072，未命中 239，写入 未知，命中率 92.8% · 缓存统计完整
+结束详情> 模型已结束本次任务
+请求 1 · 总输入 3311，输出 314 · 统计完整 · 命中 3072，未命中 239，写入 未知，命中率 92.8% · 缓存统计完整
+工具> 暂无调用记录
+暂无调用详情
+[API 思考正文已省略]
+会话> 20261005-132016-e02c · 新建
+上下文> 输入估算 4077 · 窗口 1000000 · 输出预留 8192 · 自动余量 13000 · 手动摘要余量 3000
+上下文> 落盘结果 0 · 摘要版本 0 · 连续失败 0/3 · 自动摘要 可用
+
+你> 请用 write_file 创建 protected.txt，内容为 denied test；如果工具拒绝，请按工具反馈的替代目标创建文件，随后读取并报告结果。
+工具> [#1] 失败 · hook_denied：protected.txt 受保护，请改为创建 alternative.txt · 未启动 · write_file · protected.txt
+工具> 已读取 1 个文件（1 次调用）、已写入 1 个文件（1 次调用） · 成功 · #2、#3（F2 / /status 详情）
+MewCode> 执行结果如下：
+
+1. **创建 `protected.txt`**：被 hook 拒绝，错误码 `hook_denied`，反馈信息为“protected.txt 受保护，请改为创建 alternative.txt”。
+
+2. **按反馈创建 `alternative.txt`**：成功，写入内容 `denied test`（11 字节）。
+
+3. **读取 `alternative.txt`**：实际读到的内容为：
+
+```
+DENIED TEST
+```
+
+即写入的 `denied test` 被 hook 转成了大写并追加了换行符。以上为按工具实际反馈和读取结果如实报告。
+
+HOOK_CONTEXT_OK
+结束> model_done · 9.0s · 请求 4/20 · Token 输入 17508 / 输出 376
+
+你> 请使用 read_file 读取 slow.txt 并概括内容，不执行其他工具。
+Hook /private/tmp/mewcode-hooks-e2e-20261005/.mewcode/hooks.yaml#hooks[5] event=tool.after: 动作失败或无效决策
+工具> 已读取 1 个文件（1 次调用） · 成功 · #1（F2 / /status 详情）
+MewCode> `slow.txt` 的内容是一行文本 `controlled input`（末尾带换行）。概括：文件仅包含一行受控输入字符串，无其他内容。
+
+HOOK_CONTEXT_OK
+结束> model_done · 4.3s · 请求 2/20 · Token 输入 10574 / 输出 85
+
+你> 请使用 read_file 读取 cancel.txt，然后总结内容。
+Hook /private/tmp/mewcode-hooks-e2e-20261005/.mewcode/hooks.yaml#hooks[6] event=tool.before: 动作失败或无效决策
+工具> 已读取 1 个文件（1 次调用） · 成功 · #1（F2 / /status 详情）
+MewCode> `cancel.txt` 内容为一行 `controlled input`（末尾带换行）。总结：文件仅包含一行受控输入文本，无其他内容。
+
+HOOK_CONTEXT_OK
+结束> model_done · 24.0s · 请求 2/20 · Token 输入 11706 / 输出 84
+[DEFAULT] 执行 · 权限 bypass · 空闲
+你>
+Enter 发送 · Esc+Enter 换行 · / 发现命令 · F2 详情 · Ctrl+C 清草稿／空草稿退出

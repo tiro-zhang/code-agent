@@ -71,7 +71,7 @@ class CollectedResponse:
 
 @dataclass(frozen=True)
 class AgentEvent:
-    kind: Literal["display_line", "thinking_delta", "text_delta", "tool_call", "tool_started", "tool_result",
+    kind: Literal["hook_notice", "display_line", "thinking_delta", "text_delta", "tool_call", "tool_started", "tool_result",
                   "permission_requested", "permission_resolved", "usage", "progress", "history_trimmed", "context_compaction", "memory_update", "skill_loaded", "skill_event", "finished"]
     run_id: str = ""
     iteration: int = 0
@@ -101,6 +101,8 @@ class AgentEvent:
     child_event: 'AgentEvent | None' = None
     # 仅用于界面识别独立 Skill 的结构化回流；不进入模型历史或协议。
     replay_of: str = ''
+    hook_source: str = ''
+    hook_event: str = ''
 
 
 class Provider(Protocol):

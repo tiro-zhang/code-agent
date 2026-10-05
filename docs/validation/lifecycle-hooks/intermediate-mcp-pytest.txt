@@ -1,0 +1,56 @@
+........................................................................ [  6%]
+........................................................................ [ 12%]
+........................................................................ [ 19%]
+........................................................................ [ 25%]
+........................................................................ [ 32%]
+............................................F........................... [ 38%]
+........................................................................ [ 45%]
+........................................................................ [ 51%]
+........................................................................ [ 57%]
+........................................................................ [ 64%]
+........................................................................ [ 70%]
+........................................................................ [ 77%]
+........................................................................ [ 83%]
+........................................................................ [ 90%]
+........................................................................ [ 96%]
+........................................                                 [100%]
+=================================== FAILURES ===================================
+_ test_recovery_stops_on_deadline_or_cancel_and_connection_survives[legacy-False] _
+  + Exception Group Traceback (most recent call last):
+  |   File "/Users/tiro/workspace/code/vibecoding/mewcode-demo/tests/test_mcp_sdk_contract.py", line 94, in test_recovery_stops_on_deadline_or_cancel_and_connection_survives
+  |     async with LifecycleHTTPClient() as http, Client(streamable_http_client(url, http_client=http), cache=None) as client:
+  |   File "/Users/tiro/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/contextlib.py", line 745, in __aexit__
+  |     raise exc_details[1]
+  |   File "/Users/tiro/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/contextlib.py", line 728, in __aexit__
+  |     cb_suppress = await cb(*exc_details)
+  |                   ^^^^^^^^^^^^^^^^^^^^^^
+  |   File "/Users/tiro/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(typ, value, traceback)
+  |   File "/Users/tiro/workspace/code/vibecoding/mewcode-demo/.venv/lib/python3.11/site-packages/mcp/client/streamable_http.py", line 766, in streamable_http_client
+  |     async with (
+  |   File "/Users/tiro/workspace/code/vibecoding/mewcode-demo/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "/Users/tiro/workspace/code/vibecoding/mewcode-demo/.venv/lib/python3.11/site-packages/mcp/client/streamable_http.py", line 788, in streamable_http_client
+    |     yield read_stream, write_stream
+    |   File "/Users/tiro/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/contextlib.py", line 728, in __aexit__
+    |     cb_suppress = await cb(*exc_details)
+    |                   ^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/tiro/workspace/code/vibecoding/mewcode-demo/.venv/lib/python3.11/site-packages/mcp/client/session.py", line 514, in __aexit__
+    |     result = await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "/Users/tiro/workspace/code/vibecoding/mewcode-demo/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
+    |     raise BaseExceptionGroup(
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "/Users/tiro/workspace/code/vibecoding/mewcode-demo/tests/test_mcp_sdk_contract.py", line 115, in test_recovery_stops_on_deadline_or_cancel_and_connection_survives
+      |     assert before == after, "已取消请求的响应恢复仍在运行"
+      | AssertionError: 已取消请求的响应恢复仍在运行
+      | assert 4 == 5
+      +------------------------------------
+=========================== short test summary info ============================
+FAILED tests/test_mcp_sdk_contract.py::test_recovery_stops_on_deadline_or_cancel_and_connection_survives[legacy-False]
+1 failed, 1119 passed in 136.91s (0:02:16)

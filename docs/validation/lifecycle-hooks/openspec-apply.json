@@ -1,0 +1,172 @@
+{
+  "changeName": "add-lifecycle-hooks",
+  "changeDir": "/Users/tiro/workspace/code/vibecoding/mewcode-demo/openspec/changes/add-lifecycle-hooks",
+  "schemaName": "spec-driven",
+  "contextFiles": {
+    "proposal": [
+      "/Users/tiro/workspace/code/vibecoding/mewcode-demo/openspec/changes/add-lifecycle-hooks/proposal.md"
+    ],
+    "specs": [
+      "/Users/tiro/workspace/code/vibecoding/mewcode-demo/openspec/changes/add-lifecycle-hooks/specs/lifecycle-hooks/spec.md"
+    ],
+    "design": [
+      "/Users/tiro/workspace/code/vibecoding/mewcode-demo/openspec/changes/add-lifecycle-hooks/design.md"
+    ],
+    "tasks": [
+      "/Users/tiro/workspace/code/vibecoding/mewcode-demo/openspec/changes/add-lifecycle-hooks/tasks.md"
+    ]
+  },
+  "progress": {
+    "total": 28,
+    "complete": 28,
+    "remaining": 0
+  },
+  "tasks": [
+    {
+      "id": "1",
+      "description": "1.1 抽取纯字符串／路径 glob 和 exact 匹配，保留权限的规则合并、shell 结构限制和 MCP 规范化；以现有 `tests/test_permission_rules.py`、`tests/test_permission_shell.py`、`tests/test_mcp_permissions.py` 回归验证判定不变。",
+      "done": true
+    },
+    {
+      "id": "2",
+      "description": "1.2 增加完整 regex、类型明确的 exact 和字段适用性支持；新增匹配测试验证大小写、路径片段、`**`、布尔与数值区分、非法正则及字符串 glob。",
+      "done": true
+    },
+    {
+      "id": "3",
+      "description": "2.1 定义 Hook 事件目录、适用字段及 JSON 快照契约；新增 `tests/test_hook_events.py` 验证关联标识、原始参数与真实目标区分、缺失字段和快照独立性。",
+      "done": true
+    },
+    {
+      "id": "4",
+      "description": "2.2 实现扁平 all/any、点分对象字段及 negate 条件；新增 `tests/test_hook_conditions.py` 验证非空组合、禁止嵌套／混用和缺失字段反向仍不匹配。",
+      "done": true
+    },
+    {
+      "id": "5",
+      "description": "2.3 实现项目级严格 YAML 加载、动作分型、控制组合和全文件校验；新增 `tests/test_hook_config.py` 验证必填字段、重复键、不安全对象、未知项、错误聚合、无文件兼容及无效文件整体停用。",
+      "done": true
+    },
+    {
+      "id": "6",
+      "description": "3.1 为 Hook 命令提供事件 JSON stdin、固定 cwd、有界输出、独立超时及进程组清理；新增 `tests/test_hook_actions.py` 验证输入中的 shell 元字符不执行、正常结果、非零退出、超时和取消后无受控进程遗留。",
+      "done": true
+    },
+    {
+      "id": "7",
+      "description": "3.2 接入现有命令权限，区分前台交互授权与后台非交互判定，避免动作递归进入工具 Hook；前台复用唯一授权界面，在不可变展示快照中标明 Hook 来源、规则位置和事件，结束时按取消／关闭状态优先恢复所属阶段。以动作及授权测试验证 deny、ask、有效批准、黑名单、规划禁止、批准等待不计入执行时限，以及启动／控制指令中的授权不创建普通任务、不固定恢复到 running。",
+      "done": true
+    },
+    {
+      "id": "8",
+      "description": "3.3 实现专用 httpx2 HTTP 动作并声明直接依赖，配置固定端点、JSON 请求体、30 秒总期限、64 KiB 响应预算和禁止自动重发／重定向；使用本地受控服务验证成功决策、状态码错误、断连、超时、截断和取消归属，并以 `uv sync` 验证依赖安装。",
+      "done": true
+    },
+    {
+      "id": "9",
+      "description": "3.4 实现静态 prompt 入队及 subagent 声明占位；以动作测试验证前者同步提交，后者只产生未实现诊断、不启动 Skill 或模型、不改变 usage。",
+      "done": true
+    },
+    {
+      "id": "10",
+      "description": "4.1 实现声明顺序派发、结构化动作结果及匹配／执行／诊断异常隔离；新增 `tests/test_hook_runtime.py` 验证前一普通失败不阻止后续规则、有效拒绝短路前置规则和日志故障不逃逸。",
+      "done": true
+    },
+    {
+      "id": "11",
+      "description": "4.2 实现会话级 once 原子标记与提交规则；以运行时测试验证并发只提交一次、前台失败不返还、模式／后台授权跳过不消耗、reset 保留及恢复进程不还原标记。",
+      "done": true
+    },
+    {
+      "id": "12",
+      "description": "4.3 实现有限后台队列、独立快照与取消归属、实际启动前重查及关闭清理；以运行时测试验证队列饱和不阻塞主流程、不消耗未提交 once、后一任务取消不取消既有后台工作及会话关闭不再入队。",
+      "done": true
+    },
+    {
+      "id": "13",
+      "description": "5.1 接入幂等 session.start/end，覆盖新建、显式恢复、无存档和无终端消费者的使用路径；以 `tests/test_hook_lifecycle.py` 验证每个会话至多一次开始／结束及专用资源在会话句柄前关闭。终端路径在关闭开始时进入 closing，并保持控制器可用直到会话与 Hook 清理完成；启动通知不重置最近任务详情。",
+      "done": true
+    },
+    {
+      "id": "14",
+      "description": "5.2 统一普通和顶层 Skill 用户任务的 turn.start/end 与 message.user；以生命周期测试验证自然完成、取消、错误、预算耗尽和裸控制指令的事件次数与实际原因。",
+      "done": true
+    },
+    {
+      "id": "15",
+      "description": "5.3 接入工作请求意图和完整响应事件，区分摘要、恢复、记忆维护及预览；以 `tests/test_hook_loop.py` 验证完整流才有 after_response、压缩重估不重复 before_request、新工作重试有新意图且 Hook 不额外增加请求预算。",
+      "done": true
+    },
+    {
+      "id": "16",
+      "description": "5.4 在既有权限通过后、实际工具启动前接入同步 Hook，解析成功的 JSON 拒绝并在调度器统一派发 after；以循环测试验证 hook_denied 配对保存、拒绝原因回流、模型选择替代操作、前置故障放行，以及未知／非法／拒绝／取消调用各至多一个 after。",
+      "done": true
+    },
+    {
+      "id": "17",
+      "description": "5.5 将 `SessionCommandContext.set_mode()` 及对应命令处理器改为可 await，等待后台清理、模式提交和变更 Hook，并为控制指令等待绑定自己的取消归属；接入自动／手动／恢复压缩事件。以生命周期及命令测试验证变更失败或重复模式不误触发、控制指令不创建用户任务或工作请求、压缩用途与结果成对，以及切入规划前有界停止后台副作用。",
+      "done": true
+    },
+    {
+      "id": "18",
+      "description": "6.1 实现待注入队列与请求意图预览／消费，接入最终工作请求上下文和压缩后复查；新增 `tests/test_hook_prompt.py` 验证大注入触发预算处理、摘要不消费、压缩不重复追加、发送前取消保留及开始后失败消费。",
+      "done": true
+    },
+    {
+      "id": "19",
+      "description": "6.2 保留固定系统提示、模式／SOP 范围和原交互提交语义；以提示词与历史测试验证成功上下文随调用结果成对保存、异常流不伪造历史及注入不改变许可。",
+      "done": true
+    },
+    {
+      "id": "20",
+      "description": "6.3 独立 Skill 继承父 Hook 运行时、规则和 once，传递顶层／子运行关联；新增 `tests/test_hook_skills.py` 验证子消息和工具事件可辨认、会话／用户／轮次事件不重复、共享一次性标记且 subagent 占位仍不执行。",
+      "done": true
+    },
+    {
+      "id": "21",
+      "description": "7.1 在配置同步 command/http 工具 Hook 时保守串行工具批次；新增 `tests/test_hook_scheduling.py` 验证读取加同步副作用的顺序、后置格式化完成后后续读取，以及无此类规则时仍最多四个只读并发。",
+      "done": true
+    },
+    {
+      "id": "22",
+      "description": "7.2 统一前台授权、命令、HTTP、排队工具及重复取消的收尾；以取消集成测试验证不吞可信取消、不启动后续副作用、保留已完成结果、补齐 not_started 结果，并有界清理本地资源且不声称远端已回滚。验证所属任务清理完成前持续显示“正在停止”，授权结束及迟到的后台通知不能提前恢复输入阶段。",
+      "done": true
+    },
+    {
+      "id": "23",
+      "description": "7.3 验证空 Hook 和失效配置与现有权限／规划要求兼容；运行相关会话、代理、权限、Skill 及工具调度回归，并检查诊断默认不含完整事件、stdin 或 headers。",
+      "done": true
+    },
+    {
+      "id": "24",
+      "description": "7.4 将需要展示的 Hook 信息通过 `TerminalController` 单独路由并保留来源与原始关联，复用安全文本处理；扩展现有 `tests/test_terminal_projection.py`、`tests/test_terminal_ui_keys.py` 和授权测试，验证不进入普通工具聚合或模型 usage、不重置最近任务详情与 F2／`/status`、授权优先占用界面且恢复所属阶段、后台通知保留草稿／光标／当前授权，以及普通终端降级。验证 `hook_denied` 沿原工具异常结果路径即时展示且不重复计数，Hook 自身失败仍只记日志、动作原始输出不自动进入正文。",
+      "done": true
+    },
+    {
+      "id": "25",
+      "description": "8.1 更新 README 与 checklist，提供三要素、全事件清单、四动作字段、JSON 决策和 stdin 示例，说明一次性、异步、权限及规划边界，补充 Hook 授权来源、拒绝展示、失败日志及后台通知的终端行为；通过文档对照确认示例与配置校验契约一致，且不含真实凭据。",
+      "done": true
+    },
+    {
+      "id": "26",
+      "description": "8.2 运行 `uv run pytest -q`、`uv build` 和 `openspec validate add-lifecycle-hooks --strict`；记录命令及实际结果，确认自动化回归、构建和规格校验通过。",
+      "done": true
+    },
+    {
+      "id": "27",
+      "description": "8.3 配置真实且已授权的模型服务，用 tmux 在临时工作目录验收成功同步格式化、前置拒绝后模型调整、提示词注入、一次性行为、后台动作、超时、取消和规划跳过；同时检查启动／控制指令授权来源与阶段恢复、F2／`/status` 最近任务详情、成功工具聚合隔离、后台通知期间草稿及授权保留、取消清理期间“正在停止”和普通终端降级。观察真实工具与流式结果，核对产物，不能用 `optimize-terminal-ui` 或其他历史记录替代本次运行。",
+      "done": true
+    },
+    {
+      "id": "28",
+      "description": "8.4 在 `docs/validation/` 保存脱敏的本次 tmux 输出和结果，对照 checklist 标明通过／失败／未执行及原因；核对记录覆盖当前实现，确认占位、持久化及优先级排除项没有被误报为已实现。",
+      "done": true
+    }
+  ],
+  "state": "all_done",
+  "instruction": "All tasks are complete! This change is ready to be archived.\nConsider running tests and reviewing the changes before archiving.",
+  "root": {
+    "path": "/Users/tiro/workspace/code/vibecoding/mewcode-demo",
+    "source": "nearest"
+  }
+}

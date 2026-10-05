@@ -1,0 +1,12 @@
+{"action": "startup", "event": "session.start", "mode": "execute", "run_id": null, "tool": null}
+{"action": "format", "event": "tool.after", "mode": "execute", "run_id": "bb712936f3a74620beaf830ec3e82824", "tool": "call_00_TO7cvZ5HfiQRYwbh4vKf5328"}
+{"action": "background", "event": "turn.end", "mode": "execute", "run_id": "bb712936f3a74620beaf830ec3e82824", "tool": null}
+{"action": "before", "event": "tool.before", "mode": "execute", "run_id": "7ed99b3396ca4959a58da3a8b4aa46ed", "tool": "call_00_HYN8lnZawk4EHh0TrSCw3295"}
+{"action": "format", "event": "tool.after", "mode": "execute", "run_id": "7ed99b3396ca4959a58da3a8b4aa46ed", "tool": "call_00_V1vwkQhGiF43sXmIbwhx6210"}
+{"action": "timeout", "event": "tool.after", "mode": "execute", "run_id": "c000626967904b3197ad38997183010e", "tool": "call_00_ET_hzXZAC9pRZM58W525ZxQ6260"}
+{"action": "cancel", "event": "tool.before", "mode": "execute", "run_id": "ab8391758e574a62932459d442e2dced", "tool": "call_00_ET_aMMvS77V5eVff6TD0esY9695"}
+{"action": "cancel", "event": "tool.before", "mode": "execute", "run_id": "0511b562099d4e5e861a70589bc156e4", "tool": "call_00_ET_soNBUDfUccyEBfiGjRc23338"}
+{"action": "startup", "event": "session.start", "mode": "execute", "run_id": null, "tool": null}
+{"action": "mode", "event": "mode.changed", "mode": "execute", "run_id": null, "tool": null}
+{"action": "mode", "event": "mode.changed", "mode": "execute", "run_id": null, "tool": null}
+{"action": "background", "event": "turn.end", "mode": "execute", "run_id": "d8114819d629418e9e54bf1e53aa087e", "tool": null}

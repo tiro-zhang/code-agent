@@ -10,11 +10,13 @@ from .executor import ToolExecutor
 
 
 class ToolScheduler:
-    def __init__(self, executor: ToolExecutor, *, max_parallel: int = 4, on_result=None) -> None:
+    def __init__(self, executor: ToolExecutor, *, max_parallel: int = 4, on_result=None,
+                 hooks=None, hook_fields=None) -> None:
         if max_parallel < 1:
             raise ValueError("并发上限必须是正整数")
         self.executor = executor
-        self.max_parallel = min(max_parallel, 4)
+        self.max_parallel = 1 if hooks is not None and hooks.serial_tools else min(max_parallel, 4)
+        self.hooks, self.hook_fields = hooks, hook_fields
         self.results: tuple[ToolResult, ...] = ()
         self.on_result = on_result
         self.storage_error = None
@@ -28,6 +30,8 @@ class ToolScheduler:
         jobs: dict[int, asyncio.Task] = {}
         self.results = ()
         normal_end = False
+        notified = set()
+        tool_snapshots = {}
 
         def event(kind, index, **fields):
             call = calls[index]
@@ -37,6 +41,25 @@ class ToolScheduler:
 
         def unstarted():
             return ToolResult.failure("cancelled", "任务取消，工具未启动", details={"not_started": True})
+
+        async def finish(index, result):
+            if index in notified:
+                return
+            notified.add(index)
+            call = calls[index]
+            if self.hooks is not None:
+                from ..hooks.events import tool_snapshot
+                def fields_for_hook():
+                    data = dict(tool_snapshots.get(index) or tool_snapshot(self.executor, call.id, call.name, call.arguments))
+                    data['result'] = result.to_dict()
+                    fields = self.hook_fields() if callable(self.hook_fields) else (self.hook_fields or {})
+                    return {'run_id': run_id, **fields, 'tool': data}
+                await protected(self.hooks.emit('tool.after', fields=fields_for_hook, cancel_event=cancel), cancel_event=cancel)
+            if self.on_result and self.storage_error is None:
+                try:
+                    self.on_result(call, result)
+                except OSError as error:
+                    self.storage_error = error
 
         async def execute_one(index):
             call = calls[index]
@@ -61,11 +84,17 @@ class ToolScheduler:
                     current = allowed_tools() if callable(allowed_tools) else allowed_tools
                     self.executor.registry.prepare(call.name, call.arguments, allowed_tools=current)
                 except ToolError as error:
-                    result = error.result()
+                    result = ToolResult.failure(error.code, error.message,
+                                                details={**error.details, 'not_started': True})
                 else:
+                    options = {}
+                    if self.hooks is not None:
+                        tool_snapshots[index] = {}
+                        options = {'hooks': self.hooks, 'hook_fields': self.hook_fields,
+                                   'hook_tool': tool_snapshots[index], 'call_id': call.id}
                     operation = asyncio.create_task(self.executor.execute(
                         call.name, call.arguments, allowed_tools=allowed_tools, cancel_event=cancel,
-                        on_event=notify))
+                        on_event=notify, **options))
                     try:
                         result = await operation
                     except asyncio.CancelledError:
@@ -76,12 +105,7 @@ class ToolScheduler:
                         result = ToolResult.failure('storage_error', '执行过程存档失败，停止后续工作；已完成操作保留')
                     except Exception:
                         result = ToolResult.failure("execution_error", "工具执行入口异常结束")
-            if self.on_result and self.storage_error is None:
-                try:
-                    self.on_result(call, result)
-                except OSError as error:
-                    # 已产生的真实结果仍回传；后续未启动工具停在存档边界。
-                    self.storage_error = error
+            await finish(index, result)
             await queue.put((index, event("tool_result", index, result=result)))
 
         async def drain_and_cleanup():
@@ -134,6 +158,7 @@ class ToolScheduler:
                 if index not in results:
                     results[index] = (ToolResult.failure('storage_error', '存档失败，工具未启动',
                                       details={'not_started': True}) if self.storage_error else unstarted())
+                    await finish(index, results[index])
                     yield event("tool_result", index, result=results[index])
             normal_end = True
         finally:
@@ -141,3 +166,5 @@ class ToolScheduler:
                 cancel.set()
             await protected(drain_and_cleanup(), cancel_event=cancel)
             self.results = tuple(results.get(index, unstarted()) for index in range(len(calls)))
+            for index, result in enumerate(self.results):
+                await protected(finish(index, result), cancel_event=cancel)

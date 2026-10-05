@@ -51,7 +51,7 @@ async def run_isolated(parent, skill, args, history_scope, *, cancel_event, on_e
         runtime.commit = lambda records: journal.append('skills_changed', {'active_skills': records})
     provider = parent.provider if config is parent.config else parent.provider_factory(config)
     child = Agent(provider, executor, max_iterations=budget.limit, config=config, journal=journal,
-                  prompt_state=prompt, before_request=prepare, allowed_tools=allowed)
+                  prompt_state=prompt, before_request=prepare, allowed_tools=allowed, hooks=parent.hooks)
     child.context.cache.close()
     child.context.cache = ChildResultCache(parent.context.cache, run_id)
     if journal:
@@ -68,7 +68,8 @@ async def run_isolated(parent, skill, args, history_scope, *, cancel_event, on_e
                 '请直接按 SOP 完成任务，无需再次加载自身，也不能嵌套启动独立 Skill。\n'
                 f'当前主任务目标：{parent._task_question}\n'
                 f'Skill 参数（原文）：{args}\n最终回答作为主对话摘要，报告已完成、失败、未执行及实际证据。')
-    stream = child.run(question, history=history, mode=parent.mode, cancel_event=cancel_event, budget=budget, run_id=run_id)
+    stream = child.run(question, history=history, mode=parent.mode, cancel_event=cancel_event,
+                       budget=budget, run_id=run_id, turn_owned=True, parent_run_id=budget.root_run_id)
     finished = None
     try:
         async for event in stream:

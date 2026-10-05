@@ -29,6 +29,7 @@ class ApprovalRequest:
     mode: str
     external: tuple[str, str] | None = None
     connection_description: str = ""
+    origin: tuple[str, str] | None = None
 
 
 @dataclass(frozen=True)
@@ -142,7 +143,8 @@ class PermissionManager:
 
     async def authorize(self, tool: str, arguments: dict, *, targets: tuple[str, ...] | None = None,
                         cancel_event: asyncio.Event | None = None,
-                        notify: Callable[[dict], None] | None = None) -> Authorization:
+                        notify: Callable[[dict], None] | None = None,
+                        origin: tuple[str, str] | None = None) -> Authorization:
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
         original = deepcopy(arguments)
         once, rejected = set(), set()
@@ -175,7 +177,7 @@ class PermissionManager:
                 external = self.mcp_tools.get(tool)
                 request = ApprovalRequest(uuid4().hex, tool, deepcopy(original), pending, reason, self.mode,
                                           (external.server_name, external.original_name) if external else None,
-                                          external.connection_description if external else "")
+                                          external.connection_description if external else "", origin)
                 await emit({"kind": "permission_requested", "request": request})
                 choice = await self.responder(request, cancel)
                 if cancel.is_set():
@@ -202,3 +204,14 @@ class PermissionManager:
             if not pending:
                 return Authorization(deepcopy(original), allowed if kind == "path" else None, len(denied))
             await interruptible(ask(), cancel)
+
+    def authorize_noninteractive(self, tool: str, arguments: dict, *,
+                                cancel_event: asyncio.Event | None = None) -> Authorization:
+        """后台只能使用已有许可；黑名单、拒绝及有效批准与前台相同。"""
+        if cancel_event is not None and cancel_event.is_set():
+            raise cancelled()
+        original = deepcopy(arguments)
+        kind, allowed, pending, denied, _ = self._evaluate(tool, original, None, set(), set())
+        if pending:
+            raise ToolError("approval_required", "后台动作缺少非交互许可", not_started=True)
+        return Authorization(original, allowed if kind == "path" else None, len(denied))

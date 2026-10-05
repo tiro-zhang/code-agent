@@ -1,0 +1,190 @@
+{
+  "enhanced": {
+    "root": "/private/tmp/mewcode-hooks-e2e-20261005",
+    "sessions": {
+      "473fc34dff7b4aaf8b5aff725fd82d1e": {
+        "events": {
+          "session.start": 1,
+          "turn.start": 7,
+          "message.user": 7,
+          "message.before_request": 14,
+          "message.after_response": 14,
+          "tool.before": 8,
+          "tool.after": 8,
+          "turn.end": 7,
+          "session.end": 1
+        },
+        "work_request_markers": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      },
+      "534731d44fb24148a478660d82da2217": {
+        "events": {
+          "session.start": 1,
+          "turn.start": 3,
+          "message.user": 3,
+          "message.before_request": 4,
+          "message.after_response": 4,
+          "tool.after": 2,
+          "turn.end": 3,
+          "mode.changed": 4,
+          "tool.before": 1,
+          "session.end": 1
+        },
+        "work_request_markers": [
+          true,
+          false,
+          false,
+          false
+        ]
+      }
+    },
+    "requests": 18,
+    "model_ids": [
+      "deepseek-v4-pro"
+    ],
+    "actions": {
+      "startup": 2,
+      "format": 2,
+      "background": 2,
+      "before": 1,
+      "timeout": 1,
+      "cancel": 2,
+      "mode": 2
+    },
+    "tool_results": {
+      "write_file": 3,
+      "read_file": 7
+    },
+    "errors": [
+      {
+        "code": "hook_denied",
+        "message": "protected.txt 受保护，请改为创建 alternative.txt",
+        "details": {
+          "not_started": true,
+          "hook_source": "/private/tmp/mewcode-hooks-e2e-20261005/.mewcode/hooks.yaml#hooks[2]"
+        }
+      },
+      {
+        "code": "cancelled",
+        "message": "任务取消，工具未启动",
+        "details": {
+          "not_started": true
+        }
+      },
+      {
+        "code": "cancelled",
+        "message": "任务取消，工具未启动",
+        "details": {
+          "not_started": true
+        }
+      }
+    ],
+    "products": {
+      "format.txt": {
+        "text": "HELLO HOOKS\n",
+        "sha256": "56a63d0745e1c417e292fe7d1f391b3f23c2b01b09899a90c17ea70ef2f83f49"
+      },
+      "alternative.txt": {
+        "text": "DENIED TEST\n",
+        "sha256": "e9ccb678e1cc954073ea9ca94b2c4ecc33da3a1f9a34d05dbf6130298c57203e"
+      }
+    },
+    "local_processes": {
+      "timeout": {
+        "pid": 21667,
+        "alive": false,
+        "delayed_file_exists": false
+      },
+      "cancel": {
+        "pid": 21877,
+        "alive": false,
+        "delayed_file_exists": false
+      }
+    },
+    "protected_file_exists": false,
+    "plan_file_exists": false
+  },
+  "plain": {
+    "root": "/private/tmp/mewcode-hooks-plain-e2e-20261005",
+    "sessions": {
+      "e04004e0798d48efa38e9e4642dca5ba": {
+        "events": {
+          "session.start": 1,
+          "turn.start": 2,
+          "message.user": 2,
+          "message.before_request": 5,
+          "message.after_response": 5,
+          "tool.before": 3,
+          "tool.after": 3,
+          "turn.end": 2,
+          "mode.changed": 2,
+          "session.end": 1
+        },
+        "work_request_markers": [
+          true,
+          false,
+          false,
+          false,
+          false
+        ]
+      }
+    },
+    "requests": 5,
+    "model_ids": [
+      "deepseek-v4-pro"
+    ],
+    "actions": {
+      "startup": 1,
+      "format": 1,
+      "background": 1,
+      "mode": 1
+    },
+    "tool_results": {
+      "write_file": 1,
+      "read_file": 2
+    },
+    "errors": [],
+    "products": {
+      "plain-output.txt": {
+        "text": "HELLO PLAIN HOOKS\n",
+        "sha256": "5d8d9eb8c70ee8a67e5beb64923be853fa6229a29f18c6a25d9b851876e8aa20"
+      }
+    },
+    "local_processes": {},
+    "protected_file_exists": false,
+    "plan_file_exists": false
+  },
+  "docs_and_package": {
+    "readme_rules_loaded": 4,
+    "wheel_modules": [
+      "mewcode/hooks/__init__.py",
+      "mewcode/hooks/actions.py",
+      "mewcode/hooks/conditions.py",
+      "mewcode/hooks/config.py",
+      "mewcode/hooks/events.py",
+      "mewcode/hooks/models.py",
+      "mewcode/hooks/prompts.py",
+      "mewcode/hooks/runtime.py"
+    ],
+    "wheel_python_files_equal_current_source": 96,
+    "direct_http_dependency": [
+      "Requires-Dist: httpx2<3,>=2.13.1"
+    ],
+    "real_key_hits_in_public_artifacts": 0
+  },
+  "total_real_model_requests": 23
+}

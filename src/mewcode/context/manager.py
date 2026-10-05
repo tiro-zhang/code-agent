@@ -86,7 +86,26 @@ class ContextManager:
         return result
 
     async def compact(self, provider, history, user, tools, system, reminder, cancel, *, manual=False,
-                      on_start=None):
+                      on_start=None, hooks=None, hook_fields=None, purpose=None):
+        """摘要维护与普通工作请求分开，Hook 只观察本次压缩尝试。"""
+        purpose = purpose or ('manual' if manual else 'auto')
+        result = None
+        def fields():
+            return hook_fields() if callable(hook_fields) else (hook_fields or {})
+        try:
+            if hooks is not None:
+                await hooks.emit('context.before_compact', **fields(), context={'purpose': purpose, 'estimated_tokens': self.last_estimate, 'threshold': self.window}, cancel_event=cancel)
+            result = await self._compact(provider, history, user, tools, system, reminder, cancel,
+                                         manual=manual, on_start=on_start)
+            return result
+        finally:
+            if hooks is not None:
+                status = ('cancelled' if cancel.is_set() or (result and result.cancelled) else
+                          'success' if result and result.success else 'failed' if result is None or result.called else 'noop')
+                await protected(hooks.emit('context.after_compact', **fields(), context={'purpose': purpose, 'result': status, 'reason': status, 'estimated_tokens': self.last_estimate, 'threshold': self.window}, cancel_event=cancel), cancel_event=cancel)
+
+    async def _compact(self, provider, history, user, tools, system, reminder, cancel, *, manual=False,
+                       on_start=None):
         pending = [user] if user and all(m.id != user.id for m in history) else []
         baseline = tuple(history)
         result = CompactionResult(before=self.estimate([*history, *pending, reminder], system, tools))

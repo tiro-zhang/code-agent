@@ -130,6 +130,54 @@ async def test_narrow_approval_keeps_navigation_and_decisions_visible():
             await ui.close()
 
 
+@async_test
+async def test_hook_notice_keeps_draft_cursor_approval_and_controller_owner_phase(monkeypatch):
+    from io import StringIO
+    from mewcode.app import _Renderer
+    from mewcode.permissions.terminal import InputReader
+    from mewcode.terminal.controller import TerminalController
+    from mewcode.types import AgentEvent
+    from test_terminal_controller import request
+    with create_pipe_input() as pipe:
+        output = StringIO()
+        terminal = TerminalController(InputReader(StringIO()), output, root='/project', secret='', on_interrupt=lambda: None)
+        monkeypatch.setattr(terminal, '_can_enhance', lambda: True)
+        monkeypatch.setattr('mewcode.terminal.controller.create_input', lambda *a, **k: pipe)
+        monkeypatch.setattr('mewcode.terminal.controller.create_output', lambda *a, **k: DummyOutput())
+        await terminal.start()
+        renderer = _Renderer(terminal.stream, '')
+        try:
+            pending = asyncio.create_task(terminal.readline(asyncio.Event()))
+            await tick()
+            pipe.send_text('草稿\x1b[D')
+            await tick()
+            cursor = terminal.backend.chat.cursor_position
+            details = terminal.state.details
+            terminal.show(renderer, AgentEvent('hook_notice', run_id='old', hook_source='hooks[0]', hook_event='turn.end', text='通知'))
+            await terminal.drain()
+            assert terminal.backend.chat.text == '草稿' and terminal.backend.chat.cursor_position == cursor
+            assert terminal.state.details is details and terminal.phase == 'idle'
+            pipe.send_text('\r')
+            assert await pending == '草稿'
+            terminal.set_phase('summary')
+            item = request('hook')
+            item.origin = ('hooks.yaml#hooks[2]', 'context.before_compact')
+            approval = asyncio.create_task(terminal.approve(item, asyncio.Event()))
+            await tick()
+            pipe.send_text('2')
+            await tick()
+            terminal.show(renderer, AgentEvent('hook_notice', hook_source='background', hook_event='tool.after', text='稍后通知'))
+            await tick()
+            assert terminal.backend.answer.text == '2' and terminal.backend._view.request_id == 'hook'
+            assert '稍后通知' not in output.getvalue()
+            pipe.send_text('\r')
+            assert await approval == 'once'
+            assert terminal.phase == terminal.backend.phase == 'summary'
+            assert '稍后通知' in output.getvalue() and terminal.state.details is details
+        finally:
+            await terminal.close()
+
+
 def test_command_menu_description_uses_the_same_secret_boundary():
     from dataclasses import replace
     from mewcode.commands.builtins import build_registry

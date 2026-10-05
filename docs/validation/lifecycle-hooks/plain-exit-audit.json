@@ -1,0 +1,9 @@
+{
+  "exit": "1:0",
+  "real_requests": 5,
+  "pty_bytes": 984,
+  "pty_escape_bytes": 0,
+  "background_done": true,
+  "product": "HELLO PLAIN HOOKS\n",
+  "driver_cleanup_note": "会话正常结束时 tmux 自动关闭 pipe-pane；随后显式关闭已退出 pane 的管道返回非零，实际退出码与原始输出在本次独立读取确认。"
+}

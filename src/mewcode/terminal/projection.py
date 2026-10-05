@@ -81,6 +81,9 @@ class TerminalProjection:
         return [event] if alert else []
 
     def accept(self, event, *, maintenance=False):
+        if event.kind == 'hook_notice':
+            text = f'Hook> {self.state.safe(event.hook_source)} · {self.state.safe(event.hook_event)} · {self.state.safe(event.text)}'
+            return [replace(event, kind='display_line', text=text)]
         if maintenance:
             return self.maintenance_events(event)
         if self._generation is not self.state.details:

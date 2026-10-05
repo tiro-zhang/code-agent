@@ -1,0 +1,1 @@
+Change 'add-lifecycle-hooks' is valid

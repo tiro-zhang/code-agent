@@ -1,0 +1,5 @@
+{"model": "deepseek-v4-pro", "choice": "auto", "marker": true, "tools": ["read_file", "write_file", "edit_file", "execute_command", "glob_files", "search_code", "load_skill"]}
+{"model": "deepseek-v4-pro", "choice": "auto", "marker": false, "tools": ["read_file", "write_file", "edit_file", "execute_command", "glob_files", "search_code", "load_skill"]}
+{"model": "deepseek-v4-pro", "choice": "auto", "marker": false, "tools": ["read_file", "write_file", "edit_file", "execute_command", "glob_files", "search_code", "load_skill"]}
+{"model": "deepseek-v4-pro", "choice": "auto", "marker": false, "tools": ["read_file", "write_file", "edit_file", "execute_command", "glob_files", "search_code", "load_skill"]}
+{"model": "deepseek-v4-pro", "choice": "auto", "marker": false, "tools": ["read_file", "write_file", "edit_file", "execute_command", "glob_files", "search_code", "load_skill"]}

@@ -197,7 +197,7 @@ class EnhancedTerminal:
             refresh_interval=.25, min_redraw_interval=.03, erase_when_done=False)
 
     def _status_text(self):
-        labels = {"starting": "启动中", "idle": "等待输入", "running": "运行中",
+        labels = {"starting": "启动中", "idle": "等待输入", "running": "运行中", "control": "处理控制指令",
                   "approval": "等待授权", "summary": "压缩上下文", "closing": "退出清理",
                   "cancelling": "正在停止"}
         text = self.status() or labels[self.phase]
@@ -243,6 +243,8 @@ class EnhancedTerminal:
             return "Enter 发送 · Esc+Enter 换行 · / 发现命令 · F2 详情 · Ctrl+C 清草稿／空草稿退出"
         if self.phase == 'cancelling':
             return '正在停止，等待流和工具清理；已完成操作可能保留'
+        if self.phase == 'control':
+            return 'Ctrl+C 取消当前控制指令，等待清理完成'
         return "Ctrl+C 取消启动" if self.phase == "starting" else "Ctrl+C 取消本轮" if self.phase in {"running", "summary"} else "正在清理资源"
 
     def _tiny(self):

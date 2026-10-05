@@ -1,0 +1,58 @@
+........................................................................ [  6%]
+........................................................................ [ 12%]
+........................................................................ [ 19%]
+........................................................................ [ 25%]
+........................................................................ [ 32%]
+........................................................................ [ 38%]
+........................................................................ [ 44%]
+........................................................................ [ 51%]
+........................................................................ [ 57%]
+........................................................................ [ 64%]
+........................................................................ [ 70%]
+........................................................................ [ 76%]
+........................................................................ [ 83%]
+................................................................F....... [ 89%]
+........................................................................ [ 96%]
+...........................................                              [100%]
+=================================== FAILURES ===================================
+______ test_small_review_pages_do_not_skip_lines_hidden_by_other_regions _______
+
+    @async_test
+    async def test_small_review_pages_do_not_skip_lines_hidden_by_other_regions():
+        from prompt_toolkit.data_structures import Size
+        from mewcode.terminal.input import EnhancedTerminal
+        class SmallOutput(DummyOutput):
+            def get_size(self): return Size(rows=12, columns=80)
+        class NumberedView:
+            request_id = 'review'
+            decisions = {'1': 'deny'}
+            def page(self, section, index, *, width, height):
+                total = (20 + height - 1) // height
+                index = min(max(0,index),total-1)
+                return '\n'.join(f'REVIEW-LINE-{n:02}' for n in range(index*height,min(20,(index+1)*height))), index, total
+        with create_pipe_input() as pipe:
+            terminal=EnhancedTerminal(pipe, SmallOutput(), on_interrupt=lambda:None,
+                                      status=lambda:'status1\nstatus2\nstatus3', active=lambda:['tool']*4)
+            await terminal.start()
+            try:
+                pending=asyncio.create_task(terminal.approve(NumberedView(),asyncio.Event()))
+                seen=set()
+                for _ in range(22):
+                    await tick()
+                    import re
+                    seen.update(re.findall(r'REVIEW-LINE-\d\d',screen_text(terminal)))
+                    pipe.send_text('next\r')
+>               assert seen=={f'REVIEW-LINE-{n:02}' for n in range(20)}
+E               AssertionError: assert {'REVIEW-LINE...LINE-09', ...} == {'REVIEW-LINE...LINE-05', ...}
+E                 
+E                 Extra items in the right set:
+E                 'REVIEW-LINE-05'
+E                 'REVIEW-LINE-06'
+E                 'REVIEW-LINE-07'
+E                 'REVIEW-LINE-04'
+E                 Use -v to get more diff
+
+tests/test_terminal_input.py:232: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_terminal_input.py::test_small_review_pages_do_not_skip_lines_hidden_by_other_regions
+1 failed, 1122 passed in 120.04s (0:02:00)

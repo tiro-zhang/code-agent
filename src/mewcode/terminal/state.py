@@ -15,7 +15,7 @@ from .details import DetailStore
 
 
 PHASE_LABELS = {
-    "starting": "启动中", "idle": "空闲", "running": "任务运行中",
+    "starting": "启动中", "idle": "空闲", "running": "任务运行中", "control": "处理控制指令",
     "approval": "等待授权", "closing": "退出清理", "model": "请求模型",
     "cancelling": "正在停止", "thinking": "思考中", "answer": "正在回答",
     "summary": "压缩上下文", "tools": "权限检查／执行工具", "permissions": "权限检查", "permission": "等待授权",

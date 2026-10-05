@@ -1,0 +1,4 @@
+{"action": "startup", "event": "session.start", "mode": "execute", "run_id": null, "tool": null}
+{"action": "format", "event": "tool.after", "mode": "execute", "run_id": "db5ace12fbff433aa9ee9f02e289c456", "tool": "call_00_20TS6ovT3seRbMn5JFkf6287"}
+{"action": "background", "event": "turn.end", "mode": "execute", "run_id": "db5ace12fbff433aa9ee9f02e289c456", "tool": null}
+{"action": "mode", "event": "mode.changed", "mode": "execute", "run_id": null, "tool": null}

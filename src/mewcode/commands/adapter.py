@@ -9,6 +9,7 @@ class SessionCommandContext:
     def __init__(self, registry, session, terminal, renderer, config):
         self.registry, self.session, self.terminal = registry, session, terminal
         self.renderer, self.config = renderer, config
+        self.cancel_event = None
 
     @property
     def enhanced(self):
@@ -20,11 +21,8 @@ class SessionCommandContext:
     async def clear_screen(self):
         await self.terminal.clear_screen()
 
-    def set_mode(self, mode):
-        if mode == 'plan':
-            self.session.enter_plan()
-        else:
-            self.session.enter_execute()
+    async def set_mode(self, mode):
+        await self.session.set_mode(mode, cancel_event=self.cancel_event)
 
     def refresh_status(self):
         self.terminal.sync_session(self.session)

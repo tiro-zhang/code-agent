@@ -131,3 +131,19 @@ def test_json_escaped_secrets_are_removed_from_bounded_details():
     details.put('a', '参数', json.dumps({'payload': secret, 'nested': [secret]}))
     body = details.text('tools')
     assert '[已隐藏]' in body and 'fictional' not in body
+
+
+def test_hook_notice_preserves_details_usage_tool_batch_and_original_association():
+    p = projection()
+    call(p, 'one', path='/project/a')
+    p.accept(AgentEvent('usage', run_id='r', usage=TokenUsage(20, 3)))
+    details, usage = p.state.details, p.state._total_usage
+    text = p.state.details_text('tools')
+    visible = p.accept(AgentEvent('hook_notice', run_id='old', parent_run_id='root',
+        hook_source='hooks.yaml#hooks[2]', hook_event='tool.after', text='后台通知private-key\x1b[31m'))
+    assert len(visible) == 1 and visible[0].run_id == 'old' and visible[0].parent_run_id == 'root'
+    assert 'Hook' in visible[0].text and 'hooks[2]' in visible[0].text and 'tool.after' in visible[0].text
+    assert '\x1b' not in visible[0].text and 'private-key' not in visible[0].text
+    assert p.state.details is details and p.state._total_usage == usage
+    assert p.state.details_text('tools') == text
+    assert len(p.flush()) == 1 and len(p.state._tools) == 1

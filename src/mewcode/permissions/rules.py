@@ -1,33 +1,15 @@
 """纯规则判定；授权和硬限制由执行入口独立处理。"""
 
-from fnmatch import fnmatchcase
-from functools import lru_cache
 from collections.abc import Iterable
 
 from .models import Evaluation, Rule
 from ..mcp.tools import is_mcp_alias
-
-
-def _path_glob(pattern: str, subject: str) -> bool:
-    patterns, parts = pattern.split("/"), subject.split("/")
-
-    @lru_cache(maxsize=None)
-    def matches(pi: int, si: int) -> bool:
-        if pi == len(patterns):
-            return si == len(parts)
-        if patterns[pi] == "**":
-            return matches(pi + 1, si) or (si < len(parts) and matches(pi, si + 1))
-        return si < len(parts) and fnmatchcase(parts[si], patterns[pi]) and matches(pi + 1, si + 1)
-
-    return matches(0, 0)
+from ..matching import match_value, path_glob as _path_glob
 
 
 def _matches(rule: Rule, subject: str) -> bool:
-    if rule.match == "exact":
-        return rule.pattern == subject
-    if rule.tool == "execute_command" or is_mcp_alias(rule.tool):
-        return fnmatchcase(subject, rule.pattern)
-    return _path_glob(rule.pattern, subject)
+    return match_value(subject, rule.pattern, rule.match,
+                       path=rule.tool != "execute_command" and not is_mcp_alias(rule.tool))
 
 
 def merge_rules(
