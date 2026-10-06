@@ -1,6 +1,6 @@
 # Worktree 隔离本次验收
 
-本次实施位于 `.worktrees/add-worktree-isolation`，分支 `add-worktree-isolation`，开发基线 `62b99e8`。验收时间为 2026-10-05 至 2026-10-06（Asia/Shanghai）。本报告只使用本次执行的证据；未合并、推送或归档 OpenSpec 变更。
+本次实施位于 `.worktrees/add-worktree-isolation`，分支 `add-worktree-isolation`，开发基线 `62b99e8`。验收时间为 2026-10-05 至 2026-10-06（Asia/Shanghai）。本报告只使用本次执行的证据。实施已于 2026-10-06 合并到本地 `main`，整合验证记录见文末。
 
 最终完整回归 **1423 passed，157.25 秒**；源码包和 wheel 构建成功，wheel 含 8 个 Worktree 模块及 explore/general 内置角色；`git diff --check` 和 `openspec validate add-worktree-isolation --strict` 通过。独立只读代码复审无剩余 Critical／Important。日志见 [pytest](worktree-isolation/pytest.txt)、[构建](worktree-isolation/build.txt)、[评审修复回归](worktree-isolation/review-fixes.txt)；10 份增量规格的 106 个场景逐项对应见 [规格核对](worktree-isolation/spec-audit.md)。场景数不等于独立测试数。
 
@@ -45,3 +45,11 @@
 | README、checklist、构建及规格 | 通过 | 默认值、角色声明、共享边界、成果路径、删除条件已同步；本次新证据完整，不复用旧章节的验收结论。 |
 
 本次隔离表示 Git 工作副本及默认工具根。shell、依赖软链、共享 Git、LLM 和 MCP 的边界在 README 明示；未增加操作系统沙箱、自动合并、跨目录同步或团队编排。验收程序正常退出，保留临时项目中的受保护成果和可恢复证据供复核。
+
+## 主干整合（2026-10-06）
+
+本地 `main` 从 `62b99e8` 快进至实施提交 `4eb7b02`，没有冲突。合并前主干的未追踪旧方案（任务清单尚未完成）完整备份到 `/private/tmp/mewcode-main-planning-backup-tm6wwc2h/add-worktree-isolation`，开发过程记录也已备份。远端 SSH 连接关闭，`git pull --ff-only` 未完成，因此本次仅确认本地整合，远端最新状态未核实。
+
+合并前首次完整回归 1422 通过、1 个已记录 MCP 竞态失败（`legacy-False`，GET 4→5）；单独复验 1 通过（1.15 秒），完整重跑 **1423 passed，168.12 秒**。合并后首次回归 1422 通过、1 个 Git Hook 取消测试的准备等待超时；失败发生于 3 秒启动窗口，单独复验 1 通过（1.10 秒）。将准备窗口调整为 10 秒，并在创建提前结束时立即失败，取消后的 3 秒收尾断言保持；生命周期专项 **22 passed，4.35 秒**。没有修改运行代码或 MCP 实现。
+
+主干最终完整回归 **1423 passed，151.73 秒**，严格规格校验及差异检查通过。记录见 [本次合并验证日志](worktree-isolation/merge-verification.txt)。本次开发 Worktree 已非强制移除，已合并功能分支已安全删除；其他工作树和真实验收项目成果保留。OpenSpec 变更仍保持完成的活动状态，未自动归档。

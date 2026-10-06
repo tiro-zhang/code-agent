@@ -228,8 +228,13 @@ async def test_cancel_during_git_hook_drains_process_and_keeps_incomplete(tmp_pa
     m=manager(root); cancel=asyncio.Event()
     task=asyncio.create_task(m.create('one',task_id='one',cancel_event=cancel))
     try:
-        async with asyncio.timeout(3):
-            while not marker.exists(): await asyncio.sleep(.01)
+        # 给真实 Git 检出及 Hook 启动独立的准备窗口。
+        async with asyncio.timeout(10):
+            while not marker.exists():
+                if task.done():
+                    await task
+                    pytest.fail('创建已结束但阻塞 Hook 未启动')
+                await asyncio.sleep(.01)
         cancel.set()
         with pytest.raises(asyncio.CancelledError): await asyncio.wait_for(task,3)
         with pytest.raises(ToolError): await m.create('one',task_id='one')

@@ -1,0 +1,245 @@
+2026-10-06 本地主干整合验证
+实施提交：4eb7b02
+命令：PYTHONPATH=src UV_CACHE_DIR=/tmp/mewcode-uv-cache uv run --no-sync pytest ...
+完整回归使用 -q；专项使用记录中的用例或模块。
+
+
+合并前完整回归（首次，失败已记录）
+........................................................................ [  5%]
+........................................................................ [ 10%]
+........................................................................ [ 15%]
+........................................................................ [ 20%]
+........................................................................ [ 25%]
+........................................................................ [ 30%]
+........................................................................ [ 35%]
+.......F................................................................ [ 40%]
+........................................................................ [ 45%]
+........................................................................ [ 50%]
+........................................................................ [ 55%]
+........................................................................ [ 60%]
+........................................................................ [ 65%]
+........................................................................ [ 70%]
+........................................................................ [ 75%]
+........................................................................ [ 80%]
+........................................................................ [ 86%]
+........................................................................ [ 91%]
+........................................................................ [ 96%]
+.......................................................                  [100%]
+=================================== FAILURES ===================================
+_ test_recovery_stops_on_deadline_or_cancel_and_connection_survives[legacy-False] _
+  + Exception Group Traceback (most recent call last):
+  |   File "<SOURCE_CHECKOUT>/.worktrees/add-worktree-isolation/tests/test_mcp_sdk_contract.py", line 94, in test_recovery_stops_on_deadline_or_cancel_and_connection_survives
+  |     async with LifecycleHTTPClient() as http, Client(streamable_http_client(url, http_client=http), cache=None) as client:
+  |   File "<LOCAL_HOME>/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/contextlib.py", line 745, in __aexit__
+  |     raise exc_details[1]
+  |   File "<LOCAL_HOME>/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/contextlib.py", line 728, in __aexit__
+  |     cb_suppress = await cb(*exc_details)
+  |                   ^^^^^^^^^^^^^^^^^^^^^^
+  |   File "<LOCAL_HOME>/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/contextlib.py", line 231, in __aexit__
+  |     await self.gen.athrow(typ, value, traceback)
+  |   File "<SOURCE_CHECKOUT>/.venv/lib/python3.11/site-packages/mcp/client/streamable_http.py", line 766, in streamable_http_client
+  |     async with (
+  |   File "<SOURCE_CHECKOUT>/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
+  |     raise BaseExceptionGroup(
+  | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Exception Group Traceback (most recent call last):
+    |   File "<SOURCE_CHECKOUT>/.venv/lib/python3.11/site-packages/mcp/client/streamable_http.py", line 788, in streamable_http_client
+    |     yield read_stream, write_stream
+    |   File "<LOCAL_HOME>/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/contextlib.py", line 728, in __aexit__
+    |     cb_suppress = await cb(*exc_details)
+    |                   ^^^^^^^^^^^^^^^^^^^^^^
+    |   File "<SOURCE_CHECKOUT>/.venv/lib/python3.11/site-packages/mcp/client/session.py", line 514, in __aexit__
+    |     result = await self._task_group.__aexit__(exc_type, exc_val, exc_tb)
+    |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |   File "<SOURCE_CHECKOUT>/.venv/lib/python3.11/site-packages/anyio/_backends/_asyncio.py", line 847, in __aexit__
+    |     raise BaseExceptionGroup(
+    | ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+    +-+---------------- 1 ----------------
+      | Traceback (most recent call last):
+      |   File "<SOURCE_CHECKOUT>/.worktrees/add-worktree-isolation/tests/test_mcp_sdk_contract.py", line 115, in test_recovery_stops_on_deadline_or_cancel_and_connection_survives
+      |     assert before == after, "已取消请求的响应恢复仍在运行"
+      | AssertionError: 已取消请求的响应恢复仍在运行
+      | assert 4 == 5
+      +------------------------------------
+=========================== short test summary info ============================
+FAILED tests/test_mcp_sdk_contract.py::test_recovery_stops_on_deadline_or_cancel_and_connection_survives[legacy-False]
+1 failed, 1422 passed in 163.86s (0:02:43)
+
+
+既有 MCP 用例单独复验
+.                                                                        [100%]
+1 passed in 1.15s
+
+
+合并前完整重跑
+........................................................................ [  5%]
+........................................................................ [ 10%]
+........................................................................ [ 15%]
+........................................................................ [ 20%]
+........................................................................ [ 25%]
+........................................................................ [ 30%]
+........................................................................ [ 35%]
+........................................................................ [ 40%]
+........................................................................ [ 45%]
+........................................................................ [ 50%]
+........................................................................ [ 55%]
+........................................................................ [ 60%]
+........................................................................ [ 65%]
+........................................................................ [ 70%]
+........................................................................ [ 75%]
+........................................................................ [ 80%]
+........................................................................ [ 86%]
+........................................................................ [ 91%]
+........................................................................ [ 96%]
+.......................................................                  [100%]
+1423 passed in 168.12s (0:02:48)
+
+
+合并后完整回归（首次，准备超时已记录）
+........................................................................ [  5%]
+........................................................................ [ 10%]
+........................................................................ [ 15%]
+........................................................................ [ 20%]
+........................................................................ [ 25%]
+........................................................................ [ 30%]
+........................................................................ [ 35%]
+........................................................................ [ 40%]
+........................................................................ [ 45%]
+........................................................................ [ 50%]
+........................................................................ [ 55%]
+........................................................................ [ 60%]
+........................................................................ [ 65%]
+........................................................................ [ 70%]
+........................................................................ [ 75%]
+........................................................................ [ 80%]
+........................................................................ [ 86%]
+........................................................................ [ 91%]
+...................................................................F.... [ 96%]
+.......................................................                  [100%]
+=================================== FAILURES ===================================
+_______ test_cancel_during_git_hook_drains_process_and_keeps_incomplete ________
+
+tmp_path = PosixPath('/private/var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/pytest-of-tiro/pytest-582/test_cancel_during_git_hook_dr0')
+
+    @async_test
+    async def test_cancel_during_git_hook_drains_process_and_keeps_incomplete(tmp_path):
+        import shlex
+        root=repository(tmp_path/'repo')
+        marker=tmp_path/'started'
+        hook=root/'.git/hooks/post-checkout'
+        hook.write_text('#!/bin/sh\necho $$ > '+shlex.quote(str(marker))+'\nsleep 30\n')
+        hook.chmod(0o700)
+        m=manager(root); cancel=asyncio.Event()
+        task=asyncio.create_task(m.create('one',task_id='one',cancel_event=cancel))
+        try:
+            async with asyncio.timeout(3):
+>               while not marker.exists(): await asyncio.sleep(.01)
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_worktree_manager.py:232:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+delay = 0.01, result = None
+
+    async def sleep(delay, result=None):
+        """Coroutine that completes after a given time (in seconds)."""
+        if delay <= 0:
+            await __sleep0()
+            return result
+
+        loop = events.get_running_loop()
+        future = loop.create_future()
+        h = loop.call_later(delay,
+                            futures._set_result_unless_cancelled,
+                            future, result)
+        try:
+>           return await future
+                   ^^^^^^^^^^^^
+E           asyncio.exceptions.CancelledError
+
+<LOCAL_HOME>/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/tasks.py:649: CancelledError
+
+The above exception was the direct cause of the following exception:
+
+tmp_path = PosixPath('/private/var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/pytest-of-tiro/pytest-582/test_cancel_during_git_hook_dr0')
+
+    @async_test
+    async def test_cancel_during_git_hook_drains_process_and_keeps_incomplete(tmp_path):
+        import shlex
+        root=repository(tmp_path/'repo')
+        marker=tmp_path/'started'
+        hook=root/'.git/hooks/post-checkout'
+        hook.write_text('#!/bin/sh\necho $$ > '+shlex.quote(str(marker))+'\nsleep 30\n')
+        hook.chmod(0o700)
+        m=manager(root); cancel=asyncio.Event()
+        task=asyncio.create_task(m.create('one',task_id='one',cancel_event=cancel))
+        try:
+>           async with asyncio.timeout(3):
+
+tests/test_worktree_manager.py:231:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <Timeout [expired]>
+exc_type = <class 'asyncio.exceptions.CancelledError'>
+exc_val = CancelledError(), exc_tb = <traceback object at 0x10c3e4d00>
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> Optional[bool]:
+        assert self._state in (_State.ENTERED, _State.EXPIRING)
+
+        if self._timeout_handler is not None:
+            self._timeout_handler.cancel()
+            self._timeout_handler = None
+
+        if self._state is _State.EXPIRING:
+            self._state = _State.EXPIRED
+
+            if self._task.uncancel() <= self._cancelling and exc_type is exceptions.CancelledError:
+                # Since there are no new cancel requests, we're
+                # handling this.
+>               raise TimeoutError from exc_val
+E               TimeoutError
+
+<LOCAL_HOME>/.local/share/uv/python/cpython-3.11.14-macos-aarch64-none/lib/python3.11/asyncio/timeouts.py:115: TimeoutError
+=========================== short test summary info ============================
+FAILED tests/test_worktree_manager.py::test_cancel_during_git_hook_drains_process_and_keeps_incomplete
+1 failed, 1422 passed in 163.53s (0:02:43)
+
+
+Git Hook 用例单独复验
+.                                                                        [100%]
+1 passed in 1.10s
+
+
+调整准备窗口后的生命周期专项
+......................                                                   [100%]
+22 passed in 4.35s
+
+
+主干最终完整回归
+........................................................................ [  5%]
+........................................................................ [ 10%]
+........................................................................ [ 15%]
+........................................................................ [ 20%]
+........................................................................ [ 25%]
+........................................................................ [ 30%]
+........................................................................ [ 35%]
+........................................................................ [ 40%]
+........................................................................ [ 45%]
+........................................................................ [ 50%]
+........................................................................ [ 55%]
+........................................................................ [ 60%]
+........................................................................ [ 65%]
+........................................................................ [ 70%]
+........................................................................ [ 75%]
+........................................................................ [ 80%]
+........................................................................ [ 86%]
+........................................................................ [ 91%]
+........................................................................ [ 96%]
+.......................................................                  [100%]
+1423 passed in 151.73s (0:02:31)
