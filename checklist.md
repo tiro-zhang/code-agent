@@ -420,6 +420,8 @@
 
 ## Worktree 隔离（add-worktree-isolation，2026-10-06 本次验证）
 
+OpenSpec 已同步 10 份主规格并归档至 [2026-10-06-add-worktree-isolation](openspec/changes/archive/2026-10-06-add-worktree-isolation/)，44/44 项实施任务完成；同步保留未涉及的需求和场景，全部主规格严格校验通过。
+
 使用本次完整回归 **1423 passed**、构建、严格规格校验、独立只读代码复审与真实模型 tmux 的新证据。详见 [验收报告](docs/validation/worktree-isolation.md)、[106 场景核对](docs/validation/worktree-isolation/spec-audit.md)、[脱敏终端](docs/validation/worktree-isolation/terminal-evidence.txt) 和 [实际产物审计](docs/validation/worktree-isolation/artifact-audit.json)。基线 MCP 取消计数竞态已记录，未修改其实现；最终完整回归通过。
 
 - [x] 原生 Git 多目录、独立分支和准确根身份；私有非追踪管理目录、严格名称／路径边界、双向关联及已有目标零 Git／零写入恢复。

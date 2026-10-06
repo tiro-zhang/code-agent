@@ -1,0 +1,102 @@
+2026-10-06 Asia/Shanghai — add-worktree-isolation 主规格同步与归档
+Schema: spec-driven
+同步：10 份主规格；新增 14 条需求、修改 14 条需求；无删除或重命名。
+核对：全部增量描述及场景已同步，未涉及需求及场景保留，重复同步幂等。
+新 capability worktree-isolation 沿用增量 Purpose，无 TBD 占位。
+首次临时同步脚本的重复同步检查发现仅文件末尾空行差异；修正换行处理后，全部 10 份核对及 git diff --check 通过。
+归档：openspec/changes/archive/2026-10-06-add-worktree-isolation
+规划材料全部完成，任务 44/44 完成。14 个文件移动前后 SHA-256 一致，包含 .openspec.yaml。
+
+$ openspec validate --all --strict
+- Validating...
+✓ spec/agent-definitions
+  ℹ [INFO] requirements[0]: Requirement text is very long (>500 characters). Consider breaking it down.
+✓ spec/agent-loop
+✓ spec/automatic-memory
+  ℹ [INFO] requirements[2]: Requirement text is very long (>500 characters). Consider breaking it down.
+✓ spec/background-tasks
+✓ spec/context-management
+  ℹ [INFO] requirements[4]: Requirement text is very long (>500 characters). Consider breaking it down.
+✓ spec/core-tools
+✓ spec/interactive-chat
+  ℹ [INFO] requirements[4]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[6]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[5]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[7]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[10]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[14]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[15]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[16]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[17]: Requirement text is very long (>500 characters). Consider breaking it down.
+✓ spec/lifecycle-hooks
+  ℹ [INFO] requirements[1]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[2]: Requirement text is very long (>500 characters). Consider breaking it down.
+✓ spec/llm-providers
+✓ spec/mcp-client
+✓ spec/mcp-configuration
+✓ spec/mcp-tools
+✓ spec/plan-mode
+✓ spec/project-instructions
+✓ spec/prompt-caching
+  ℹ [INFO] requirements[1]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[6]: Requirement text is very long (>500 characters). Consider breaking it down.
+✓ spec/provider-configuration
+✓ spec/runtime-context
+  ℹ [INFO] requirements[3]: Requirement text is very long (>500 characters). Consider breaking it down.
+✓ spec/session-persistence
+  ℹ [INFO] requirements[9]: Requirement text is very long (>500 characters). Consider breaking it down.
+✓ spec/skill-system
+✓ spec/slash-commands
+  ℹ [INFO] requirements[0]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[5]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[7]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[3]: Requirement text is very long (>500 characters). Consider breaking it down.
+✓ spec/subagent-runtime
+✓ spec/system-prompt
+  ℹ [INFO] requirements[1]: Requirement text is very long (>500 characters). Consider breaking it down.
+✓ spec/tool-permissions
+  ℹ [INFO] requirements[2]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[3]: Requirement text is very long (>500 characters). Consider breaking it down.
+✓ spec/tool-system
+✓ spec/worktree-isolation
+  ℹ [INFO] requirements[6]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[7]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[9]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[0]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[1]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[3]: Requirement text is very long (>500 characters). Consider breaking it down.
+  ℹ [INFO] requirements[5]: Requirement text is very long (>500 characters). Consider breaking it down.
+Totals: 25 passed, 0 failed (25 items)
+
+$ openspec validate --archived --strict
+- Validating archived changes...
+✓ change/2026-09-27-initial-streaming-chat
+✓ change/2026-10-01-add-agent-loop
+✓ change/2026-10-01-add-tool-system
+✓ change/2026-10-02-add-structured-system-prompt
+✓ change/2026-10-03-add-permission-system
+✓ change/2026-10-04-add-context-management
+✓ change/2026-10-04-add-mcp-client
+✓ change/2026-10-04-add-project-memory
+✓ change/2026-10-04-add-slash-command-registry
+✓ change/2026-10-04-improve-terminal-interaction
+✓ change/2026-10-05-add-lifecycle-hooks
+✓ change/2026-10-05-add-skill-system
+✓ change/2026-10-05-add-subagent-delegation
+✓ change/2026-10-05-optimize-terminal-ui
+✓ change/2026-10-06-add-worktree-isolation
+Totals: 15 passed, 0 failed (15 items)
+
+$ openspec list --json
+{
+  "changes": [],
+  "root": {
+    "path": "/Users/tiro/workspace/code/vibecoding/mewcode-demo",
+    "source": "nearest"
+  }
+}
+
+$ git diff --check
+exit 0；无输出。
+
+本次仅规格和文档调整，未重新运行运行时测试；实施与主干验证见 merge-verification.txt。
