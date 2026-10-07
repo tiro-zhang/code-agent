@@ -17,7 +17,7 @@ async def test_system_route_updates_main_state_before_same_batch_edit(tmp_path):
     registry = default_registry()
     assert "load_skill" in registry.names()
     assert "load_skill" not in registry.names(read_only=True)
-    assert [t.name for t in registry.definitions(allowed_tools=frozenset())] == ["load_skill", "agent"]
+    assert [t.name for t in registry.definitions(allowed_tools=frozenset())] == ["load_skill", "agent", "team"]
     pickle.loads(pickle.dumps(registry))
     allowed = set(registry.names())
     events, loaded = [], []

@@ -101,6 +101,19 @@ async def tasks_command(args: str, context: CommandContext) -> CommandResult:
     return CommandResult()
 
 
+async def team_command(args: str, context: CommandContext) -> CommandResult:
+    parts = args.split()
+    action = parts[0] if parts else 'status'
+    if (action in {'list', 'pause'} and len(parts) != 1
+            or action == 'status' and len(parts) > 2
+            or action in {'create', 'resume', 'stop'} and len(parts) != 2
+            or action not in {'list', 'status', 'create', 'resume', 'pause', 'stop'}):
+        raise CommandUsageError('需要合法团队操作、名称或成员 ID')
+    context.show_message(await context.team_text(action, parts[1] if len(parts) == 2 else None))
+    context.refresh_status()
+    return CommandResult()
+
+
 def skill_command(name):
     async def invoke(args: str, context: CommandContext) -> CommandResult:
         return CommandResult('skill', args, name)
@@ -143,6 +156,11 @@ def builtin_definitions() -> tuple[CommandSpec, ...]:
         CommandSpec('tasks', (), '查看当前进程子任务、完整结果或取消', '/tasks [list|show <id>|cancel <id>|cancel-parent <parent_id>]',
                     'state', tasks_command, accepts_arguments=True,
                     argument_choices=(('list',), ('show',), ('cancel',), ('cancel-parent',))),
+        CommandSpec('team', (), '查看、创建、恢复或暂停团队，停止指定成员',
+                    '/team list|status [name]|create <name>|resume <name>|pause|stop <member_id>',
+                    'state', team_command, accepts_arguments=True,
+                    argument_hint='查看不请求模型或创建窗格；--team <name> 启动恢复保持空闲，与 --resume 互斥',
+                    argument_choices=(('list',), ('status',), ('create',), ('resume',), ('pause',), ('stop',))),
         CommandSpec('exit', (), '受控退出并保留存档', '/exit', 'state', exit_command),
     )
 

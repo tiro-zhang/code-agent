@@ -32,12 +32,12 @@ class ToolRegistry:
     def definitions(self, *, allowed_tools: frozenset[str] | None = None,
                     system_passthrough: bool = True) -> tuple[ToolDefinition, ...]:
         return tuple(ToolDefinition(t.name, t.description, t.input_schema, bool(getattr(t, "read_only", False)))
-                     for t in self._tools.values() if allowed_tools is None or t.name in allowed_tools
-                     or (system_passthrough and getattr(t, "system", False)))
+                     for t in self._tools.values() if (allowed_tools is None and getattr(t, 'default_visible', True)) or (allowed_tools is not None and t.name in allowed_tools)
+                     or (system_passthrough and getattr(t, "system", False) and not getattr(t, 'requires_scope', False)))
 
     def prepare(self, name: str, raw: str, *, allowed_tools: frozenset[str] | None = None) -> tuple[Tool, dict[str, Any]]:
         tool = self.get(name)
-        if allowed_tools is not None and name not in allowed_tools and not getattr(tool, "system", False):
+        if allowed_tools is not None and name not in allowed_tools and (not getattr(tool, "system", False) or getattr(tool, 'requires_scope', False)):
             raise ToolError("tool_not_allowed", "当前模式或 Skill 工具范围禁止使用此工具", name=name, not_started=True)
         try:
             if len(raw.encode("utf-8")) > ARGUMENT_LIMIT:

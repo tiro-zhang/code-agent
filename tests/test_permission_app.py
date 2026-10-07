@@ -130,8 +130,8 @@ def test_permission_commands_do_not_request_model_or_change_plan_history(tmp_pat
     assert "default" in shown and "strict" in shown and "已撤销" in shown and "用法" in shown
     assert '权限模式> 已切换为 strict' in shown and '进度>' not in shown
     assert not any("/permissions" in message.content for message in provider.requests[-1][0])
-    assert len(provider.requests[0][1]["tools"]) == 5
-    assert len(provider.requests[1][1]["tools"]) == 8
+    assert len(provider.requests[0][1]["tools"]) == 6
+    assert len(provider.requests[1][1]["tools"]) == 9
     assert "任务" in provider.requests[1][0][-2].content
 
 

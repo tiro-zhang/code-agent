@@ -442,3 +442,34 @@ OpenSpec 已同步 10 份主规格并归档至 [2026-10-06-add-worktree-isolatio
 - [ ] 本次官方 Anthropic、多远端模型或外部 MCP 实机：未执行，只有现有授权 OpenAI 兼容服务；两协议及本地 SDK 回归重跑，不证明远端副作用停止。
 
 本章实现 Git 工作副本及默认工具目录隔离；shell、依赖、Git 公共版本库和 MCP 不构成操作系统沙箱。自动合并、跨目录同步和团队编排不在范围内。
+
+## 持久 Agent Teams（add-agent-teams，2026-10-06）
+
+已同步全部 11 份增量规格到主规格，并归档到 [2026-10-06-add-agent-teams](openspec/changes/archive/2026-10-06-add-agent-teams/tasks.md)；49 项实施任务全部完成，主规格严格校验通过。
+
+本节依据本轮执行更新。真实模型调用、脱敏终端、失败尝试和未人工注入的故障见 [e2e.md](docs/validation/agent-teams/e2e.md)；11 份规格的 81 场景和对应实际测试见 [spec-audit.md](docs/validation/agent-teams/spec-audit.md)。自动化与真实模型证据分别注明。
+
+| 验收项 | 本次结果及证据 |
+| --- | --- |
+| 旧配置默认启动、稳定 Schema、普通主入口／子 Agent 无成员协作能力 | 自动化通过；test_team_capabilities / test_team_security / test_team_tool_permissions / test_tool_registry；真实子 Agent 伪造 team_message 与普通写入私有邮箱均拒绝，非 shell 沙箱 |
+| 名称／真实仓库绑定、单 Lead 排他持有、固定 flock 不依据旧时间戳抢占 | 自动化通过；test_team_store / test_team_scenario_audit 的真实双进程恢复和锁租约 |
+| 查看与显式恢复保持空闲、不启动模型或窗格 | 真实双后端通过；inprocess-resume.txt、tmux-resume.txt；预算、成员和旧历史核对见 e2e-state.json |
+| auto 优先 tmux，公开探测回退，选定后失败不降级 | 自动化通过；test_team_scenario_boundaries 实际 Service 通知进入终端，test_team_backends 启动失败零替代后端 |
+| inprocess／tmux 双成员并行、独立工作根与 Journal | 真实通过；inprocess-terminal.txt、tmux-terminal.txt；自动化另核对实际同时工具调用及各自 call_id／根／日志归属 |
+| 稳定成员第二次派工、磁盘历史续接及新目标 baseline start 自动同步 | 真实通过；Bob A→C、Jerry B→C；tmux-reuse.txt 的同一 tom/jerry 新目标自动同步、双向通信、提交及发布 |
+| coordinator 两把锁、真实声明移除 Lead 编辑／普通 agent，成员合法编辑保留 | 真实三组合通过；locks-*.txt 与 coordinator-model-tools.jsonl；dotenv 伪启用和成员不提升另有自动化，借用旧 tmux server 的真实开关继承专项通过 |
+| plan 同时收尾成员、只读消息不能间接派执行；裸 /do 零自动请求 | 自动化通过 test_team_plan_wakeup / test_team_hook_guards；真实 tmux /plan 停止受管成员窗格，/do 后仍空闲，保留执行模式及暂停状态 |
+| 原子 claim、revision 冲突、并发 DAG 校验、晚到旧领取审计 | 真实双成员对同一个未指派Task调用claim，唯一成功者、另一方明确拒绝，见 claim-terminal.txt / claim-state.json；test_team_tasks 另覆盖可控双进程竞锁／版本冲突／DAG；不把实际请求到达时序冒充完全同时竞锁 |
+| 消息先保存后通知、直接成员邮箱、广播部分失败、消费 ID 与 read 对账 | 真实双后端双向消息通过；e2e-state.json 的实际 sender/recipient/read；test_team_mailbox / test_team_consumption_cancel 确定性故障及取消窗口通过 |
+| 计划批准与真实工具授权独立、旧版本／claim 不放行 | 真实 Alice v1 审批后开工通过；默认 ask／deny、无人工通道阻塞及正文伪批准由 test_team_tool_permissions / test_team_permission_lifecycle / test_team_security 验证 |
+| 成员 Hook／MCP／Skill 生命周期和角色硬上限 | 自动化通过；test_team_hook_guards / test_team_permission_lifecycle / test_team_scenario_boundaries，真实本地后台 Hook、stdio MCP 兄弟保活；本次真实模型 bypass 不冒充人工授权验收 |
+| idle／paused 超 TTL 不清理，历史／缓存保留且提示重新核查当前文件 | 自动化通过；test_team_retention 的实际目录、解除 pin 仍保护成果；test_team_scenario_boundaries 的 61 天恢复首请求历史和重新读取提醒 |
+| 缺失结果不重放、未知运行不重复接管、明确重新指派新领取 | 真实子进程 SIGKILL 自动化；test_team_crash_recovery，包含实际副作用前／后窗口及合法历史截断、普通消息零模型、固定租约拒抢占；具体最终状态证据见映射 |
+| Lead 通知与用户输入竞争、草稿／统计／授权保持、零预算只显示 | 自动化通过；test_team_commands / test_team_scenario_boundaries，实际已提交 /team status 优先于邮箱接续、零预算保留实际成员消息且不排模型请求 |
+| 停止不确定时报告 needs_review 与安全运行标识 | 自动化通过；test_team_scenario_boundaries 实际独立 PID + 停止故障注入，UI 保留 member/generation/pane，不泄露 nonce、不谎报已暂停 |
+| A 接口→C 依赖实际同步、独立验收、immutable commit 与最终发布 | 真实双后端通过；inprocess 最终 4 测试，tmux 最终 8 测试；test_team_integration / test_team_git_permissions 另覆盖真实 Git 及授权错误 |
+| 可解冲突向成员交排他整合目录租约，Lead 无直接编辑 | 真实通过；conflict-resolved.txt，成员实际提交 04df868，用户 master alpha/beta，原成员成果保留；自动化另证双写拒绝 |
+| 不可解冲突只撤销当前操作、前序成果／成员分支／用户未提交内容保留 | 真实通过；conflict-rollback.txt、rollback-cancel-terminal.txt、e2e-state.json；用户未提交文件 SHA256 原样保持 |
+| 取消目标实际收尾、reset／退出保留成果，晚到消息不重启 | 真实 inprocess 活动工具取消通过；cancel-terminal.txt、cancel-state.json，before 写入保留、after 不出现、工具结果 cancelled、Goal cancelled、Member stopped；双后端活动工具停止／reset 的可控运行器测试通过；真实正常退出停窗格且显式恢复 |
+| Git 已执行状态未发布只对账、外部更新竞争和脏目录保护 | 自动化通过；test_team_reconciliation / test_team_integration，真实 Git 提交后故障注入、保留用户后续提交；未人工对真实模型制造精确崩溃窗口，详见 integration.md |
+| 全量回归、构建、OpenSpec 严格校验及脱敏材料 | 最终命令及本轮结果见 summary.md；不得用前期限定测试／跳过实例冒充最终全量通过 |

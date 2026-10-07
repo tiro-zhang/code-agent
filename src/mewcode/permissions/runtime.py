@@ -13,6 +13,7 @@ from ..tools.base import ToolContext, ToolError
 from ..tools.paths import checked_path
 from .config import PermissionConfig, PermissionConfigError
 from .grants import GrantStore
+from .models import JSON_ARGUMENT_TOOLS
 from .rules import apply_mode, merge_rules
 from .shell import analyze_command
 from ..mcp.config import canonical
@@ -75,6 +76,8 @@ class PermissionManager:
         self._prompt_lock = asyncio.Lock()
         self.mcp_tools = {}
         self.ceiling = None
+        self.protected_roots = {Path.home() / '.mewcode/teams'}
+        self.writable_protected_roots = set()
 
     def bind_mcp_tools(self, tools):
         self.mcp_tools = {tool.name: tool for tool in tools}
@@ -92,6 +95,7 @@ class PermissionManager:
         else:
             child.ceiling = self
         child.mcp_tools = self.mcp_tools.copy()
+        child.protected_roots.update(self.protected_roots)
         return child
 
     @property
@@ -118,7 +122,7 @@ class PermissionManager:
         if tool in self.mcp_tools:
             values = (grant_value(self.mcp_tools[tool], arguments),)
             kind = "mcp"
-        elif tool == "agent":
+        elif tool in JSON_ARGUMENT_TOOLS:
             values = (canonical(arguments),)
             kind = "command"
         elif tool == "execute_command":
@@ -133,6 +137,8 @@ class PermissionManager:
             if tool in {"write_file", "edit_file"} and (
                 path in self.config.protected_paths()
                 or path.is_relative_to(self.root / ".mewcode/worktree-state")
+                or (any(path.is_relative_to(root) for root in self.protected_roots)
+                    and not any(path.is_relative_to(root) for root in self.writable_protected_roots))
             ):
                 raise ToolError("permission_denied", "权限配置只能通过可信管理入口修改",
                                 source="protected_config", not_started=True)

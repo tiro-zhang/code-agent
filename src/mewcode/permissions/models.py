@@ -3,6 +3,9 @@
 from dataclasses import dataclass
 
 
+JSON_ARGUMENT_TOOLS = frozenset(('agent', 'team', 'team_member', 'team_task', 'team_message', 'team_integrate'))
+
+
 @dataclass(frozen=True)
 class Rule:
     effect: str

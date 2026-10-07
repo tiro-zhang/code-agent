@@ -167,9 +167,10 @@ def _read(fd, identity: str, root: Path):
 class Journal:
     """持有排他文件锁；projection 是本次启动时的恢复快照。"""
 
-    def __init__(self, root: Path, identity: str, fd: int, directories: list[int]):
+    def __init__(self, root: Path, identity: str, fd: int, directories: list[int], *, storage_root=None):
         self.root, self.id, self._fd, self._directories = root, identity, fd, directories
-        self.path = root / '.mewcode' / 'sessions' / f'{identity}.jsonl'
+        self.storage_root = storage_root or root
+        self.path = self.storage_root / '.mewcode' / 'sessions' / f'{identity}.jsonl'
         self.seq = 0
         self.warnings: list[str] = []
         self.projection = Projection()
@@ -178,13 +179,14 @@ class Journal:
         self._resume_confirmed = False
 
     @classmethod
-    def create(cls, root, protocol: str, model: str):
+    def create(cls, root, protocol: str, model: str, *, storage_root=None):
         directories, fd = [], None
         try:
             root = _root(root)
+            storage = _root(storage_root) if storage_root is not None else root
             if not isinstance(protocol, str) or not protocol or not isinstance(model, str) or not model:
                 raise SessionError('协议或模型身份无效')
-            directories = _directories(root, create=True)
+            directories = _directories(storage, create=True)
             prefix = datetime.now().strftime('%Y%m%d-%H%M%S')
             for _ in range(1000):
                 identity = f'{prefix}-{secrets.token_hex(2)}'
@@ -197,7 +199,7 @@ class Journal:
             else:
                 raise SessionError('无法分配唯一会话身份')
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            journal = cls(root, identity, fd, directories)
+            journal = cls(root, identity, fd, directories, storage_root=storage)
             now = datetime.now(timezone.utc).isoformat()
             journal.append('session_created', {'session_id': identity, 'project_root': str(root),
                                               'protocol': protocol, 'model': model, 'created_at': now})
@@ -211,13 +213,16 @@ class Journal:
             raise SessionError(f'无法创建会话存档：{error}') from error
 
     @classmethod
-    def resume(cls, root, identity: str, protocol: str, model: str, *, record_activity: bool = True):
+    def resume(cls, root, identity: str, protocol: str, model: str, *, record_activity: bool = True, storage_root=None):
         directories, fd = [], None
         try:
             root = _root(root)
+            storage = _root(storage_root) if storage_root is not None else root
             if not isinstance(protocol, str) or not protocol or not isinstance(model, str) or not model:
                 raise SessionError('协议或模型身份无效')
             if identity == 'latest':
+                if storage != root:
+                    raise SessionError('成员恢复必须指定精确会话 ID')
                 now = datetime.now(timezone.utc)
                 candidates = [item for item in scan_sessions(root) if item.recoverable and not item.active
                               and timedelta() <= now - item.last_activity <= TTL]
@@ -226,7 +231,7 @@ class Journal:
                 identity = candidates[0].id
             if not isinstance(identity, str) or not ID_PATTERN.fullmatch(identity):
                 raise SessionError('会话 ID 格式无效')
-            directories = _directories(root)
+            directories = _directories(storage)
             fd = os.open(f'{identity}.jsonl', os.O_RDWR | os.O_APPEND | os.O_NOFOLLOW | os.O_NONBLOCK,
                          dir_fd=directories[-1])
             _regular(fd)
@@ -247,7 +252,7 @@ class Journal:
                     saved_model = record['payload']['model']
             if saved_model != model and any(message.provider_content for message in projection.history):
                 raise SessionError('供应商续接内容与当前模型不兼容')
-            journal = cls(root, identity, fd, directories)
+            journal = cls(root, identity, fd, directories, storage_root=storage)
             journal.seq, journal.warnings, journal.projection = maximum, warnings, projection
             journal._resume_payload = {'session_id': identity, 'protocol': protocol, 'model': model}
             os.fchmod(fd, 0o600)
@@ -276,7 +281,7 @@ class Journal:
         if self._fd is None or self._failed:
             raise SessionError('会话存档已关闭或此前写入失败')
         try:
-            _check_directories(self.root, self._directories)
+            _check_directories(self.storage_root, self._directories)
             actual, owned = self.path.lstat(), os.fstat(self._fd)
             if not stat.S_ISREG(actual.st_mode) or (actual.st_dev, actual.st_ino) != (owned.st_dev, owned.st_ino):
                 raise SessionError('会话存档真实路径发生变化')

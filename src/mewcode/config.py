@@ -28,6 +28,20 @@ class ProviderConfig:
     agent_models: tuple[tuple[str, str, int, int], ...] = ()
     agent_plugin_dirs: tuple[str, ...] = ()
     agent_background_tools: frozenset[str] | None = None
+    team_backend: str = 'auto'
+    team_max_running: int = 4
+    team_max_queued: int = 32
+    team_coordinator_enabled: bool = False
+
+    def __post_init__(self):
+        if self.team_backend not in {'auto', 'tmux', 'inprocess'}:
+            raise ConfigError('team_backend 必须是 auto、tmux 或 inprocess')
+        for name, minimum in (('team_max_running', 1), ('team_max_queued', 0)):
+            value = getattr(self, name)
+            if type(value) is not int or value < minimum:
+                raise ConfigError(f'{name} 必须是大于等于 {minimum} 的整数')
+        if type(self.team_coordinator_enabled) is not bool:
+            raise ConfigError('team_coordinator_enabled 必须是布尔值')
 
     def for_skill(self, model: str | None):
         """仅覆盖同一服务的模型及其显式预算。"""
@@ -167,6 +181,17 @@ def load_config(path: str | Path) -> ProviderConfig:
     if limits["context_window"] <= limits["max_output_tokens"] + 13000:
         raise ConfigError("context_window 必须大于 max_output_tokens + 13000")
 
+    team = {'team_backend': values.get('team_backend', 'auto')}
+    for key, default, minimum in (('team_max_running', '4', 1), ('team_max_queued', '32', 0)):
+        value = values.get(key, default)
+        if value is None or not re.fullmatch(r'[0-9]+', value.strip()) or int(value) < minimum:
+            raise ConfigError(f'{key} 必须是大于等于 {minimum} 的十进制整数')
+        team[key] = int(value)
+    enabled = values.get('team_coordinator_enabled', 'false')
+    if enabled not in {'true', 'false'}:
+        raise ConfigError('team_coordinator_enabled 必须是 true 或 false')
+    team['team_coordinator_enabled'] = enabled == 'true'
+
     return ProviderConfig(
         name=values["name"].strip(),
         protocol=protocol,
@@ -180,4 +205,5 @@ def load_config(path: str | Path) -> ProviderConfig:
         agent_plugin_dirs=_agent_list(values['agent_plugin_dirs'], 'agent_plugin_dirs') if 'agent_plugin_dirs' in values else (),
         agent_background_tools=_agent_list(values['agent_background_tools'], 'agent_background_tools', tool_names=True) if 'agent_background_tools' in values else None,
         **limits,
+        **team,
     )

@@ -1,0 +1,618 @@
+[
+  {
+    "team": "e2e-inprocess-v4",
+    "team_id": "team-b06e74e42a744f77a9230f216a2bca6e",
+    "status": "paused",
+    "mode": "execute",
+    "goals": [
+      {
+        "goal_id": "goal-bdf26c57081a4b079d116b72730ad10a",
+        "state": "cancelled",
+        "baseline_commit": "c7262784973de88d1d9248bd60330eefc2aea8a9",
+        "budget_used": 5,
+        "budget_limit": 80
+      },
+      {
+        "goal_id": "goal-d5997e9b3506410b82a000b33b085d72",
+        "state": "completed",
+        "baseline_commit": "64cc332cad84295096af83702cf0df5ede54a31b",
+        "budget_used": 49,
+        "budget_limit": 80
+      },
+      {
+        "goal_id": "goal-eaec1efc990540bc8c9873edeb14d91c",
+        "state": "cancelled",
+        "baseline_commit": "b529c8026525441c0eabea277b9a44698bf390ab",
+        "budget_used": 7,
+        "budget_limit": 80
+      }
+    ],
+    "members": [
+      {
+        "member_id": "member-234b765e4f3a43f7a5ea23380f09a77c",
+        "name": "bob",
+        "backend": "inprocess",
+        "state": "stopped",
+        "branch": "mewcode/worktree/ae3ce36e948fd4b7d4900db3df014521fa447e7e6e6cd3bbf81eb54fbf3d14c3",
+        "session_ref": "20261006-202514-07ce",
+        "generation": "eda21e88ddf54eb88d426355d394aa78",
+        "require_plan_approval": false
+      },
+      {
+        "member_id": "member-4dbae9eeed154688ae34b6be48d763c0",
+        "name": "alice",
+        "backend": "inprocess",
+        "state": "idle",
+        "branch": "mewcode/worktree/79eb65b4652d4fefab673e3f329cbfd09e5827b991c3864dd8e4b4d9176c5213",
+        "session_ref": "20261006-202514-3a99",
+        "generation": "242215741d3843c5b39d8860cbe359b3",
+        "require_plan_approval": true
+      },
+      {
+        "member_id": "member-e8ab6f3dbba54bd5b1669b8b4863bdcb",
+        "name": "lead",
+        "backend": "inprocess",
+        "state": "idle",
+        "branch": "main",
+        "session_ref": "20261006-202446-46dd",
+        "generation": "",
+        "require_plan_approval": false
+      }
+    ],
+    "tasks": [
+      {
+        "task_id": "task-199be539ff42473280d19b0db0b67bcc",
+        "goal_id": "goal-d5997e9b3506410b82a000b33b085d72",
+        "title": "任务B：USAGE.md 说明调用与测试步骤",
+        "owner_id": "member-234b765e4f3a43f7a5ea23380f09a77c",
+        "claim_id": "claim-46b365c4287b428ba37cda86d2bdcd7d",
+        "state": "completed",
+        "budget_used": 11,
+        "integrated_commit": "effb66ff6739ecd284b2c171a913c932a2db113e",
+        "commit": "37f05160d604376a32fd8b326c00863f7f4d0b4c",
+        "verified": true
+      },
+      {
+        "task_id": "task-69844737166547e0a145b5c53e84a49d",
+        "goal_id": "goal-d5997e9b3506410b82a000b33b085d72",
+        "title": "任务C：test_calculator.py unittest 测试正负数加法",
+        "owner_id": "member-234b765e4f3a43f7a5ea23380f09a77c",
+        "claim_id": "claim-6d6bafa437d144a39e000141e13b72ab",
+        "state": "completed",
+        "budget_used": 8,
+        "integrated_commit": "2a9aaafc4c36ca758db6da1c386ff6820d331239",
+        "commit": "bd8baeeeb5441b7e9d3bf398bc610e59e08b0708",
+        "verified": true
+      },
+      {
+        "task_id": "task-b61ba94ef1ae49df9ca95ab609fbbd25",
+        "goal_id": "goal-d5997e9b3506410b82a000b33b085d72",
+        "title": "任务A：calculator.py 实现 add(a,b)",
+        "owner_id": "member-4dbae9eeed154688ae34b6be48d763c0",
+        "claim_id": "claim-88180efc102f419a9b1f7b20b0407a8b",
+        "state": "completed",
+        "budget_used": 16,
+        "integrated_commit": "a5aa33fbd2b8b92ec37b34b39058c0271cd35082",
+        "commit": "f97a801c4bb94d3f738300c948528e49699f15ed",
+        "verified": true
+      },
+      {
+        "task_id": "task-ee8a67f5d9da4fcf8ba4bd8bc9045343",
+        "goal_id": "goal-eaec1efc990540bc8c9873edeb14d91c",
+        "title": "取消验收：执行可取消的长时 Python3 进程",
+        "owner_id": "member-234b765e4f3a43f7a5ea23380f09a77c",
+        "claim_id": "claim-360592c5006c4451a7b25f38b81f26a5",
+        "state": "claimed",
+        "budget_used": 0,
+        "integrated_commit": null,
+        "commit": null,
+        "verified": null
+      },
+      {
+        "task_id": "task-f3acda189c7d43dab8f8af89c8800246",
+        "goal_id": "goal-bdf26c57081a4b079d116b72730ad10a",
+        "title": "最终取消验收：执行可取消的 Python3 长时进程",
+        "owner_id": "member-234b765e4f3a43f7a5ea23380f09a77c",
+        "claim_id": "claim-0b7457551adf49a495e191972c94e4dd",
+        "state": "blocked",
+        "budget_used": 2,
+        "integrated_commit": null,
+        "commit": null,
+        "verified": null
+      }
+    ],
+    "peer_messages": [
+      {
+        "message_id": "message-c86000f0db554e659a3037fcbe33918b",
+        "sender_id": "member-4dbae9eeed154688ae34b6be48d763c0",
+        "recipient_id": "member-234b765e4f3a43f7a5ea23380f09a77c",
+        "timestamp": "2026-10-06T12:25:50.231795+00:00",
+        "read": true
+      },
+      {
+        "message_id": "message-a7f5e470156c49079fe122d7d1a1abec",
+        "sender_id": "member-4dbae9eeed154688ae34b6be48d763c0",
+        "recipient_id": "member-234b765e4f3a43f7a5ea23380f09a77c",
+        "timestamp": "2026-10-06T12:26:19.209478+00:00",
+        "read": true
+      },
+      {
+        "message_id": "message-978650395ab342369e46e1d5b5ebde9a",
+        "sender_id": "member-234b765e4f3a43f7a5ea23380f09a77c",
+        "recipient_id": "member-4dbae9eeed154688ae34b6be48d763c0",
+        "timestamp": "2026-10-06T12:25:31.158749+00:00",
+        "read": true
+      },
+      {
+        "message_id": "message-0f4365d75df54f9fadfb5c99131be217",
+        "sender_id": "member-234b765e4f3a43f7a5ea23380f09a77c",
+        "recipient_id": "member-4dbae9eeed154688ae34b6be48d763c0",
+        "timestamp": "2026-10-06T12:25:52.781271+00:00",
+        "read": true
+      },
+      {
+        "message_id": "message-330adce6e78144988e327da580964496",
+        "sender_id": "member-234b765e4f3a43f7a5ea23380f09a77c",
+        "recipient_id": "member-4dbae9eeed154688ae34b6be48d763c0",
+        "timestamp": "2026-10-06T12:26:25.531216+00:00",
+        "read": true
+      }
+    ],
+    "integration_operations": [
+      {
+        "goal_id": "goal-d5997e9b3506410b82a000b33b085d72",
+        "operation_id": "18c7664c46e44db987a63dd6fb55f8d5",
+        "kind": "integrate",
+        "state": "published",
+        "pre_head": "a5aa33fbd2b8b92ec37b34b39058c0271cd35082",
+        "result_head": "2a9aaafc4c36ca758db6da1c386ff6820d331239"
+      },
+      {
+        "goal_id": "goal-d5997e9b3506410b82a000b33b085d72",
+        "operation_id": "2959978600044c2cb4ecc8a12981ce26",
+        "kind": "finalize",
+        "state": "published",
+        "pre_head": "64cc332cad84295096af83702cf0df5ede54a31b",
+        "result_head": "2a9aaafc4c36ca758db6da1c386ff6820d331239"
+      },
+      {
+        "goal_id": "goal-d5997e9b3506410b82a000b33b085d72",
+        "operation_id": "7abed82f33ae44778456656f14936d3d",
+        "kind": "integrate",
+        "state": "published",
+        "pre_head": "64cc332cad84295096af83702cf0df5ede54a31b",
+        "result_head": "effb66ff6739ecd284b2c171a913c932a2db113e"
+      },
+      {
+        "goal_id": "goal-d5997e9b3506410b82a000b33b085d72",
+        "operation_id": "200626ac34664999885f82f2d814bf7d",
+        "kind": "sync",
+        "state": "synced",
+        "pre_head": "37f05160d604376a32fd8b326c00863f7f4d0b4c",
+        "result_head": "a5aa33fbd2b8b92ec37b34b39058c0271cd35082"
+      },
+      {
+        "goal_id": "goal-d5997e9b3506410b82a000b33b085d72",
+        "operation_id": "27c7e7be756e4fe586163b9eeff44408",
+        "kind": "integrate",
+        "state": "published",
+        "pre_head": "effb66ff6739ecd284b2c171a913c932a2db113e",
+        "result_head": "a5aa33fbd2b8b92ec37b34b39058c0271cd35082"
+      }
+    ],
+    "user_head": "c7262784973de88d1d9248bd60330eefc2aea8a9",
+    "user_status": ""
+  },
+  {
+    "team": "e2e-tmux-v1",
+    "team_id": "team-afb02d0fbe5f4a529c27634240a2cb59",
+    "status": "paused",
+    "mode": "execute",
+    "goals": [
+      {
+        "goal_id": "goal-47560fb14cbf4c20b1b0c13f1fbbeaa9",
+        "state": "completed",
+        "baseline_commit": "b529c8026525441c0eabea277b9a44698bf390ab",
+        "budget_used": 20,
+        "budget_limit": 80
+      },
+      {
+        "goal_id": "goal-7df89fbd1e0b4d47b88c1aa10df40e64",
+        "state": "completed",
+        "baseline_commit": "2a9aaafc4c36ca758db6da1c386ff6820d331239",
+        "budget_used": 48,
+        "budget_limit": 80
+      },
+      {
+        "goal_id": "goal-f5151ea400b84b10aaf882c680372c8b",
+        "state": "completed",
+        "baseline_commit": "c7262784973de88d1d9248bd60330eefc2aea8a9",
+        "budget_used": 10,
+        "budget_limit": 80
+      }
+    ],
+    "members": [
+      {
+        "member_id": "member-151bbdbd037441b08e4c20fbc3436b5b",
+        "name": "jerry",
+        "backend": "tmux",
+        "state": "stopped",
+        "branch": "mewcode/worktree/6b8a91fba3b5b434401e1d06ae298be6cb3f290d2e029e2447870096d104cb07",
+        "session_ref": "20261006-203041-bb56",
+        "generation": "a85ae4312b864681a2c32ecacdb05654",
+        "require_plan_approval": false
+      },
+      {
+        "member_id": "member-e63817a096c34a2783efb7883eb797b3",
+        "name": "tom",
+        "backend": "tmux",
+        "state": "stopped",
+        "branch": "mewcode/worktree/777fc96fbae76301251e69d820e79c23385e79bd0e3eb23c728ddb6dfc85d17e",
+        "session_ref": "20261006-203039-fcc6",
+        "generation": "dc7154d30c004536a675b84f0f503f3c",
+        "require_plan_approval": false
+      },
+      {
+        "member_id": "member-f91307c87a0a4e6d91e161ce494bf088",
+        "name": "lead",
+        "backend": "inprocess",
+        "state": "idle",
+        "branch": "main",
+        "session_ref": "20261006-203022-04ac",
+        "generation": "",
+        "require_plan_approval": false
+      }
+    ],
+    "tasks": [
+      {
+        "task_id": "task-018858faa9f4478497ffa9b42e22c2e2",
+        "goal_id": "goal-7df89fbd1e0b4d47b88c1aa10df40e64",
+        "title": "B: 新增 MULTIPLY.md 使用文档",
+        "owner_id": "member-151bbdbd037441b08e4c20fbc3436b5b",
+        "claim_id": "claim-c28e89225ddd4fa7be311f4c80aa0d17",
+        "state": "completed",
+        "budget_used": 4,
+        "integrated_commit": "f3e5d85eb9f8a4a10d43c0c45c7dbe62d1bde122",
+        "commit": "71359b3182ca25d1e1d7e73076957c1933a499a4",
+        "verified": true
+      },
+      {
+        "task_id": "task-0e1c591d11ec416a9c08c8642e12f05a",
+        "goal_id": "goal-47560fb14cbf4c20b1b0c13f1fbbeaa9",
+        "title": "J2: 新增 JERRY_REUSE.md（jerry 复用身份验证）",
+        "owner_id": "member-151bbdbd037441b08e4c20fbc3436b5b",
+        "claim_id": "claim-c3cf9a7bb3534a3e95ff7a2b291986eb",
+        "state": "completed",
+        "budget_used": 12,
+        "integrated_commit": "c7262784973de88d1d9248bd60330eefc2aea8a9",
+        "commit": "8e808b9b46edd3d39b90c42060b9485fbb073eba",
+        "verified": true
+      },
+      {
+        "task_id": "task-3bed95a3ffed45ca9a61fbb67629ef10",
+        "goal_id": "goal-47560fb14cbf4c20b1b0c13f1fbbeaa9",
+        "title": "T2: 新增 TOM_REUSE.md（tom 复用身份验证）",
+        "owner_id": "member-e63817a096c34a2783efb7883eb797b3",
+        "claim_id": "claim-8eb3105825ec438b866ba47f8ce898a9",
+        "state": "completed",
+        "budget_used": 12,
+        "integrated_commit": "b88f7fef7897d21f889fa4cd1180c417ab4c784e",
+        "commit": "e2e6af9bc638894570de6b36a58f6f7b4da7f867",
+        "verified": true
+      },
+      {
+        "task_id": "task-8382c8a73869407f9935d207a61ab693",
+        "goal_id": "goal-7df89fbd1e0b4d47b88c1aa10df40e64",
+        "title": "C: 新增 test_arithmetic.py 单元测试（依赖 A）",
+        "owner_id": "member-151bbdbd037441b08e4c20fbc3436b5b",
+        "claim_id": "claim-aff74fbf8302429a8e32296698d7cf29",
+        "state": "completed",
+        "budget_used": 10,
+        "integrated_commit": "b529c8026525441c0eabea277b9a44698bf390ab",
+        "commit": "5c2b75595c96ab992f4e754d82f08e551185a36f",
+        "verified": true
+      },
+      {
+        "task_id": "task-cd8b454a43d540b5974f43ce6211fb44",
+        "goal_id": "goal-f5151ea400b84b10aaf882c680372c8b",
+        "title": "RACE: 原子领取单赢家验证（code=false）",
+        "owner_id": "member-e63817a096c34a2783efb7883eb797b3",
+        "claim_id": "claim-a887145272ee4c04ae9c6d4c3a4112f5",
+        "state": "completed",
+        "budget_used": 3,
+        "integrated_commit": null,
+        "commit": null,
+        "verified": true
+      },
+      {
+        "task_id": "task-e60cc719dcf3459eb931d0ea5c25962b",
+        "goal_id": "goal-7df89fbd1e0b4d47b88c1aa10df40e64",
+        "title": "A: 新增 arithmetic.py 实现 multiply(a,b)",
+        "owner_id": "member-e63817a096c34a2783efb7883eb797b3",
+        "claim_id": "claim-b2b181f7b8ca4476b41be44ce26051a5",
+        "state": "completed",
+        "budget_used": 7,
+        "integrated_commit": "ae38465cedd13b37b05a6e969c8313e311ed1f56",
+        "commit": "bcd047ff2171a30aee5729a78287941ff4917c94",
+        "verified": true
+      }
+    ],
+    "peer_messages": [
+      {
+        "message_id": "message-fa52fb72fcbd4105bbf7de4c2e5a270c",
+        "sender_id": "member-151bbdbd037441b08e4c20fbc3436b5b",
+        "recipient_id": "member-e63817a096c34a2783efb7883eb797b3",
+        "timestamp": "2026-10-06T13:03:06.226862+00:00",
+        "read": true
+      },
+      {
+        "message_id": "message-74901457b94647a9abba94881e748a39",
+        "sender_id": "member-e63817a096c34a2783efb7883eb797b3",
+        "recipient_id": "member-151bbdbd037441b08e4c20fbc3436b5b",
+        "timestamp": "2026-10-06T12:31:03.593974+00:00",
+        "read": true
+      },
+      {
+        "message_id": "message-d3a16c9126cc4c12a3ecef113a82f46c",
+        "sender_id": "member-e63817a096c34a2783efb7883eb797b3",
+        "recipient_id": "member-151bbdbd037441b08e4c20fbc3436b5b",
+        "timestamp": "2026-10-06T13:03:10.893708+00:00",
+        "read": true
+      }
+    ],
+    "integration_operations": [
+      {
+        "goal_id": "goal-f5151ea400b84b10aaf882c680372c8b",
+        "operation_id": "8c9e73092f1e49cc8f82466ba920d827",
+        "kind": "finalize",
+        "state": "published",
+        "pre_head": "c7262784973de88d1d9248bd60330eefc2aea8a9",
+        "result_head": "c7262784973de88d1d9248bd60330eefc2aea8a9"
+      },
+      {
+        "goal_id": "goal-7df89fbd1e0b4d47b88c1aa10df40e64",
+        "operation_id": "09b23ad12bd84471833de06fed5ee3f0",
+        "kind": "sync",
+        "state": "synced",
+        "pre_head": "71359b3182ca25d1e1d7e73076957c1933a499a4",
+        "result_head": "f3e5d85eb9f8a4a10d43c0c45c7dbe62d1bde122"
+      },
+      {
+        "goal_id": "goal-7df89fbd1e0b4d47b88c1aa10df40e64",
+        "operation_id": "69ad5380f1464bc98b79453b81165786",
+        "kind": "finalize",
+        "state": "published",
+        "pre_head": "2a9aaafc4c36ca758db6da1c386ff6820d331239",
+        "result_head": "b529c8026525441c0eabea277b9a44698bf390ab"
+      },
+      {
+        "goal_id": "goal-7df89fbd1e0b4d47b88c1aa10df40e64",
+        "operation_id": "f7537e32edfb4b8e913e799f503716f1",
+        "kind": "integrate",
+        "state": "published",
+        "pre_head": "2a9aaafc4c36ca758db6da1c386ff6820d331239",
+        "result_head": "ae38465cedd13b37b05a6e969c8313e311ed1f56"
+      },
+      {
+        "goal_id": "goal-7df89fbd1e0b4d47b88c1aa10df40e64",
+        "operation_id": "ff67457b2f814c2c882546e859b4d46a",
+        "kind": "integrate",
+        "state": "published",
+        "pre_head": "f3e5d85eb9f8a4a10d43c0c45c7dbe62d1bde122",
+        "result_head": "b529c8026525441c0eabea277b9a44698bf390ab"
+      },
+      {
+        "goal_id": "goal-7df89fbd1e0b4d47b88c1aa10df40e64",
+        "operation_id": "07f333dbabad4582a1cb5aa126fa3d50",
+        "kind": "integrate",
+        "state": "published",
+        "pre_head": "ae38465cedd13b37b05a6e969c8313e311ed1f56",
+        "result_head": "f3e5d85eb9f8a4a10d43c0c45c7dbe62d1bde122"
+      },
+      {
+        "goal_id": "goal-47560fb14cbf4c20b1b0c13f1fbbeaa9",
+        "operation_id": "9da7e8f6c13b4b7f8e2003704633040e",
+        "kind": "sync",
+        "state": "synced",
+        "pre_head": "bcd047ff2171a30aee5729a78287941ff4917c94",
+        "result_head": "b529c8026525441c0eabea277b9a44698bf390ab"
+      },
+      {
+        "goal_id": "goal-47560fb14cbf4c20b1b0c13f1fbbeaa9",
+        "operation_id": "d0b1fc792aac49df9aeea5528126d90f",
+        "kind": "finalize",
+        "state": "published",
+        "pre_head": "b529c8026525441c0eabea277b9a44698bf390ab",
+        "result_head": "c7262784973de88d1d9248bd60330eefc2aea8a9"
+      },
+      {
+        "goal_id": "goal-47560fb14cbf4c20b1b0c13f1fbbeaa9",
+        "operation_id": "fe36adcc77574a3a9812118591a9d70d",
+        "kind": "sync",
+        "state": "synced",
+        "pre_head": "5c2b75595c96ab992f4e754d82f08e551185a36f",
+        "result_head": "b529c8026525441c0eabea277b9a44698bf390ab"
+      },
+      {
+        "goal_id": "goal-47560fb14cbf4c20b1b0c13f1fbbeaa9",
+        "operation_id": "9bee4524664543f295d9c9b06ca8e499",
+        "kind": "integrate",
+        "state": "published",
+        "pre_head": "b88f7fef7897d21f889fa4cd1180c417ab4c784e",
+        "result_head": "c7262784973de88d1d9248bd60330eefc2aea8a9"
+      },
+      {
+        "goal_id": "goal-47560fb14cbf4c20b1b0c13f1fbbeaa9",
+        "operation_id": "f488c37395a645b492482d5cb2b2c52f",
+        "kind": "integrate",
+        "state": "published",
+        "pre_head": "b529c8026525441c0eabea277b9a44698bf390ab",
+        "result_head": "b88f7fef7897d21f889fa4cd1180c417ab4c784e"
+      }
+    ],
+    "user_head": "c7262784973de88d1d9248bd60330eefc2aea8a9",
+    "user_status": ""
+  },
+  {
+    "team": "e2e-conflicts",
+    "team_id": "team-2b9724c586604c159b1cd27443f4bbf1",
+    "status": "paused",
+    "mode": "execute",
+    "goals": [
+      {
+        "goal_id": "goal-39832f0cb14a4cc0987491fda4bae494",
+        "state": "cancelled",
+        "baseline_commit": "04df8682f90527b95dcc67bfb01da0f1319607e8",
+        "budget_used": 26,
+        "budget_limit": 80
+      },
+      {
+        "goal_id": "goal-4cd89ebc963646278d721b72d04db807",
+        "state": "completed",
+        "baseline_commit": "8074d5efffa55523b17c67e6a6cf6423dae6a406",
+        "budget_used": 51,
+        "budget_limit": 80
+      }
+    ],
+    "members": [
+      {
+        "member_id": "member-2b9c80c08d1c4f9b91c1a050fdc510dd",
+        "name": "red",
+        "backend": "inprocess",
+        "state": "idle",
+        "branch": "mewcode/worktree/1eb23716be687597593d5878f28c944c4699cf3227d87052909512a0bfdefbb3",
+        "session_ref": "20261006-203809-92b3",
+        "generation": "3a6728857d8e4f6d9e4bc4221f635a9f",
+        "require_plan_approval": false
+      },
+      {
+        "member_id": "member-c868e125bd73463a96504d7d1c6ae5a5",
+        "name": "blue",
+        "backend": "inprocess",
+        "state": "idle",
+        "branch": "mewcode/worktree/1f38bd6974cf0dabf9000f93b0100af05d0233a9771b1cda16893b40fd1e6040",
+        "session_ref": "20261006-203809-c9be",
+        "generation": "a65993d5580543ef81bf3f97fa34176e",
+        "require_plan_approval": false
+      },
+      {
+        "member_id": "member-e836bed9bdb04ac9a9fa79be265e0ebe",
+        "name": "lead",
+        "backend": "inprocess",
+        "state": "idle",
+        "branch": "master",
+        "session_ref": "20261006-203757-8a10",
+        "generation": "",
+        "require_plan_approval": false
+      }
+    ],
+    "tasks": [
+      {
+        "task_id": "task-19178820a52b4e5aa6cf7c45952a6617",
+        "goal_id": "goal-39832f0cb14a4cc0987491fda4bae494",
+        "title": "blue: 将 shared.txt 替换为 delta 一行",
+        "owner_id": "member-c868e125bd73463a96504d7d1c6ae5a5",
+        "claim_id": "claim-dea786460e4d418ba7f88eac3792c581",
+        "state": "accepted",
+        "budget_used": 11,
+        "integrated_commit": null,
+        "commit": "2a6ed1a52a5dcb87d62f910c1d9431be04c2a560",
+        "verified": true
+      },
+      {
+        "task_id": "task-5efb6c0325dd4c029ca3e6a9cc2e8947",
+        "goal_id": "goal-4cd89ebc963646278d721b72d04db807",
+        "title": "red: 将 shared.txt 替换为 alpha 一行",
+        "owner_id": "member-2b9c80c08d1c4f9b91c1a050fdc510dd",
+        "claim_id": "claim-1b2fe15a54a34bb4b0fd67f9d539c321",
+        "state": "completed",
+        "budget_used": 6,
+        "integrated_commit": "f64310ab05f3075fda621a1d84806613387a566f",
+        "commit": "3efcf6d913ecf67ee28be664830e3b597d4571c7",
+        "verified": true
+      },
+      {
+        "task_id": "task-64a3f4c13b314bcbac3674cb1ec51656",
+        "goal_id": "goal-4cd89ebc963646278d721b72d04db807",
+        "title": "blue: 将 shared.txt 替换为 beta 一行",
+        "owner_id": "member-c868e125bd73463a96504d7d1c6ae5a5",
+        "claim_id": "claim-62754c560e204d4fa38ae013d2d899d6",
+        "state": "completed",
+        "budget_used": 9,
+        "integrated_commit": "04df8682f90527b95dcc67bfb01da0f1319607e8",
+        "commit": "2c50d68203ac33b92981c207e35e1fb37f2f338a",
+        "verified": true
+      },
+      {
+        "task_id": "task-66bbad17cd3d4600a90fc111e206fe95",
+        "goal_id": "goal-39832f0cb14a4cc0987491fda4bae494",
+        "title": "red: 将 shared.txt 替换为 gamma 一行",
+        "owner_id": "member-2b9c80c08d1c4f9b91c1a050fdc510dd",
+        "claim_id": "claim-a39f14eb67dd4e749cfc1c3607fff0a4",
+        "state": "integrated",
+        "budget_used": 14,
+        "integrated_commit": "dbd1d99e93734b67310f8fee203b7d6a32d510fd",
+        "commit": "523595cac657c235db17bc23184cca58323cc5e6",
+        "verified": true
+      },
+      {
+        "task_id": "task-ca986433c81c4b69b098a6b469a5f6af",
+        "goal_id": "goal-4cd89ebc963646278d721b72d04db807",
+        "title": "解决整合冲突",
+        "owner_id": "member-c868e125bd73463a96504d7d1c6ae5a5",
+        "claim_id": "claim-f2b652d0ffaa42d490f5e54bbc42fc1f",
+        "state": "completed",
+        "budget_used": 13,
+        "integrated_commit": null,
+        "commit": "04df8682f90527b95dcc67bfb01da0f1319607e8",
+        "verified": true
+      }
+    ],
+    "peer_messages": [],
+    "integration_operations": [
+      {
+        "goal_id": "goal-4cd89ebc963646278d721b72d04db807",
+        "operation_id": "6a6bbc1c88414858a980505a6c63dc50",
+        "kind": "integrate",
+        "state": "published",
+        "pre_head": "f64310ab05f3075fda621a1d84806613387a566f",
+        "result_head": "04df8682f90527b95dcc67bfb01da0f1319607e8"
+      },
+      {
+        "goal_id": "goal-4cd89ebc963646278d721b72d04db807",
+        "operation_id": "dfa33addd5e943a78b77ccdeebfc9bbb",
+        "kind": "finalize",
+        "state": "published",
+        "pre_head": "8074d5efffa55523b17c67e6a6cf6423dae6a406",
+        "result_head": "04df8682f90527b95dcc67bfb01da0f1319607e8"
+      },
+      {
+        "goal_id": "goal-4cd89ebc963646278d721b72d04db807",
+        "operation_id": "8b146b5312f942f0afd6f3b099deb681",
+        "kind": "integrate",
+        "state": "published",
+        "pre_head": "8074d5efffa55523b17c67e6a6cf6423dae6a406",
+        "result_head": "f64310ab05f3075fda621a1d84806613387a566f"
+      },
+      {
+        "goal_id": "goal-39832f0cb14a4cc0987491fda4bae494",
+        "operation_id": "6abec518a41a4cd9835fea058dd94cbe",
+        "kind": "integrate",
+        "state": "published",
+        "pre_head": "04df8682f90527b95dcc67bfb01da0f1319607e8",
+        "result_head": "dbd1d99e93734b67310f8fee203b7d6a32d510fd"
+      },
+      {
+        "goal_id": "goal-39832f0cb14a4cc0987491fda4bae494",
+        "operation_id": "60034a5d0ba641728c7db3dcf78a29fc",
+        "kind": "integrate",
+        "state": "rolled_back",
+        "pre_head": "dbd1d99e93734b67310f8fee203b7d6a32d510fd",
+        "result_head": null
+      }
+    ],
+    "user_head": "04df8682f90527b95dcc67bfb01da0f1319607e8",
+    "user_status": "?? user-keep.txt",
+    "user_keep_sha256": "67feeea08584dc39bbf648b8393f4865030ed903883b71da516ed56ec53f2652"
+  }
+]

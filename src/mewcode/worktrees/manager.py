@@ -232,6 +232,8 @@ class WorktreeManager:
         return await self.delete(tree)
 
     async def _protected_reason(self, tree, record):
+        if record.get('team_pin'):
+            return '团队持久引用保留工作目录'
         if record.get('evidence_protected') is not False:
             return '证据尚未归档或仍有引用'
         if (await self.git(tree.worktree_root, 'rev-parse', '--verify', 'HEAD')).strip() != tree.base_commit:

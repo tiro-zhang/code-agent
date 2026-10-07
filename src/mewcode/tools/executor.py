@@ -130,7 +130,11 @@ class ToolExecutor:
             return ToolResult.failure("cancelled", "任务取消，工具未启动", details={"not_started": True})
         # 人工审批不消耗工具的执行时间预算。
         if getattr(tool, "system", False):
-            return await self._execute_system(name, authorization.arguments, cancel_event, on_event)
+            return await self._execute_system(name, authorization.arguments, cancel_event, on_event, call_id=call_id)
+        if name == 'read_file' and getattr(self, 'cache_reader', None) is not None:
+            cached = await self.cache_reader(authorization.arguments)
+            if cached is not None:
+                return cached
         from ..mcp.tools import MCPTool
         if isinstance(tool, MCPTool):
             if self.mcp is None:
@@ -199,12 +203,13 @@ class ToolExecutor:
         details = {"side_effects_may_have_occurred": mutating}
         return ToolResult.failure(failure, detail, details=details, data=data, truncated=truncated)
 
-    async def _execute_system(self, name, arguments, cancel, on_event):
+    async def _execute_system(self, name, arguments, cancel, on_event, *, call_id=''):
         handler = self.system_handlers.get(name)
         if handler is None:
             return ToolResult.failure("skill_unavailable", "系统加载服务未初始化", details={"not_started": True})
         timeout = handler.timeout_for(arguments) if hasattr(handler, "timeout_for") else self.timeout
-        operation = asyncio.create_task(handler(arguments, cancel_event=cancel, on_event=on_event))
+        extra = {'tool_call_id':call_id} if getattr(self.registry.get(name),'requires_scope',False) else {}
+        operation = asyncio.create_task(handler(arguments, cancel_event=cancel, on_event=on_event, **extra))
         watcher = asyncio.create_task(cancel.wait())
         try:
             if on_event:

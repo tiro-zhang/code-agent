@@ -45,7 +45,7 @@ def freeze_child(parent, arguments, *, role=None):
     """提交时复制所有控制状态，后续父变更只影响新任务。"""
     type = arguments["type"]
     worktree = None
-    upper = frozenset(parent.effective_tools())
+    upper = frozenset(parent.effective_tools()) - {'team', 'team_member', 'team_task', 'team_message', 'team_integrate'}
     configured = getattr(parent.config, "agent_background_tools", None)
     background = DEFAULT_BACKGROUND_TOOLS if configured is None else configured
     if type == "fork":

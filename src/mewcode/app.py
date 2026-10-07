@@ -29,8 +29,11 @@ from .terminal.render import _Renderer
 
 
 async def _run(config, input_stream, output_stream, error_stream, factory, *,
-               permission_mode="default", approval_responder=None, input_reader=None, resume=None,
-               persistent=True, memory_enabled=True, user_root=None):
+               permission_mode="default", approval_responder=None, input_reader=None, resume=None, team=None,
+               persistent=True, memory_enabled=True, user_root=None, config_path=None):
+    if resume is not None and team is not None:
+        error_stream.write('启动失败：--resume 与 --team 不能同时使用。\n')
+        return 2
     try:
         from .skills.catalog import discover_skills
         catalog = discover_skills(Path.cwd(), user_root=user_root)
@@ -60,8 +63,9 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             reader = input_reader or InputReader(input_stream)
             def maintenance(notification):
                 kind = notification.get('kind')
-                event = AgentEvent('usage' if kind in {'usage', 'restore_usage'} else 'memory_update',
-                    purpose=notification.get('purpose', 'memory'), text=notification.get('text', ''),
+                event_kind = 'usage' if kind in {'usage', 'restore_usage'} else 'team_update' if kind == 'team_update' else 'memory_update'
+                event = AgentEvent(event_kind,
+                    purpose=notification.get('purpose', 'team' if kind == 'team_update' else 'memory'), text=notification.get('text', ''),
                     usage=notification.get('usage'), phase=notification.get('status', ''))
                 # 独立通道不写入当前任务统计，也不改变输入阶段或草稿。
                 if terminal is not None:
@@ -73,7 +77,12 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             session = ChatSession(provider, max_iterations=config.max_iterations, permission_mode=permission_mode,
                 config=config, persistent=persistent, resume=resume, memory_enabled=memory_enabled,
                 user_root=user_root, notify=maintenance, skill_catalog=catalog, provider_factory=factory)
+            session.config_path = Path(config_path).expanduser().resolve() if config_path is not None else None
             session.permissions.config.load()
+            if team is not None:
+                arguments = {'action': 'resume', 'name': team}
+                session.teams.guard('team', arguments)
+                await session.teams.control(arguments)
             terminal = TerminalController(reader, output_stream, secret=config.api_key,
                 root=session.executor.context.root, on_interrupt=interrupt, allow_enhanced=input_reader is None, registry=registry)
             terminal.sync_session(session)
@@ -155,7 +164,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                     renderer.line('提示> ' + renderer.safe(error, 400))
                     continue
             parsed = parse_command(question)
-            control = parsed.kind == 'command' and parsed.name in {'plan', 'do', 'reset', 'tasks'}
+            control = parsed.kind == 'command' and parsed.name in {'plan', 'do', 'reset', 'tasks', 'team'}
             if control:
                 terminal.set_phase('control')
             active_cancel = asyncio.Event()
@@ -267,7 +276,7 @@ async def _idle_input(terminal, session, cancel):
 def run(config_path: str | Path, *, stdin: TextIO | None = None, stdout: TextIO | None = None,
         stderr: TextIO | None = None, provider_factory: Callable[[ProviderConfig], Provider] | None = None,
         permission_mode: str = "default", approval_responder=None, input_reader=None, resume=None,
-        list_sessions=False, persistent=True, memory_enabled=True, user_root=None) -> int:
+        team=None, list_sessions=False, persistent=True, memory_enabled=True, user_root=None) -> int:
     """保留同步启动接口，由单个事件循环管理会话与客户端。"""
     input_stream = stdin if stdin is not None else sys.stdin
     output_stream = stdout if stdout is not None else sys.stdout
@@ -294,4 +303,5 @@ def run(config_path: str | Path, *, stdin: TextIO | None = None, stdout: TextIO 
     return asyncio.run(_run(config, input_stream, output_stream, error_stream, provider_factory or make_provider,
                            permission_mode=permission_mode, approval_responder=approval_responder,
                            input_reader=input_reader, resume=resume, persistent=persistent,
+                           team=team, config_path=Path(config_path).expanduser().resolve(),
                            memory_enabled=memory_enabled, user_root=user_root))

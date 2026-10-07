@@ -18,7 +18,7 @@ python -m pip install -e .
 mewcode --config .env
 ```
 
-`--config` 为必填参数。输入 `/exit` 或在提示符处按 Ctrl+D 结束会话；生成过程中按 Ctrl+C 会取消本轮并返回提示符。会话历史只保存在本次运行的内存里。
+`--config` 为必填参数。输入 `/exit` 或在提示符处按 Ctrl+D 结束会话；生成过程中按 Ctrl+C 会取消本轮并返回提示符。会话保留私有存档；普通会话用 `--resume ID|latest` 显式恢复，团队用 `--team <name>`，两者互斥。恢复不重放工具。
 
 ## 终端输入与状态
 
@@ -47,6 +47,9 @@ mewcode --config .env
 | `/agents [list\|show <name>]` | 本地 | 查看有效 Agent 角色、来源、工具限制及固定提示 |
 | `/tasks [list\|show <id>]` | 本地 | 查看当前进程子任务及完整结果、证据和逐请求用量 |
 | `/tasks cancel <id>` / `/tasks cancel-parent <parent_id>` | 状态 | 取消单子或该父全部子任务；已产生文件和远端操作不承诺回滚 |
+| `/team list`、`/team status [name]` | 本地 | 查看保存状态，不请求模型、不创建窗格或任务 |
+| `/team create <name>`、`/team resume <name>` | 状态 | 创建或恢复并绑定 Lead，保持空闲等待明确目标 |
+| `/team pause`、`/team stop <member_id>` | 状态 | 暂停团队或停止指定成员，保留存档和成果 |
 | `/plan [任务]` | 状态 | 进入或重入只读规划；可选任务提交一次 |
 | `/do` | 状态 | 仅切回执行模式，随后需输入明确任务 |
 | `/session [list]` | 本地 | 查看当前身份或项目存档；恢复用启动参数 `--resume ID\|latest` |
@@ -91,6 +94,10 @@ mewcode --config .env
 | `max_iterations` | 可选，十进制正整数，缺省 20；主对话、独立 Skill、自动摘要、失败与恢复请求共同消耗 |
 | `context_window` | 必填，服务的总上下文窗口（token）；按所选服务实际能力填写，不从模型名推断 |
 | `max_output_tokens` | 可选，正整数，默认 8192；工作和摘要请求均以此限制输出 |
+| `team_backend` | 可选 `auto`（默认）、`tmux`、`inprocess`；实际选择可查看 |
+| `team_max_running` | 可选正整数，默认 4 |
+| `team_max_queued` | 可选非负整数，默认 32；0 禁止排队 |
+| `team_coordinator_enabled` | 可选严格 `true`／`false`，默认 false；还需真实进程环境开关和 Lead 身份 |
 | `skill_models` | 可选 JSON 模型预算映射；独立 Skill 选择其他模型时必须显式配置其窗口 |
 
 `thinking=true` 时，MewCode 会请求 Claude 返回可读的思考摘要，或请求 DeepSeek 的 Anthropic 兼容接口返回思考内容，实际收到的工作思考默认收起，阶段显示“思考中”，可按 F2 切到思考页（plain 使用 `/status`）查看保留的片段。Claude API 不提供原始思维链；自适应思考也可能在简单问题中不返回思考片段。DeepSeek 兼容地址使用 `https://api.deepseek.com/anthropic`，并按其协议设置思考开关。对于 Claude，`thinking=false` 不展示思考，但不能保证关闭某些模型默认且不可关闭的内部思考；对于 DeepSeek，该值会发送关闭思考的参数。
@@ -238,6 +245,24 @@ rules:
 ```
 
 规则格式是 `工具名(模式)`，`Bash` 是 `execute_command` 的规则别名。`exact` 匹配完整字面字符串；`glob` 匹配完整范围，文件路径的 `*` 不跨目录、`**` 可跨零层或多层，大小写敏感。文件规则使用 resolve 后的真实路径相对 root 的 POSIX 表达，链接别名不能绕开规则。工具间不继承权限，例如 `read_file` 的规则不能授权 `search_code` 或 `edit_file`；`search_code` 的权限模式匹配文件路径，内容正则 `pattern` 不用作权限路径。
+
+`agent` 与五个团队工具 `team`、`team_member`、`team_task`、`team_message`、`team_integrate` 使用完整参数 JSON。`exact` 的 JSON 对象会规范化键顺序和空白，正文、任务／领取标识等任何参数变化都须重新匹配；`glob` 匹配键排序、无多余空白的完整 JSON 字符串，`*` 可跨正文中的 `/`。例如为后台成员配置读消息、发送计划／正文和开工许可：
+
+```yaml
+version: 1
+rules:
+  - effect: allow
+    rule: 'team_message({"action":"read"})'
+    match: exact
+  - effect: allow
+    rule: 'team_message({"action":"send",*})'
+    match: glob
+  - effect: allow
+    rule: 'team_task({"action":"start",*})'
+    match: glob
+```
+
+按动作放行仍覆盖该动作的所有参数；需要更窄范围时，使用授权详情里的完整实际参数写 `exact` 规则。会话／永久批准也绑定工具名、实际项目根和完整规范参数，不能跨参数复用。没有规则仍为 ask，成员没有交互批准通道时返回 `approval_required`；明确 deny 优先。上述许可不能扩大角色、规划模式、任务领取或计划门禁，也不批准实际文件、命令、MCP 和受管 Git 操作。成员工作根和父项目的当前策略都须允许，成员专用项目规则应在实际 Worktree 根配置。
 
 搜索先枚举项目内可见候选路径，再逐文件授权，随后仅把获准的显式文件列表交给搜索。deny 或被拒绝的文件会跳过，文件内容不会先读再过滤。结果中的 `permission_limited` 与 `skipped_files` 说明搜索范围受限；它独立于输出 `truncated`。所有候选被排除仍返回受限的成功空结果，不能据此断言完整项目没有匹配；没有候选则是普通空结果。受拒文件名和内容不会进入模型结果。
 
@@ -586,3 +611,42 @@ cleanup:
 子工具和异步 Hook 实际收尾后才释放运行租约；结果缓存先归档到父拥有的私有缓存，登记来源和映射后再评估删除。任务结果及 `/tasks show` 分别报告模型结束原因与 Worktree 的目录、分支、基线、初始化、归档、保留／删除状态。归档失败会持久保护原目录和证据，关闭句柄不会消除保护；恢复存档只展示证据，不重跑或接管子任务。
 
 无文件成果、无提交成果且证据已安全归档时可清理。暂存／未暂存修改、未追踪或未知忽略文件、初始化配置内容／权限位／链接改变均保留。只要 HEAD 不等于冻结基线，就保留提交，包括已推送提交。目录和分支分别删除并报告部分失败。会话启动及每 1800 秒有界扫描准确受管记录，依次检查归属、严格超过 30 天且无真实活动租约／证据保护、无成果；规划期间暂停，关闭时停止并等待本地收尾。人工目录、旧格式或不明状态保持原样，不执行全局 prune 或强制删除。
+
+
+## 持久 Agent Teams
+
+团队适用于同一 Git 仓库的长期协作，与上文一次性 `agent` 子任务分别管理。需要已有 Git 提交；团队登记仓库身份及稳定成员，每个新目标冻结当时目标分支和提交，旧目标、任务、消息与成果保留。同名创建或错误仓库恢复会拒绝，不能用路径创建团队。
+
+```text
+/team create demo
+/team status demo
+/team pause
+/team resume demo
+/team stop <member_id>
+```
+
+重启可使用 `uv run mewcode --config .env --team demo`，与 `--resume` 互斥。普通启动不会恢复团队。创建／恢复本身不请求模型、不创建成员窗格，保持空闲；明确目标或指派后已有成员按稳定身份和磁盘上下文懒启动。查看不唤醒成员。正常退出暂停团队，无法确认进程停止或存档时报告 `needs_review`，不能重复接管。`/reset` 停止旧目标调度并保留团队存档；取消、预算耗尽或新聊天不会自动开启新目标、补充旧预算。
+
+`auto` 在成员启动前优先探测 tmux，公开实际选择；探测不可用才显示原因并选择 `inprocess`。显式 `tmux` 不可用会失败。选定后启动或运行失败不降级，避免重复执行。tmux 使用独立进程／窗格，inprocess 使用同一应用内异步运行器；二者都有独立工作根、会话及工具上下文，都是软隔离，**不是系统沙箱**。shell 可以访问工作根之外，共享依赖链接、Git 公共目录及外部服务仍有真实边界；权限和路径校验继续生效。
+
+没有 MCP 时，普通主入口导出九个工具：六个核心普通工具，加 `load_skill`、`agent`、`team`。验证为 Lead 后才增加 `team_member`、`team_task`、`team_message`、`team_integrate`。成员可使用受限任务／消息工具，不能创建嵌套团队、调用 `agent`、接纳自己的成果或发布整合。角色范围、规划模式、成员计划批准和实际文件／命令／MCP 授权是独立门槛：计划获批不授予工具权限，明确拒绝优先。成员没有人工授权通道，缺少实际工作根适用许可会阻塞；恢复重新加载当前权限，不从历史正文恢复授权。
+
+coordinator 仅在配置 `team_coordinator_enabled=true`、真实启动进程环境 `MEWCODE_COORDINATOR=1` 且当前身份为 Lead 时生效：
+
+```bash
+MEWCODE_COORDINATOR=1 uv run mewcode --config .env --team demo
+```
+
+把同名变量写进 `--config` 文件不能代替进程环境；`/team status` 显示两个条件。coordinator Lead 不直接写入／编辑文件，也不能借独立 Skill 绕过；shell 仍可用于检查和编排，并继续经过权限检查，代码修改与冲突解决交成员。成员继承环境变量不变成 coordinator。`/plan` 同时限制 Lead 和成员，不能借聊天间接派执行任务；`/do` 只切回执行模式，需要明确新任务。
+
+成员在登记的 Worktree 根工作，提示、项目指令、Skill、项目记忆和权限按实际根加载；用户域长期团队目录存放元数据、任务、邮箱、独立成员存档与缓存。暂停不释放长期引用，存档目录也不扩大工具根；缺失或协议不兼容的必要上下文明确阻塞，不能用空历史重新 spawn 掩盖。实际租约和团队引用保护成员目录不被普通 Worktree 清理删除。
+
+恢复发现工具意图已有存档但结果缺失时，保留实际成果和旧领取预算，将成员标为待核查并阻塞旧任务。普通消息不会继续旧领取，也不重跑工具；Lead 核查后必须明确重新指派取得新 claim。不能确认旧进程已停止时，拒绝恢复接管。
+
+任务更新检查 revision；`team_task claim` 在固定锁内原子领取，并发只有一位负责人。计划决定绑定成员、任务、claim 和版本，旧批准不能放行新计划。成员自然结束只是 `idle`；提交、Lead 接纳和代码整合分别记录。代码接纳必须提供 `validation_command` 并在实际成果目录运行，不能只填模型声称通过的结果。前置代码必须接纳并整合，再由下游成员 `team_task start` 安全同步实际目录并确认要求提交，依赖才解除；脏目录／未知内容阻塞，不自动 stash 或强制重置。
+
+每目标有私有整合分支／目录。输入绑定不可变完整 commit，后续成员分支变化不改变成果凭据。整合串行持锁并保存 intent、检查点和结果；冲突交指定成员持真实租约解决，Lead 不直接编辑。失败只撤销当前受管操作，保留此前成功成果与所有成员分支；未知编辑、停止不确定或撤销失败转待核查。外部 shell、Hook、远端副作用不在 Git 回滚范围内。最终发布必须所有必需任务接纳、代码整合及候选验证成功，重新检查目标旧值、目录／索引和外部更新；不自动 push。崩溃恢复只对账，不重放 Git。
+
+容量边界：每团队最多 4096 个任务，每邮箱最多 2048 条记录，单个 JSON 记录最多 8 MiB；正文 UTF-8 最多 64 KiB，摘要最多 256 个字符。超限明确拒绝，不丢弃未读消息。固定 inode 的 POSIX `flock` 不依据锁文件年龄或时间戳抢占。消息正文只作数据保存，tmux 使用不透明唤醒信号，不执行正文。
+
+本轮证据及未执行项见 [真实模型双后端验收](docs/validation/agent-teams/e2e.md)、[81 个规格场景映射](docs/validation/agent-teams/spec-audit.md) 与 [Git 整合验证](docs/validation/agent-teams/integration.md)。

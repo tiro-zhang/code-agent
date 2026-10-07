@@ -13,7 +13,7 @@
 
 #### Scenario: 枚举六个核心工具
 - **WHEN** 执行模式在没有激活限制时准备向模型提供工具
-- **THEN** 工具列表包含六个核心普通工具、load_skill、agent 及成功发现并注册的 MCP 工具的名称、描述与参数定义，两个协议中的名称和参数语义一致
+- **THEN** 工具列表包含六个核心普通工具、load_skill、agent、team 及成功发现并注册的 MCP 工具的名称、描述与参数定义，两个协议中的名称和参数语义一致
 
 #### Scenario: 重复注册
 - **WHEN** 工具名称与已有登记重复
@@ -21,7 +21,7 @@
 
 #### Scenario: 规划模式筛选
 - **WHEN** 规划模式准备向模型提供工具
-- **THEN** 同一登记信息导出三个只读普通工具与实际 Skill 限制的交集，另导出 load_skill 和 agent，执行器使用相同普通范围和系统路由
+- **THEN** 同一登记信息导出三个只读普通工具与实际 Skill 限制的交集，另导出 load_skill、agent 和受限 team，执行器使用相同普通范围和系统路由
 
 #### Scenario: 新工具未声明只读
 - **WHEN** 后续登记一个没有明确只读声明的工具
@@ -29,7 +29,7 @@
 
 #### Scenario: 没有 MCP 配置时保持核心工具集
 - **WHEN** 启动时没有配置 MCP Server
-- **THEN** 无激活限制时执行模式提供六个核心普通工具及 load_skill 和 agent，原六个工具名称、参数和只读分类保持
+- **THEN** 无激活限制时执行模式提供六个核心普通工具及 load_skill、agent 和 team，原六个工具名称、参数和只读分类保持
 
 #### Scenario: 外部只读提示不改变调度分类
 - **WHEN** MCP Server 的工具元数据声明只读
@@ -37,7 +37,17 @@
 
 #### Scenario: 白名单为空的导出
 - **WHEN** 当前有效普通范围为空
-- **THEN** 两个供应商声明在主对话均仍包含 load_skill 和 agent，不再导出已被限制的普通工具
+- **THEN** 两个供应商声明在主对话均仍包含 load_skill、agent 和受限 team，不再导出已被限制的普通工具
+
+团队能力 SHALL 另提供稳定的 team 管理入口；普通主入口可创建、显式恢复或查看团队，但 SHALL NOT 获得共享任务和邮箱工具。只有真实团队身份 SHALL 声明 team_task、team_message；Lead SHALL 另声明 team_member、team_integrate。团队工具 SHALL 统一两种供应商 Schema，不随花名册变更动态生成名称。team 入口仅在其动作符合当前模式和身份时执行，团队身份下的导出另受下述身份过滤。
+
+#### Scenario: 普通入口创建团队
+- **WHEN** 普通主入口准备模型请求
+- **THEN** 可见原有工具及 team 管理入口，不可见 team_task、team_message、team_member 或 team_integrate；创建成功后后续请求按 Lead 身份导出
+
+#### Scenario: 团队成员工具
+- **WHEN** 团队成员准备模型请求
+- **THEN** 可见获准普通工具、受限 load_skill、team_task 和 team_message，不声明 Lead 管理、整合、普通 agent 或独立 Skill 派生能力
 
 ### Requirement: 执行前校验
 系统 SHALL 在执行前按名称查找工具、检查当前模式、最新激活 Skill 和父上限共同决定的允许范围、解析完整 JSON 参数并依据对应 Schema 校验必填字段、类型、取值范围及未知字段；参数 SHALL 是对象。未注册名称 SHALL 返回 `unknown_tool`，已注册但被当前有效普通范围禁止的名称 SHALL 返回 `tool_not_allowed`，非法参数 SHALL 返回 `invalid_arguments`；这些错误 SHALL 为结构化结果，且 SHALL NOT 启动工具或产生文件改动。通过这些校验的调用 SHALL 在实际启动前完成适用的黑名单、路径边界、权限规则、权限模式及授权检查。系统 SHALL 在执行前重新检查规则与目标真实路径；已有授权 SHALL NOT 绕过新的拒绝条件。整次调用的权限拒绝 SHALL 返回 `permission_denied` 并明确 `not_started=true`；搜索候选级权限拒绝 SHALL 排除对应候选并按部分成功合同报告受限范围，而非使整次搜索失败；shell 结构检查无法完成 SHALL 返回 `permission_check_failed`，权限配置无效 SHALL 返回 `permission_config_error`，二者均 SHALL 明确 `not_started=true`；系统 SHALL NOT 在未获准时启动目标工具工作进程、发送 MCP 工具执行请求、读取受限内容或产生副作用。搜索候选的路径元数据枚举 SHALL 允许先进行，内容读取与目标搜索执行 SHALL 在相应候选获准后进行。MCP 调用 SHALL 对稳定工具别名与完整有效参数执行外部工具权限判定，并在发送请求前重新核对 Server 有效配置身份和授权范围；本地路径边界与 shell 文本检查 SHALL NOT 被描述为约束外部 Server 内部执行。
@@ -169,3 +179,25 @@ agent 的前台等待 SHALL 使用转换后台软期限，默认 30 秒后返回
 #### Scenario: 多个调用同时需要决定
 - **WHEN** 同批多个调用需要人工授权
 - **THEN** 系统逐个展示授权请求并关联各自调用，不并发争用终端输入，已获准的只读调用仍能按既有并发规则执行
+
+### Requirement: 团队能力声明与执行双重检查
+系统 SHALL 以运行绑定的团队、成员、角色及当前模式决定团队工具范围，并在系统工具分流和每个具体动作执行前再次验证。已注册但身份不允许的工具或动作 SHALL 返回 tool_not_allowed 和 not_started=true，不视为未知工具。团队元数据、协议决定、领取及验收状态 SHALL 经可信管理入口维护，普通文件工具不能绕过身份校验改写控制状态。只读动作可以进入合法并发组，修改及身份转换动作 SHALL 保持串行调度边界。具体动作 SHALL 遵守工具权限及结果上限，不能借系统入口跳过 deny、模式或计划门禁。
+
+#### Scenario: 普通子 Agent 伪造共享任务调用
+- **WHEN** 普通 defined 或 fork 子运行返回 team_task 调用
+- **THEN** 执行层返回 tool_not_allowed，不读取或修改团队任务清单
+
+#### Scenario: 成员伪造验收
+- **WHEN** 普通成员调用共享任务中的 Lead 验收动作
+- **THEN** 返回未启动的身份限制，任务验收状态保持
+
+### Requirement: coordinator 自用能力与委派能力分离
+coordinator Lead SHALL 不声明或执行 write_file、edit_file、普通 agent 派生、独立 Skill 执行或非只读 MCP，保留 read_file、glob_files、search_code、受限共享 Skill 读取、execute_command 和获准团队管理／协作工具。其本人过滤 SHALL 在声明及执行层生效，不能借系统加载恢复写入。成员委派上限 SHALL 来自批准的团队能力范围及角色／Skill／权限约束，不把 Lead 本人的 coordinator 编辑禁用当作成员上限，也不越过真实策略拒绝或 plan 上限。保留 shell SHALL 继续受现有命令权限检查；产品 SHALL 说明 coordinator 是工具层分工而非全面文件系统禁写，代码编辑和冲突内容修改按分工交给成员。
+
+#### Scenario: Lead 自己编辑
+- **WHEN** coordinator Lead 伪造 edit_file 或通过独立 Skill 直接开发
+- **THEN** 执行前拒绝，不因系统工具属性或后续激活扩大自用范围
+
+#### Scenario: 队员仍能编辑
+- **WHEN** coordinator Lead 派生允许编辑且已有有效许可的成员
+- **THEN** 成员可以编辑自己的目录，不继承 Lead 本人的 coordinator 编辑禁用，真实权限上限继续有效

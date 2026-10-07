@@ -1,6 +1,8 @@
 """命令行入口。"""
 
 import argparse
+import asyncio
+from pathlib import Path
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -11,7 +13,13 @@ def main(argv: list[str] | None = None) -> int:
     sessions = parser.add_mutually_exclusive_group()
     sessions.add_argument('--resume', metavar='ID|latest', help='显式恢复当前项目的非活动会话')
     sessions.add_argument('--list-sessions', action='store_true', help='扫描存档，不启动模型或 MCP')
+    sessions.add_argument('--team', metavar='NAME', help='显式恢复指定团队，与普通会话恢复互斥')
+    sessions.add_argument('--team-worker', metavar='STARTUP', help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
+
+    if args.team_worker:
+        from .teams.worker import worker
+        return asyncio.run(worker(Path(args.team_worker), Path(args.config)))
 
     from .app import run
 
@@ -20,4 +28,6 @@ def main(argv: list[str] | None = None) -> int:
         options['resume'] = args.resume
     if args.list_sessions:
         options['list_sessions'] = True
+    if args.team:
+        options['team'] = args.team
     return run(args.config, **options)

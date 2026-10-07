@@ -82,6 +82,8 @@ class _Renderer:
             self.line(f"用量> {label} Token · {self.usage_text(event.usage)}")
         elif event.kind == 'memory_update':
             self.line(f'记忆> {self.safe(event.text, 400)}')
+        elif event.kind == 'team_update':
+            self.line(f'团队> {self.safe(event.text, 800)}')
         elif event.kind == 'skill_loaded':
             self.line(f'Skill> {self.safe(event.text, 800)}')
         elif event.kind in {"tool_call", "tool_started", "tool_result"}:

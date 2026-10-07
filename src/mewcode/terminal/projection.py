@@ -75,6 +75,8 @@ class TerminalProjection:
 
     @staticmethod
     def maintenance_events(event):
+        if event.kind == 'team_update':
+            return [event]
         if event.kind == 'usage':
             return []
         alert = event.phase in {'failed', 'conflict', 'incomplete', 'cancelled', 'partial', 'skipped', 'rejected'} or any(

@@ -12,7 +12,7 @@ from .codec import decode_message, decode_messages, encode_message, json_value
 KINDS = {'session_created', 'session_resumed', 'task_started', 'task_finished', 'mode_changed',
          'run_started', 'run_finished',
          'maintenance_finished', 'interaction_started', 'tool_result', 'history_commit',
-         'history_checkpoint', 'checkpoint', 'skills_changed', 'child_event', 'worktree_event'}
+         'history_checkpoint', 'checkpoint', 'skills_changed', 'child_event', 'worktree_event', 'team_control'}
 STATE_KEYS = {'version', 'failures', 'quotes', 'summary_files', 'cache_paths', 'circuit_open',
               'history_version', 'summary_version'}
 
@@ -25,6 +25,9 @@ class Projection:
     cache_paths: set[str] = field(default_factory=set)
     active_skills: list[dict] = field(default_factory=list)
     worktrees: dict = field(default_factory=dict)
+    team_control: dict | None = None
+    # 不依赖显示警告判断恢复安全；检查点不能证明缺失工具结果已经发生。
+    unconfirmed_interactions: list[dict] = field(default_factory=list)
     last_activity: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -67,6 +70,9 @@ def validate_payload(kind: str, payload, identity: str, seq: int) -> dict:
     if kind not in KINDS or not isinstance(payload, dict):
         raise ValueError('记录类型或数据无效')
     payload = json_value(payload)
+    if kind == 'team_control':
+        from ..teams.control import MemberControl
+        return MemberControl.from_dict(payload).to_dict()
     if kind == 'worktree_event':
         fields = {'parent_task_id', 'run_id', 'stage', 'workspace_root', 'worktree', 'cache_mappings'}
         if 'history_commit_seq' in payload:
@@ -195,10 +201,27 @@ def build_projection(records: list[dict], warnings: list[str]) -> Projection:
     checkpoint = None
     children, returned = {}, set()
     main_commits = set()
+    intents, result_ids = {}, {}
+    control_at_intent = None
     for record in records:
         if activity(record):
             projection.last_activity = max(projection.last_activity, timestamp(record['timestamp']))
         payload = record['payload']
+        if record['kind'] == 'team_control':
+            projection.team_control = payload
+            control_at_intent = payload
+        elif record['kind'] == 'interaction_started':
+            identity = payload['interaction_id']
+            calls = payload['messages'][-1]['tool_calls']
+            control = control_at_intent or {}
+            intents.setdefault(identity, {'interaction_id': identity, 'intent_seq': record['seq'],
+                'team_id': control.get('team_id'), 'member_id': control.get('member_id'),
+                'lead_id': control.get('lead_id'), 'task_id': control.get('task_id'),
+                'claim_id': control.get('claim_id'),
+                'budget_used': (control.get('budget') or {}).get('used', 0),
+                'call_ids': [call['id'] for call in calls]})
+        elif record['kind'] == 'tool_result':
+            result_ids.setdefault(payload['interaction_id'], set()).add(payload['message']['tool_call_id'])
         if record['kind'] == 'history_commit':
             main_commits.add(record['seq'])
         if record['kind'] == 'worktree_event':
@@ -229,6 +252,11 @@ def build_projection(records: list[dict], warnings: list[str]) -> Projection:
         projection.cache_paths.update(state.get('summary_files', []))
         if record['kind'] in {'checkpoint', 'history_checkpoint'}:
             checkpoint = record
+    for identity, intent in intents.items():
+        missing = [call_id for call_id in intent['call_ids'] if call_id not in result_ids.get(identity, set())]
+        if missing:
+            projection.unconfirmed_interactions.append({key: value for key, value in intent.items() if key != 'call_ids'}
+                | {'missing_call_ids': missing})
     for run_id, child in children.items():
         if run_id not in returned:
             label = '独立 Agent ' + child['skill'][6:] if child['skill'].startswith('agent:') else '独立 Skill ' + child['skill']

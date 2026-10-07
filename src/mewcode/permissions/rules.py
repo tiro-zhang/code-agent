@@ -2,14 +2,14 @@
 
 from collections.abc import Iterable
 
-from .models import Evaluation, Rule
+from .models import Evaluation, Rule, JSON_ARGUMENT_TOOLS
 from ..mcp.tools import is_mcp_alias
 from ..matching import match_value, path_glob as _path_glob
 
 
 def _matches(rule: Rule, subject: str) -> bool:
     return match_value(subject, rule.pattern, rule.match,
-                       path=rule.tool not in {"execute_command", "agent"} and not is_mcp_alias(rule.tool))
+                       path=rule.tool != "execute_command" and rule.tool not in JSON_ARGUMENT_TOOLS and not is_mcp_alias(rule.tool))
 
 
 def merge_rules(

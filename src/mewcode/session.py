@@ -38,7 +38,8 @@ class ChatSession:
     def __init__(self, provider: Provider, *, executor: ToolExecutor | None = None,
                  max_iterations: int = 20, permission_mode: str = "default",
                  approval_responder=None, config=None, persistent=False, resume=None,
-                 user_root=None, memory_enabled=True, notify=None, skill_catalog=None, provider_factory=None) -> None:
+                 user_root=None, memory_enabled=True, notify=None, skill_catalog=None, provider_factory=None,
+                 session_storage=None, team_scope=None) -> None:
         self.provider = provider
         from .providers import make_provider
         self.provider_factory = provider_factory or make_provider
@@ -53,6 +54,8 @@ class ChatSession:
         self.tasks = TaskManager()
         self.tasks.on_parent_cancelled = self._finish_parent
         self.config = config or getattr(provider, 'config', None)
+        self.team_scope = team_scope
+        self.session_storage = Path(session_storage) if session_storage is not None else None
         self.journal = None
         self.memory = None
         self._notify = notify
@@ -102,18 +105,30 @@ class ChatSession:
         self.warnings.extend(instructions.warnings)
         if persistent or resume:
             from .sessions import Journal, cleanup_expired
-            self.warnings.extend(cleanup_expired(root))
+            if self.session_storage is None:
+                self.warnings.extend(cleanup_expired(root))
             self.journal = (Journal.resume(root, resume, self.config.protocol, self.config.model,
-                                          record_activity=False) if resume else
-                            Journal.create(root, self.config.protocol, self.config.model))
+                                          record_activity=False, storage_root=self.session_storage) if resume else
+                            Journal.create(root, self.config.protocol, self.config.model, storage_root=self.session_storage))
             self.warnings.extend(self.journal.warnings)
         self.prompt_state = PromptState(root, custom_instructions=instructions.text)
         from .hooks.runtime import create_runtime
         self.hooks = create_runtime(root, self.permissions, lambda: self.mode)
+        from .teams.service import TeamService
+        self.teams = TeamService(self)
+        self.permissions.protected_roots.add(self.teams.store.root)
+        previous_guard = getattr(self.executor,'guard',None)
+        def guard(name, arguments):
+            if previous_guard:
+                previous_guard(name, arguments)
+            self.teams.guard(name, arguments)
+        self.executor.guard = guard
+        for name in ('team','team_member','team_task','team_message','team_integrate'):
+            self.executor.system_handlers[name] = self.teams.handler(name)
         from .worktrees.cleanup import WorktreeCleaner
         self.worktree_cleaner = WorktreeCleaner(root, lambda: self.mode, self.warnings)
         self.agent = Agent(provider, self.executor, max_iterations=max_iterations, prompt_state=self.prompt_state,
-                           config=config, journal=self.journal, before_request=self._before_request,
+                           config=config, journal=self.journal, before_request=self._before_model_request,
                            allowed_tools=self.effective_tools, hooks=self.hooks,
                            on_request_sent=self._consume_results, on_history_committed=self._confirm_results,
                            request_state=lambda: {'prompt_state': self.prompt_state, 'active_skills': self.skills.active,
@@ -124,7 +139,8 @@ class ChatSession:
             if self.journal:
                 from .context.spill import ResultCache
                 self.context.cache.close()
-                self.context.cache = ResultCache(root, session_id=self.journal.id, persistent=True)
+                self.context.cache = ResultCache(root, session_id=self.journal.id, persistent=True,
+                                                 storage_root=self.session_storage)
                 self.context.checkpoint = self._checkpoint
                 if resume:
                     projection = self.journal.projection
@@ -166,6 +182,7 @@ class ChatSession:
         try:
             self.journal.append('history_checkpoint', {'history': [encode_message(m) for m in history],
                 'state': state, 'active_skills': self.skills.descriptors()})
+            self.teams.checkpoint_lead(history)
         except OSError:
             self.agent.storage_blocked = True
             raise
@@ -218,6 +235,7 @@ class ChatSession:
         """先撤销唤醒和提交，再等待旧子运行收尾，最后发布空历史。"""
         self.tasks.paused = True
         try:
+            await self.teams.pause()
             await asyncio.gather(*(self.tasks.cancel_parent(task_id) for task_id in self.tasks.parents))
             self.reset()
         finally:
@@ -228,9 +246,24 @@ class ChatSession:
             self.prompt_state.update_memory(self.memory.refresh())
 
     def effective_tools(self):
-        return self.skills.allowed_tools(self.executor.registry.names(), mode=self.mode)
+        from .teams.capabilities import allowed_tools, COLLABORATION
+        base = self.skills.allowed_tools(self.executor.registry.names(), mode=self.mode) | {'team'}
+        if self.team_scope is not None:
+            base |= COLLABORATION
+        return allowed_tools(base, self.team_scope, self.config)
+
+    def delegation_tools(self):
+        from .teams.capabilities import allowed_tools, COLLABORATION
+        base = self.skills.allowed_tools(self.executor.registry.names(), mode=self.mode)
+        if self.team_scope is not None:
+            base |= COLLABORATION
+        return allowed_tools(base, self.team_scope, self.config, delegation=True)
 
     def _before_request(self):
+        marker = '\n\n## 团队 Lead 协作流程\n'
+        notice = self.prompt_state.workspace_notice.split(marker, 1)[0]
+        lead_notice = self.teams.lead_notice()
+        self.prompt_state.workspace_notice = notice + (marker + lead_notice if lead_notice else '')
         self.refresh_memory()
         self.prompt_state.active_skills = self.skills.render_active()
         self.prompt_state.skill_index = self.skills.catalog.index_text()
@@ -241,6 +274,13 @@ class ChatSession:
                                   if context and context.generation == self.generation and context.wake_allowed else ())
         self.prompt_state.task_results = (json.dumps(self._prepared_results, ensure_ascii=False)
                                           if self._prepared_results else '')
+
+    async def _before_model_request(self):
+        if self.teams.scope and self.teams.scope.lead and (self.teams.resume_waiting or self.teams.closed):
+            return False
+        await self.teams.consume_lead()
+        await self.teams.checkpoint_goal_budget()
+        self._before_request()
 
     def _confirm_results(self, commit_seq):
         """只在包含本次结果的主历史持久提交后确认回流。"""
@@ -377,6 +417,8 @@ class ChatSession:
             if action == 'cancel-parent':
                 parent = await self.tasks.cancel_parent(task_id)
                 self.tasks.inbox.discard_parent(task_id)
+                if self.team_scope and self.team_scope.lead and self.teams.goal_parent is parent:
+                    await self.teams.cancel_goal()
                 return f'{parent.task_id} · 已取消该父及其子任务'
         raise ValueError('用法：/tasks [list|show <id>|cancel <id>|cancel-parent <parent_id>]')
 
@@ -433,8 +475,10 @@ class ChatSession:
         owns_turn = self._hook_turn is None
         cancel = cancel_event if cancel_event is not None else asyncio.Event()
         if owns_turn:
-            self._task_context = self.tasks.new_parent(question, limit=self.agent.max_iterations,
-                mode=self.mode, generation=self.generation, cancel=cancel)
+            self._task_context = await self.teams.parent_for_input(question, cancel)
+            if self._task_context is None:
+                self._task_context = self.tasks.new_parent(question, limit=self.agent.max_iterations,
+                    mode=self.mode, generation=self.generation, cancel=cancel)
             self._task_budget = self._task_context.budget
             if self.journal:
                 self.journal.append('task_started', {'task_id': self._task_context.task_id, 'input': question, 'mode': self.mode})
@@ -450,7 +494,7 @@ class ChatSession:
         """同一父目标接续剩余预算；不重放委派或凭据。"""
         parent = self.tasks.parent(task_id)
         if (not parent.wake_allowed or parent.finished or parent.generation != self.generation
-                or parent.cancel.is_set() or not self.tasks.inbox.peek(task_id)):
+                or parent.cancel.is_set() or not (self.tasks.inbox.peek(task_id) or self.teams.pending)):
             return
         if not parent.budget.remaining:
             self._finish_parent(parent, 'max_iterations')
@@ -460,6 +504,7 @@ class ChatSession:
         self._task_budget = parent.budget
         self._task_question = parent.question
         cancel = cancel_event if cancel_event is not None else parent.cancel
+        parent.cancel = cancel
         await protected(self._begin_hook_turn(parent.question, parent.budget, cancel, resume=True), cancel_event=cancel)
         async for event in self._segment('接续原父任务：' + parent.question + '\n请结合应用提供的有来源子结果继续完成原目标。', parent.budget, cancel, continuation=True):
             yield event
@@ -467,6 +512,10 @@ class ChatSession:
     def next_parent(self):
         if self._main_running or self._main_owner.locked() or self.tasks.paused:
             return None
+        parent = self.teams.goal_parent
+        if (self.teams.pending and parent and parent.budget.remaining and parent.wake_allowed
+                and not parent.finished and parent.generation == self.generation):
+            return parent.task_id
         for task_id in self.tasks.inbox.parent_ids():
             parent = self.tasks.parent(task_id)
             if parent.wake_allowed and not parent.finished and parent.generation == self.generation:
@@ -517,7 +566,7 @@ class ChatSession:
                         parent.user_message = parent.user_message or task.get('user_message')
                         parent.final_message = task.get('final_message')
                         parent.evidence.extend(task.get('tools', ()))
-                        pending = any(self.tasks.get(child).outcome is None for child in parent.children)
+                        pending = any(self.tasks.get(child).outcome is None for child in parent.children) or await self.teams.goal_pending(parent)
                         reports = self.tasks.inbox.peek(parent.task_id)
                         terminal = reason != 'model_done' or (not pending and not reports)
                         if terminal and self._finish_parent(parent, reason):
@@ -533,10 +582,18 @@ class ChatSession:
                 parent.wake_allowed = False
                 if cancel.is_set():
                     await protected(self.tasks.cancel_parent(parent.task_id), cancel_event=cancel)
+                    await protected(self.teams.cancel_goal(), cancel_event=cancel)
             if owns_turn:
                 await self._end_hook_turn(budget, reason or 'cancelled', cancel)
                 self._task_budget = None
-            self._main_running = False
+            try:
+                if self.teams.scope and self.teams.scope.lead and self.teams.lead_journal:
+                    self._checkpoint(self.history, self.context.state())
+                    await self.teams.checkpoint_goal_budget()
+                if self.teams.pause_deferred:
+                    await self.teams.finish_pause()
+            finally:
+                self._main_running = False
 
     async def start(self, *, cancel_event=None):
         """终端初始化或首次无界面调用后开始；恢复准备不会重复。"""
@@ -575,6 +632,7 @@ class ChatSession:
             return
         previous = self.mode
         if mode == 'plan':
+            await self.teams.quiesce()
             await self.worktree_cleaner.pause()
             self.tasks.paused = True
             for parent in self.tasks.parents.values():
@@ -582,10 +640,14 @@ class ChatSession:
                        for child in parent.children):
                     await self.tasks.cancel_parent(parent.task_id)
             await self.hooks.quiesce(cancel_event=cancel_event)
+        elif self.team_scope is not None and self.team_scope.lead:
+            # 只读实例也先收尾，裸 /do 不把存量消息升级成执行任务。
+            await self.teams.quiesce()
         try:
             if cancel_event is not None and cancel_event.is_set():
                 return
             self.enter_plan() if mode == 'plan' else self.enter_execute()
+            await self.teams.publish_mode(mode)
         finally:
             if self.mode == 'execute':
                 self.hooks.resume_mutations()
@@ -621,7 +683,7 @@ class ChatSession:
     def close(self) -> None:
         """释放私有句柄；产品存档的缓存随存档保留。"""
         self.worktree_cleaner.stop()
-        if (hasattr(self, 'hooks') and self.hooks.snapshot.rules and not self.hooks.closed) or self.tasks.records:
+        if (hasattr(self, 'hooks') and self.hooks.snapshot.rules and not self.hooks.closed) or self.tasks.records or (getattr(self, 'team_scope', None) and self.team_scope.lead):
             try:
                 loop = asyncio.get_running_loop()
             except RuntimeError:
@@ -649,6 +711,8 @@ class ChatSession:
 
     async def aclose(self):
         """后台任务停止后才释放存档，供应商由应用随后关闭。"""
+        if hasattr(self, 'teams'):
+            await self.teams.pause()
         try:
             await self.worktree_cleaner.close()
             await self.tasks.aclose()

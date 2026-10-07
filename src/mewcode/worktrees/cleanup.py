@@ -43,7 +43,7 @@ async def scan(manager, *, now=None):
                     or not re.fullmatch('[0-9a-f]{40}|[0-9a-f]{64}', record['base_commit'])
                     or not 0 < record['created'] <= record['last_active'] <= now):
                 raise ValueError('记录归属或时间异常')
-            if record['ready'] is not True or record['evidence_protected'] is not False or record['last_active'] >= cutoff:
+            if record.get('team_pin') or record['ready'] is not True or record['evidence_protected'] is not False or record['last_active'] >= cutoff:
                 continue
             frozen = RepositorySnapshot(origin, repo.checkout_root, repo.common_git_dir,
                                         origin.relative_to(repo.checkout_root), record['base_commit'])

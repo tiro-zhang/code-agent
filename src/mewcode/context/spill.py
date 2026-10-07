@@ -26,15 +26,16 @@ def preview(text: str, limit: int) -> str:
 
 
 class ResultCache:
-    def __init__(self, root: Path, *, session_id: str | None = None, persistent=False):
+    def __init__(self, root: Path, *, session_id: str | None = None, persistent=False, storage_root=None):
         self.root = root.resolve()
+        self.storage_root = Path(storage_root).resolve(strict=True) if storage_root is not None else self.root
         if session_id is not None and not re.fullmatch(r'[a-zA-Z0-9_-]+', session_id):
             raise ValueError('会话缓存身份无效')
         self.session_id = session_id or uuid4().hex
         self.persistent = persistent
         self._reopening = False
         self.relative = Path('.mewcode/context') / self.session_id
-        self.directory = self.root / self.relative
+        self.directory = self.storage_root / self.relative
         self._fds: list[int] = []
         self._files: set[str] = set()
         self.failed = False
@@ -50,7 +51,7 @@ class ResultCache:
             return
         descriptors = []
         try:
-            descriptors.append(os.open(self.root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW))
+            descriptors.append(os.open(self.storage_root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW))
             for name in ('.mewcode', 'context', self.session_id):
                 try:
                     os.mkdir(name, mode=0o700, dir_fd=descriptors[-1])
@@ -87,7 +88,7 @@ class ResultCache:
             raise
 
     def _check(self):
-        current = self.root
+        current = self.storage_root
         for name, fd in zip(('.mewcode', 'context', self.session_id), self._fds[1:]):
             current /= name
             actual, owned = current.lstat(), os.fstat(fd)

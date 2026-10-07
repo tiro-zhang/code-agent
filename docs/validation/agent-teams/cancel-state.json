@@ -1,0 +1,8 @@
+{
+  "goal_id": "goal-bdf26c57081a4b079d116b72730ad10a",
+  "goal_state": "cancelled",
+  "member_id": "member-234b765e4f3a43f7a5ea23380f09a77c",
+  "member_state": "stopped",
+  "before_exists": true,
+  "after_exists": false
+}

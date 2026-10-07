@@ -43,6 +43,7 @@ class Agent:
         config = config or getattr(provider, 'config', None)
         self.config = config
         self.last_request = None
+        self.active_interaction = None
         self.system_prompt = system_prompt
         self.declared_tools = declared_tools
         self.preserve_first_prefix = preserve_first_prefix
@@ -70,10 +71,10 @@ class Agent:
     def effective_tools(self, mode):
         if self.allowed_tools:
             return self.allowed_tools()
-        names = self.executor.registry.names()
+        names = self.executor.registry.names() - {'team_member','team_task','team_message','team_integrate'}
         if mode == 'plan':
             names &= {'read_file', 'glob_files', 'search_code'}
-        return names | ({"load_skill"} if "load_skill" in self.executor.registry.names() else set())
+        return names | (self.executor.registry.names() & {'load_skill','team'})
 
     async def run(self, question: str, *, history: list[Message], mode: AgentMode,
                   cancel_event: asyncio.Event | None = None, budget=None, run_id=None,
@@ -196,7 +197,12 @@ class Agent:
                 if cancel.is_set():
                     break
                 if self.before_request:
-                    self.before_request()
+                    prepared = self.before_request()
+                    if __import__('inspect').isawaitable(prepared):
+                        prepared = await prepared
+                    if prepared is False:
+                        reason, detail = 'paused', '运行已保存，在请求边界等待明确继续指派'
+                        break
                 tools = self.declared_tools if self.declared_tools is not None else self.executor.registry.definitions(allowed_tools=allowed(), system_passthrough=self.system_passthrough)
                 self.prompt_state.allowed_tools = allowed()
                 spilled, warnings = ((0, []) if self.preserve_first_prefix and not prefix_sent else self.context.spill(history))
@@ -338,6 +344,7 @@ class Agent:
                 unknown_count = unknown_count + 1 if all(call.name not in names for call in response.tool_calls) else 0
                 interaction_id = uuid4().hex
                 tool_messages = {}
+                self.active_interaction={'interaction_id':interaction_id,'messages':encoded(group(response))}
                 if self.journal:
                     record('interaction_started', {'interaction_id': interaction_id,
                                                     'messages': encoded(group(response))})
@@ -361,9 +368,12 @@ class Agent:
                         if scheduler.storage_error:
                             raise scheduler.storage_error
                         commit(response, scheduler.results)
+                        self.active_interaction=None
                     except OSError:
                         commit(response, scheduler.results, saved=False)
                         raise
+                    finally:
+                        self.active_interaction=None
                 if any(result.error and result.error["code"] == "cancelled" for result in scheduler.results):
                     cancel.set()
                 if cancel.is_set():

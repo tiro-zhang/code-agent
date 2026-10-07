@@ -5,7 +5,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from .config import PermissionConfig, PermissionConfigError, TOOLS
-from .models import Approval, PolicySnapshot
+from .models import Approval, PolicySnapshot, JSON_ARGUMENT_TOOLS
 from ..mcp.tools import is_mcp_alias
 from ..mcp.permissions import validate_grant
 from .targets import canonical_object
@@ -33,9 +33,9 @@ class GrantStore:
             return validate_grant(tool, value)
         if tool not in TOOLS or not isinstance(value, str) or not value.strip() or "\x00" in value:
             raise ValueError("授权工具或精确目标无效")
-        if tool == "agent":
+        if tool in JSON_ARGUMENT_TOOLS:
             if kind != "command":
-                raise ValueError("Agent 授权必须使用精确规范参数")
+                raise ValueError("完整参数工具授权必须使用精确规范参数")
             return canonical_object(value)
         if tool in {"execute_command", "load_skill"}:
             if kind != "command":
