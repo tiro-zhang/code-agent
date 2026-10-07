@@ -13,6 +13,48 @@ from mewcode.tools.base import ToolResult
 from mewcode.types import AgentEvent
 
 
+@async_test
+async def test_streaming_table_header_preview_flushes_once_and_resets_style(monkeypatch):
+    from prompt_toolkit.input.defaults import create_pipe_input
+    from prompt_toolkit.output import DummyOutput
+    with create_pipe_input() as pipe:
+        output = StringIO()
+        terminal = TerminalController(InputReader(StringIO()), output, secret='', root='/project', on_interrupt=lambda: None)
+        monkeypatch.setattr(terminal, '_can_enhance', lambda: True)
+        monkeypatch.setattr('mewcode.terminal.controller.create_input', lambda *a, **k: pipe)
+        monkeypatch.setattr('mewcode.terminal.controller.create_output', lambda *a, **k: DummyOutput())
+        await terminal.start()
+        try:
+            terminal.stream.response_style(True)
+            terminal.write('| 项目 | 值 |\n')
+            await terminal.drain()
+            assert not output.getvalue()
+            assert '项目' in terminal.backend.live.text
+            terminal.write('| --- | --- |\n| A | **重要** |\n')
+            await terminal.drain()
+            assert '重要' in output.getvalue() and '**' not in output.getvalue()
+            terminal.write('| 无分隔 | 候选 |\n')
+            terminal.stream.response_style(False)
+            await terminal.drain()
+            assert output.getvalue().count('候选') == 1
+            terminal.stream.response_style(True)
+            terminal.write('```python\n**原样**')
+            terminal.stream.response_style(False)
+            terminal.write('系统提示\n')
+            await terminal.drain()
+            assert '**原样**' in output.getvalue() and '系统提示' in output.getvalue()
+            terminal.stream.response_style(True)
+            terminal.write('```python\n')
+            terminal.write('x' * (64 * 1024))
+            assert len(terminal._partial.encode()) < 64 * 1024
+            terminal.write('\n**超长代码后仍是代码**\n```\n')
+            terminal.stream.response_style(False)
+            await terminal.drain()
+            assert '**超长代码后仍是代码**' in output.getvalue()
+        finally:
+            await terminal.close()
+
+
 def request(identity):
     return SimpleNamespace(id=identity, tool="read_file", arguments={"path": "a"},
                            targets=("/project/a",), reason="需要审批", mode="strict")

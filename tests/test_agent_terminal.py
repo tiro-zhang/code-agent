@@ -31,7 +31,7 @@ async def test_ctrl_b_dispatches_background_only_without_submitting_draft():
 
 
 @async_test
-async def test_auto_resume_suspends_reader_then_restores_complete_draft():
+async def test_auto_resume_suspends_receiver_but_keeps_editable_live_draft():
     from mewcode.terminal.input import EnhancedTerminal
     with create_pipe_input() as pipe:
         terminal = EnhancedTerminal(pipe, DummyOutput(), on_interrupt=lambda: None)
@@ -45,12 +45,15 @@ async def test_auto_resume_suspends_reader_then_restores_complete_draft():
             read.cancel()
             await asyncio.gather(read, return_exceptions=True)
             terminal.set_phase("running")
-            assert terminal.chat.text == ""
+            assert terminal.chat.text == "草稿\n第二行"
+            pipe.send_text('，运行中新编辑\r')
+            await tick()
             resumed = asyncio.create_task(terminal.readline())
             await tick()
-            assert terminal.chat.text == "草稿\n第二行"
+            assert not resumed.done()
+            assert terminal.chat.text == "草稿\n第二行，运行中新编辑"
             pipe.send_text("\r")
-            assert await asyncio.wait_for(resumed, 1) == "草稿\n第二行"
+            assert await asyncio.wait_for(resumed, 1) == "草稿\n第二行，运行中新编辑"
         finally:
             await terminal.close()
 

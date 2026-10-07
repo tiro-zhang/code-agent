@@ -5,13 +5,14 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field, replace
 import json
 import time
+import sys
 
 # 展示与 Agent 共用累计口径，避免另写缓存缺失和部分字段规则。
 from ..agent import _total_usage
 from ..tools.base import ToolResult
 from ..types import AgentEvent, TokenUsage, ToolCall
 from .text import terminal_text, usage_text
-from .details import DetailStore
+from .history import TerminalHistory, bounded_id
 
 
 PHASE_LABELS = {
@@ -63,7 +64,8 @@ class TerminalState:
         self._reason = ""
         self._finish_text = ""
         self._base_phase = "idle"
-        self.details = DetailStore(secret)
+        self.history = TerminalHistory(secret)
+        self.details = self.history.details.scope('')
 
     def safe(self, value: object, *, limit: int | None = None) -> str:
         """展示边界先脱敏，再转义不可信字符。"""
@@ -76,9 +78,12 @@ class TerminalState:
 
     def reset_task(self):
         """显式重置清掉旧任务展示，保留工具身份映射。"""
-        identities = self._tool_identities
+        identities, history, seen_runs = self._tool_identities, self.history, self._seen_runs
+        history.clear()
         self.__init__(self.secret)
-        self._tool_identities = identities
+        self.history = history
+        self.details = history.details.scope('')
+        self._tool_identities, self._seen_runs = identities, seen_runs
 
     def bind_tools(self, tools: Iterable[object]) -> None:
         """登记外部工具的真实展示身份，不保存连接配置或凭据。"""
@@ -91,13 +96,19 @@ class TerminalState:
                 identities[name] = (server, original)
         self._tool_identities = identities
 
-    def begin_task(self, *, mode: str, permission_mode: str, max_iterations: int) -> None:
+    def begin_task(self, *, mode: str, permission_mode: str, max_iterations: int,
+                   title: str = '', started_at=None, source: str = '', parent_id: str = '') -> None:
         """真实任务开始时重置展示，允许预取消只产生结束事件。"""
         self.run_id = None
         self.mode, self.permission_mode = mode, permission_mode
         self.max_iterations = max_iterations
+        if self.history.current is not None:
+            for record in self.history.current.calls:
+                record._active_metadata = 0
+                self.history._refresh_call_size(record)
         self._tools.clear()
-        self.details = DetailStore(self.secret)
+        turn = self.history.begin(title=title, started_at=started_at, source=source, parent_id=parent_id)
+        self.details = self.history.details.scope(turn.id)
         self._usage.clear()
         self._purposes.clear()
         self._total_usage = None
@@ -109,6 +120,14 @@ class TerminalState:
         self.iteration = 0
         self._base_phase = "running"
         self.phase = "running"
+
+    def finish_task(self, *, reason='interrupted', text=''):
+        """通道无结束事件时显式结束展示段，不推断实际目标成功。"""
+        if self._started_at is None or self._finished:
+            return
+        self.update(AgentEvent('finished', run_id=self.run_id or '', reason=reason, text=text,
+                               mode=self.mode, permission_mode=self.permission_mode,
+                               max_iterations=self.max_iterations))
 
     @property
     def elapsed(self) -> float:
@@ -126,24 +145,27 @@ class TerminalState:
         self.max_iterations = event.max_iterations
         self.run_id = event.run_id
         self._seen_runs.append(event.run_id)
+        self.history.bind(event.run_id)
 
-    def _tool(self, event: AgentEvent) -> _ToolState:
+    def _tool(self, event: AgentEvent) -> _ToolState | None:
         identifier = event.tool_call_id or (event.call.id if event.call else "")
+        record = self.history.call_for(self.history.current, identifier)
+        if record is None:
+            return None
         if identifier not in self._tools:
-            self._tools[identifier] = _ToolState(len(self._tools) + 1, identifier, event.tool_name)
+            self._tools[identifier] = _ToolState(record.number, identifier, self.safe(event.tool_name, limit=128))
         tool = self._tools[identifier]
         if event.tool_name:
-            tool.name = event.tool_name
+            tool.name = self.safe(event.tool_name, limit=128)
         if event.call is not None:
-            self.details.put(identifier + ':arguments', f'调用 #{tool.number} · {identifier} · 参数', event.call.arguments)
-            # 活动状态只需简短操作；完整参数由同一个有界缓存持有。
+            # 参数正文由历史唯一持有，当前状态仅留操作摘要。
             try:
                 args = json.loads(event.call.arguments)
                 brief = {key: terminal_text(value, self.secret, limit=180) for key, value in args.items()
                          if key in {'path', 'command', 'pattern'} and isinstance(value, str)} if isinstance(args, dict) else {}
             except (ValueError, RecursionError):
                 brief = {}
-            tool.call = replace(event.call, arguments=json.dumps(brief, ensure_ascii=False))
+            tool.call = replace(event.call, name=self.safe(event.call.name, limit=128), arguments=json.dumps(brief, ensure_ascii=False))
             if not tool.name:
                 tool.name = event.call.name
         if tool.name in self._tool_identities:
@@ -171,6 +193,40 @@ class TerminalState:
             self._total_usage = _total_usage(records) if records else None
 
     def update(self, event: AgentEvent) -> list[str]:
+        """同步有界历史后核算活动状态的实际容器与字符串开销。"""
+        try:
+            return self._update(event)
+        finally:
+            turn = self.history.current
+            if turn is not None:
+                for identifier, tool in self._tools.items():
+                    record = self.history.call_for(turn, identifier)
+                    if record is None:
+                        continue
+                    seen = set()
+                    def size(value):
+                        if id(value) in seen:
+                            return 0
+                        seen.add(id(value))
+                        amount = sys.getsizeof(value)
+                        if isinstance(value, str):
+                            amount = max(amount, len(value.encode('utf-8')))
+                        elif isinstance(value, dict):
+                            amount += sum(size(k) + size(v) for k, v in value.items())
+                        elif isinstance(value, (list, tuple, set, frozenset)):
+                            amount += sum(size(item) for item in value)
+                        elif hasattr(value, '__dict__'):
+                            amount += size(vars(value))
+                        return amount
+                    record._active_metadata = size(tool)
+                    if tool.result is None and not turn.finished:
+                        record.status = tool.stage
+                    self.history._refresh_call_size(record)
+                self.history._enforce_metadata()
+                self._tools = {key: tool for key, tool in self._tools.items()
+                               if self.history.call_for(turn, key) is not None}
+
+    def _update(self, event: AgentEvent) -> list[str]:
         """返回新终态和权限警告；正文、用量及结束日志由控制器处理。"""
         if event.kind == 'skill_event':
             child = event.child_event
@@ -179,15 +235,30 @@ class TerminalState:
             identity = child.run_id + ':' + child.tool_call_id if child.tool_call_id else ''
             return self.update(replace(child, run_id=event.run_id, tool_call_id=identity,
                 call=replace(child.call, id=identity) if child.call else None))
+        if event.kind not in {'progress', 'tool_call', 'tool_started', 'tool_result',
+                              'permission_requested', 'permission_resolved', 'usage',
+                              'thinking_delta', 'text_delta', 'finished', 'context_compaction'}:
+            return []
+        if self.run_id is None and self._started_at is None and event.kind == 'context_compaction':
+            return []
+        event = replace(event, run_id=bounded_id(event.run_id),
+                        tool_call_id=bounded_id(event.tool_call_id),
+                        call=replace(event.call, id=bounded_id(event.call.id)) if event.call else None)
         if self.run_id is None:
             if event.run_id in self._seen_runs:
+                self.history.record(event)
                 return []
             self._begin(event)
         elif event.run_id != self.run_id:
             # 新任务只由进度开启，旧任务的迟到事件不得覆盖当前任务。
             if event.kind != "progress" or event.run_id in self._seen_runs:
+                self.history.record(event)
                 return []
             self._begin(event)
+        self.history.record(event)
+        current = self.history.current
+        if current is not None:
+            self._tools = {key: tool for key, tool in self._tools.items() if self.history.call_for(current, key) is not None}
         if event.kind == "progress":
             if self._finished or event.iteration < self.iteration:
                 return []
@@ -217,9 +288,18 @@ class TerminalState:
             self.iteration = max(self.iteration, event.iteration)
             self.phase = "idle"
             self._base_phase = "idle"
+            status = {'cancelled': '取消', 'model_done': '执行段结束', 'stream_error': '失败'}.get(self._reason, '执行段结束（未完成）')
+            self.history.close(status=status, reason=self._reason)
         elif event.kind in {"tool_call", "tool_started", "tool_result",
                              "permission_requested", "permission_resolved"}:
             tool = self._tool(event)
+            if tool is None:
+                if event.kind == 'tool_result' and event.result is not None:
+                    unknown = _ToolState(0, event.tool_call_id, self.safe(event.tool_name, limit=128), result=event.result)
+                    return [self._tool_line(unknown, detail=True) + ' · 索引未保留，无法确认重复事件']
+                if event.warning:
+                    return ['权限> 索引未保留 · ' + self.safe(event.warning, limit=2000)]
+                return []
             request_id = str(getattr(event.permission_request, "id", ""))
             if event.kind == "tool_result" and event.result is not None:
                 if tool.result is not None:
@@ -231,10 +311,13 @@ class TerminalState:
                 # 大正文只留在预算缓存；状态保留有界的引用和错误摘要。
                 references = {key: value if isinstance(value, (bool, int, type(None))) else self.safe(value, limit=1024)
                               for key, value in references.items()}
-                self.details.put(tool.identifier + ':result',
-                    self._tool_line(replace(tool, result=event.result), detail=True) +
-                    ('\n引用> ' + self.safe(json.dumps(references, ensure_ascii=False)) if references else ''),
-                    event.result.to_json())
+                # 历史正文已保存；只更新对应条目的有界状态标题。
+                record = self.history.call_for(self.history.current, tool.identifier)
+                if record and record.result:
+                    record.result.title = terminal_text(self._tool_line(replace(tool, result=event.result), detail=True) + (
+                        '\n引用> ' + self.safe(json.dumps(references, ensure_ascii=False)) if references else ''), self.secret, multiline=True, limit=2048)
+                    self.history._refresh_call_size(record)
+                    self.history._enforce_metadata()
                 error = event.result.error
                 brief_error = None if not error else {
                     'code': self.safe(error.get('code', 'unknown'), limit=100),
@@ -246,18 +329,23 @@ class TerminalState:
                 self._refresh_phase()
                 return [self._tool_line(tool)]
             if event.kind == "permission_resolved":
-                tool.resolved_requests.add(request_id)
+                tool.resolved_requests.add(self.safe(request_id, limit=128))
+                if len(tool.resolved_requests) > 8:
+                    tool.resolved_requests.pop()
                 if (tool.result is None and tool.stage != "执行中" and not self._finished
                         and (not tool.request_id or tool.request_id == request_id)):
                     tool.stage = "已拒绝，未启动" if event.permission_decision == "deny" else "已批准，未启动"
                 self._refresh_phase()
                 if event.warning:
-                    key = (request_id, event.permission_decision, event.warning)
+                    key = (self.safe(request_id, limit=128), event.permission_decision, self.safe(event.warning, limit=256))
                     if key not in tool.warning_keys:
                         tool.warning_keys.add(key)
+                        if len(tool.warning_keys) > 8:
+                            tool.warning_keys.pop()
                         label = "本次批准（永久未保存）" if event.permission_decision == "permanent" else "权限警告"
                         line = f"权限> [#{tool.number}] {self.safe(tool.name)} · {label} · {self.safe(event.warning, limit=2000)}"
                         tool.warnings.append(line)
+                        del tool.warnings[:-2]
                         return [line]
             elif tool.result is None and not self._finished:
                 if event.kind == "tool_started":
@@ -265,8 +353,10 @@ class TerminalState:
                 elif event.kind == "permission_requested" and tool.stage != "执行中":
                     if (request_id not in tool.resolved_requests
                             and (request_id not in tool.requested_requests or tool.request_id == request_id)):
-                        tool.requested_requests.add(request_id)
-                        tool.request_id = request_id
+                        tool.requested_requests.add(self.safe(request_id, limit=128))
+                        if len(tool.requested_requests) > 8:
+                            tool.requested_requests.pop()
+                        tool.request_id = self.safe(request_id, limit=128)
                         tool.stage = "等待授权"
                 self._refresh_phase()
         return []
@@ -333,7 +423,7 @@ class TerminalState:
 
     def details_text(self, section='tools') -> str:
         """同一份内存快照供 F2 和纯文本 /status 使用。"""
-        return self.details.text(section)
+        return self.history.text(section=section)
 
     def compact_status(self) -> str:
         mode = '[PLAN] 规划' if self.mode == 'plan' else '[DEFAULT] 执行'

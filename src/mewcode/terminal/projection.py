@@ -6,6 +6,7 @@ from pathlib import PurePath
 
 from ..types import AgentEvent
 from .text import usage_text
+from .history import bounded_id
 
 
 class TerminalProjection:
@@ -14,18 +15,20 @@ class TerminalProjection:
         self._generation = None
         self._batch = []
         self._source = ''
+        self._source_id = ''
         self._skills = set()
         self._child_answers = set()
 
     @staticmethod
-    def line(text):
-        return AgentEvent('display_line', text=text)
+    def line(text, **identity):
+        return AgentEvent('display_line', text=text, **identity)
 
     def reset(self):
         self._batch.clear()
         self._skills.clear()
         self._child_answers.clear()
         self._source = ''
+        self._source_id = ''
         self._generation = self.state.details
 
     def flush(self, *, consume=True):
@@ -59,10 +62,13 @@ class TerminalProjection:
             else:
                 pieces.append(f'完成 {count} 次{self.state.safe(label)}')
         members = '、'.join('#' + str(number) for _, _, number in self._batch)
-        source = f'Skill {self.state.safe(self._source)} · ' if self._source else ''
+        source = f'Skill {self.state.safe(self._source)} · 子运行 {self.state.safe(self._source_id)} · ' if self._source else ''
+        turn = self.state.history.current
+        association = f'轮次 {turn.id} · ' if turn else ''
         if consume:
             self._batch.clear()
-        return [self.line(f'工具> {source}' + '、'.join(pieces) + f' · 成功 · {members}（F2 / /status 详情）')]
+        return [self.line(f'工具> {association}{source}' + '、'.join(pieces) + f' · 成功 · {members}（F2 / /status 详情）',
+                         run_id=turn.run_id if turn else '', parent_run_id=turn.parent_id if turn else '')]
 
     @staticmethod
     def needs_attention(event):
@@ -97,8 +103,8 @@ class TerminalProjection:
         child = event.child_event if event.kind == 'skill_event' else None
         if event.kind == 'skill_event' and child is None:
             return []
-        source = child.skill_name if child else event.skill_name
-        source_id = child.run_id if child else event.run_id
+        source = self.state.safe(child.skill_name if child else event.skill_name, limit=128)
+        source_id = bounded_id(child.run_id if child else event.run_id)
         normalized = event
         if child:
             identity = child.run_id + ':' + (child.tool_call_id or (child.call.id if child.call else ''))
@@ -109,6 +115,9 @@ class TerminalProjection:
                 return []
             self.state.details.finish_thinking()
             return self.flush()
+        normalized = replace(normalized, run_id=bounded_id(normalized.run_id),
+                             tool_call_id=bounded_id(normalized.tool_call_id),
+                             call=replace(normalized.call, id=bounded_id(normalized.call.id)) if normalized.call else None)
         if self.state._finished and normalized.run_id == self.state.run_id and normalized.kind in {
                 'finished', 'text_delta', 'thinking_delta'}:
             return []
@@ -118,11 +127,14 @@ class TerminalProjection:
         if self._generation is not self.state.details:
             self.reset()
         visible = []
-        if source != self._source:
+        if source != self._source or source_id != self._source_id:
             visible += self.flush()
             self._source = source
+            self._source_id = source_id
         if child and source_id not in self._skills:
             self._skills.add(source_id)
+            if len(self._skills) > 1024:
+                self._skills.pop()
             visible.append(self.line(f'Skill> {self.state.safe(source)} · 子运行 {self.state.safe(source_id)}'))
         kind = normalized.kind
         if kind in {'text_delta', 'permission_requested', 'finished'} or self.needs_attention(normalized):
@@ -138,6 +150,8 @@ class TerminalProjection:
         elif kind == 'text_delta':
             if child and normalized.text:
                 self._child_answers.add(source_id)
+                if len(self._child_answers) > 1024:
+                    self._child_answers.pop()
             if not normalized.replay_of or normalized.replay_of not in self._child_answers:
                 visible.append(normalized)
             if self.state.phase not in {'permission', 'approval', 'cancelling'}:
@@ -146,13 +160,17 @@ class TerminalProjection:
             if self.needs_attention(normalized):
                 visible += [self.line(line) for line in lines]
             else:
-                tool = self.state._tools[normalized.tool_call_id]
+                tool = self.state._tools.get(normalized.tool_call_id)
+                if tool is None:
+                    return visible + [self.line(line, run_id=normalized.run_id) for line in lines]
                 data = normalized.result.data if isinstance(normalized.result.data, dict) else {}
                 path = data.get('path')
                 trusted = path if (isinstance(path, str) and not tool.external and
                     (PurePath(path).is_absolute() or ('..' not in PurePath(path).parts and (
                      {'start_line', 'end_line', 'content'} <= data.keys() or 'bytes_written' in data or 'replacements' in data)))) else None
-                self._batch.append((tool.name, trusted, tool.number))
+                self._batch.append((tool.name, self.state.safe(trusted, limit=512) if trusted else None, tool.number))
+                if len(self._batch) >= 128:
+                    visible += self.flush()
         elif kind == 'permission_resolved':
             visible += [self.line(line) for line in lines]
         elif kind == 'finished':

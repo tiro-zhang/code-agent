@@ -77,7 +77,7 @@ def test_enhanced_manual_events_keep_recent_work_record():
 
 
 @async_test
-async def test_enhanced_summary_phase_supports_cancel_and_ignores_typeahead():
+async def test_enhanced_summary_phase_supports_cancel_and_preserves_draft():
     from prompt_toolkit.input.defaults import create_pipe_input
     from prompt_toolkit.output import DummyOutput
     from mewcode.terminal.input import EnhancedTerminal
@@ -90,6 +90,7 @@ async def test_enhanced_summary_phase_supports_cancel_and_ignores_typeahead():
             assert '压缩' in terminal._status_text()
             pipe.send_text('不应成为下一任务\x03')
             await asyncio.wait_for(cancel.wait(),1)
-            assert not terminal.chat.text
+            assert terminal.chat.text == '不应成为下一任务'
+            assert terminal.phase == 'cancelling'
         finally:
             await terminal.close()

@@ -1,0 +1,142 @@
+{
+  "items": [
+    {
+      "id": "2026-09-27-initial-streaming-chat",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 6
+    },
+    {
+      "id": "2026-10-01-add-agent-loop",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 0
+    },
+    {
+      "id": "2026-10-01-add-tool-system",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 1
+    },
+    {
+      "id": "2026-10-02-add-structured-system-prompt",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 1
+    },
+    {
+      "id": "2026-10-03-add-permission-system",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 0
+    },
+    {
+      "id": "2026-10-04-add-context-management",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 1
+    },
+    {
+      "id": "2026-10-04-add-mcp-client",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 1
+    },
+    {
+      "id": "2026-10-04-add-project-memory",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 0
+    },
+    {
+      "id": "2026-10-04-add-slash-command-registry",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 1
+    },
+    {
+      "id": "2026-10-04-improve-terminal-interaction",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 1
+    },
+    {
+      "id": "2026-10-05-add-lifecycle-hooks",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 0
+    },
+    {
+      "id": "2026-10-05-add-skill-system",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 1
+    },
+    {
+      "id": "2026-10-05-add-subagent-delegation",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 0
+    },
+    {
+      "id": "2026-10-05-optimize-terminal-ui",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 1
+    },
+    {
+      "id": "2026-10-06-add-agent-teams",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 1
+    },
+    {
+      "id": "2026-10-06-add-worktree-isolation",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 0
+    },
+    {
+      "id": "2026-10-07-enhance-terminal-interaction",
+      "type": "change",
+      "valid": true,
+      "issues": [],
+      "durationMs": 1
+    }
+  ],
+  "summary": {
+    "totals": {
+      "items": 17,
+      "passed": 17,
+      "failed": 0
+    },
+    "byType": {
+      "change": {
+        "items": 17,
+        "passed": 17,
+        "failed": 0
+      }
+    }
+  },
+  "version": "1.0",
+  "root": {
+    "path": "/Users/tiro/workspace/code/vibecoding/mewcode-demo",
+    "source": "nearest"
+  }
+}

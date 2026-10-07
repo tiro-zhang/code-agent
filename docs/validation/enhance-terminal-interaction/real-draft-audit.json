@@ -1,0 +1,8 @@
+{
+  "tasks_before_running_enter": 2,
+  "tasks_after_cancel_without_fresh_enter": 2,
+  "started": "READY107",
+  "delayed_file_exists_at_cancel": false,
+  "draft_preserved": true,
+  "first_attempt": "首个草稿输入到达审批阶段，提示无效且没有批准；第二次在started标记出现后起草。"
+}

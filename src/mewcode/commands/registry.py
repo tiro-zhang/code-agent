@@ -109,7 +109,8 @@ class CommandRegistry:
         lines.extend([
             '以 // 开头的单行消息去掉一个 / 后作为普通消息发送；多行中的命令文字作为普通正文。',
             '启动选项：--list-sessions 列出当前项目存档；--resume ID|latest 显式恢复；默认新建。',
-            ('发送与换行：Enter 发送完整草稿；Esc 后 Enter 或 Alt+Enter 换行；粘贴只编辑草稿。\n'
+            ('发送与换行：空闲时 Enter 发送完整草稿；运行／压缩中可起草，Enter 不发送也不排队，空闲后须再按一次。\n'
+             'Esc 后 Enter 或 Alt+Enter 换行；粘贴只编辑草稿。\n'
              '输入 / 自动发现命令及描述；Tab 补全只修改草稿；菜单中 Enter 确认候选，再按 Enter 执行；Esc 关闭菜单。'
              if enhanced else '发送：纯文本兼容模式逐行读取，Enter 提交当前行；不支持多行草稿编辑。'),
             ('取消与退出：空闲 Ctrl+C 清除非空草稿，空草稿时退出；运行中 Ctrl+C 显示正在停止，清理结束后恢复输入。'
@@ -118,6 +119,7 @@ class CommandRegistry:
         ])
         if enhanced:
             lines.append('Ctrl+B 在等待前台子 Agent 时切到后台；自动接续保留未提交草稿。/tasks 查看完整结果及取消。')
-            lines.append('F2 查看最近任务的调用／思考，Tab 切换、PgUp/PgDn 翻页、Esc/F2 返回；浏览保留草稿，不提交。')
+            lines.append('F2 查看调用列表，↑↓选择、Enter详情、t轮次、Tab思考；Esc逐层返回，F2关闭，草稿和光标保留。')
+            lines.append('列表 /搜索、e异常；详情 PgUp/PgDn翻页、/搜索、n/N跳转、r原始 JSON。保留当前段和最近10个已结束段。')
             lines.append('增强审批中输入 results 可分页查看全部旁路结果，scope 查看批准范围；浏览不批准。')
         return '\n'.join(lines)

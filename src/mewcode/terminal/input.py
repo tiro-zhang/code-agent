@@ -108,6 +108,7 @@ class _PasteBoundary:
         self._flush()
 
     def emit(self, key):
+        key.input_generation = self.generation()
         if key.key == Keys.BracketedPaste:
             key.paste_generation = self._completed.popleft()
         self._emit(key)
@@ -120,7 +121,8 @@ class EnhancedTerminal:
     """Application 从启动存活至资源收尾，不另开 stdin 或全屏缓冲。"""
 
     def __init__(self, input, output, *, on_interrupt, status=lambda: "", active=lambda: [], secret="",
-                 results=lambda: "", registry=None, details=lambda section: '暂无详情', on_background=lambda: None):
+                 results=lambda: "", registry=None, details=lambda section: '暂无详情', on_background=lambda: None,
+                 browser=None, can_background=lambda: False):
         self.input, self.output = input, output
         self.secret = secret
         self._closing = False
@@ -128,6 +130,8 @@ class EnhancedTerminal:
         self._review_cache = None
         self.on_interrupt, self.status, self.active = on_interrupt, status, active
         self.on_background = on_background
+        self.can_background = can_background
+        self.browser = browser
         self._saved_draft = None
         self.results = results
         self.details = details
@@ -140,7 +144,7 @@ class EnhancedTerminal:
         self.generation = 0
         self.registry = registry if registry is not None else build_registry()
         self.chat = Buffer(multiline=True, completer=CommandCompleter(self.registry, secret), complete_while_typing=False,
-                           read_only=Condition(lambda: self.phase != "idle" or self.details_open))
+                           read_only=Condition(lambda: not self._editable()))
         self.chat.on_text_changed += self._discover
         self.answer = Buffer(multiline=True, read_only=Condition(lambda: self.phase != "approval"))
         self.live = Buffer(read_only=True)
@@ -161,7 +165,7 @@ class EnhancedTerminal:
         self._chat_control = BufferControl(self.chat)
         self._answer_control = BufferControl(self.answer)
         approval = Condition(lambda: self.phase == "approval")
-        idle = Condition(lambda: self.phase == "idle" and not self.details_open)
+        idle = Condition(self._editable)
         self._details_control = FormattedTextControl(self._details_text, focusable=True)
         layout = HSplit([
             ConditionalContainer(Window(FormattedTextControl(self._status_text),
@@ -177,7 +181,7 @@ class EnhancedTerminal:
             ConditionalContainer(Window(FormattedTextControl(self._review_text), wrap_lines=True,
                 height=lambda: self._review_height()), approval),
             ConditionalContainer(Window(self._details_control, wrap_lines=True,
-                height=lambda: max(2, min(20, self.output.get_size().rows - 1 - self._hint_height()))),
+                height=lambda: max(1, min(20, self.output.get_size().rows - 1 - self._hint_height()))),
                 Condition(lambda: self.details_open)),
             ConditionalContainer(Window(FormattedTextControl(lambda: self._notice), height=1),
                 Condition(lambda: self.phase == "approval" and bool(self._notice) and not self._tiny())),
@@ -185,11 +189,11 @@ class EnhancedTerminal:
                 get_line_prefix=lambda line, wrap: "> " if self._tiny() else "授权> "), approval),
             ConditionalContainer(Window(self._chat_control, wrap_lines=True,
                 height=Dimension(min=1, max=8),
-                get_line_prefix=lambda line, wrap: "你> " if line == 0 else "… "), idle),
+                get_line_prefix=lambda line, wrap: ("你> " if self.phase == 'idle' else "草稿> ") if line == 0 else "… "), idle),
             ConditionalContainer(CompletionsMenu(max_height=6, scroll_offset=1), idle),
             ConditionalContainer(Window(FormattedTextControl(self._hint),
                 height=lambda: self._hint_height() if self.phase == "approval" or self.details_open else Dimension(min=1, max=2), wrap_lines=True),
-                Condition(lambda: True)),
+                Condition(lambda: not (self.details_open and self.browser))),
         ])
         # 避免无响应的终端位置查询拖延退出；非全屏布局仍使用真实尺寸。
         if hasattr(output, "enable_cpr"):
@@ -206,6 +210,9 @@ class EnhancedTerminal:
         if self.details_open:
             return _fit_width(text.splitlines()[0], max(2, self.output.get_size().columns - 1))
         return text.splitlines()[0] if self.phase == "approval" else text
+
+    def _editable(self):
+        return self.phase in {'idle', 'running', 'summary'} and not self.details_open
 
     def _active_text(self):
         lines = self.active()
@@ -230,6 +237,8 @@ class EnhancedTerminal:
 
     def _hint(self):
         if self.details_open:
+            if self.browser:
+                return self.browser.hint()
             if self.output.get_size().columns < 80:
                 return 'Tab 切换 · ↑↓翻页\nEsc/F2 返回 · Ctrl+C 取消/清草稿'
             return 'Tab 调用／思考 · PgUp/PgDn 翻页 · Esc/F2 返回 · Ctrl+C 按当前任务状态处理'
@@ -247,7 +256,12 @@ class EnhancedTerminal:
             return '正在停止，等待流和工具清理；已完成操作可能保留'
         if self.phase == 'control':
             return 'Ctrl+C 取消当前控制指令，等待清理完成'
-        return "Ctrl+C 取消启动" if self.phase == "starting" else "Ctrl+C 取消本轮" if self.phase in {"running", "summary"} else "正在清理资源"
+        if self.phase in {'running', 'summary'}:
+            hint = '可起草 · Enter 不发送（空闲后再按） · Esc+Enter 换行 · F2 详情 · Ctrl+C 取消本轮'
+            if self.can_background():
+                hint += ' · Ctrl+B 转后台'
+            return hint
+        return "Ctrl+C 取消启动" if self.phase == "starting" else "正在清理资源"
 
     def _tiny(self):
         size = self.output.get_size()
@@ -260,6 +274,9 @@ class EnhancedTerminal:
         return max(1, min(18, rows - overhead))
 
     def _hint_height(self):
+        if self.details_open and self.browser:
+            # 新详情面板自己在最后一行保留导航，避免小窗口重复占高。
+            return 0
         width = max(2, self.output.get_size().columns - 1)
         return sum(max(1, (get_cwidth(line) + width - 1) // width) for line in self._hint().split('\n'))
 
@@ -313,7 +330,7 @@ class EnhancedTerminal:
 
     def _discover(self, buffer):
         """只用当前注册表发现命令；粘贴、详情和完整命令不拦截提交。"""
-        if self._discover_inhibited or self.phase != 'idle' or self.details_open:
+        if self._discover_inhibited or not self._editable():
             return
         text = buffer.text
         content = text.lstrip()
@@ -327,6 +344,9 @@ class EnhancedTerminal:
 
     def _details_text(self):
         size = self.output.get_size()
+        if self.browser:
+            return self.browser.render(max(2, size.columns - 1),
+                                       max(1, min(20, size.rows - 1 - self._hint_height())))
         body, page, total = ApprovalView.page_text(self.details(self._details_section), self._details_page,
             width=max(2, size.columns - 1), height=max(1, min(19, size.rows - 2 - self._hint_height())))
         self._details_page = page
@@ -337,12 +357,25 @@ class EnhancedTerminal:
         self.discard_pending()
         self.chat.cancel_completion()
         self.details_open = not self.details_open
+        if self.browser:
+            self.browser.open() if self.details_open else self.browser.close()
+        self.application.layout.focus(self._details_control if self.details_open else self._chat_control)
+        self.application.invalidate()
+
+    def _details_key(self, key):
+        if not self.browser:
+            return
+        searching = self.browser.searching
+        self.browser.handle(key)
+        self.details_open = self.browser.is_open
+        if not self.details_open or searching != self.browser.searching:
+            self.discard_pending()
         self.application.layout.focus(self._details_control if self.details_open else self._chat_control)
         self.application.invalidate()
 
     def _bindings(self):
         bindings = KeyBindings()
-        idle = Condition(lambda: self.phase == "idle" and not self.details_open)
+        idle = Condition(self._editable)
         approval = Condition(lambda: self.phase == "approval")
 
         @bindings.add('c-b', eager=True)
@@ -351,15 +384,19 @@ class EnhancedTerminal:
 
         @bindings.add("enter", eager=True)
         def submit(event):
+            if getattr(event.key_sequence[-1], 'input_generation', self.generation) != self.generation:
+                return
             if self.details_open:
+                self._details_key('enter')
                 return
             if self.phase == "idle" and self.chat.complete_state:
                 state = self.chat.complete_state
                 self.chat.apply_completion(state.current_completion or state.completions[0])
                 return
-            if self.phase == "idle" and self._pending is not None:
+            if self.phase == "idle" and self._pending is not None and not self._pending.done():
                 text = self.chat.text
                 future = self._pending
+                self.chat.set_document(Document(''), bypass_readonly=True)
                 self.set_phase("running")
                 if not future.done():
                     future.set_result(text)
@@ -393,10 +430,13 @@ class EnhancedTerminal:
 
         @bindings.add('escape', eager=True, filter=Condition(lambda: self.details_open))
         def close_details(event):
-            self._toggle_details()
+            self._details_key('escape') if self.browser else self._toggle_details()
 
         @bindings.add('tab', eager=True, filter=Condition(lambda: self.details_open))
         def details_tab(event):
+            if self.browser:
+                self._details_key('tab')
+                return
             self._details_section = 'thinking' if self._details_section == 'tools' else 'tools'
             self._details_page = 0
 
@@ -406,12 +446,15 @@ class EnhancedTerminal:
 
         @bindings.add(Keys.BracketedPaste, eager=True)
         def paste(event):
-            if self.details_open:
-                return
             if getattr(event.key_sequence[-1], "paste_generation", self.generation) != self.generation:
                 return
             text = event.data.replace("\r\n", "\n").replace("\r", "\n")
-            if self.phase == "idle":
+            if self.details_open:
+                if self.browser and self.browser.searching:
+                    self.browser.insert_search(text)
+                    self.application.invalidate()
+                return
+            if self._editable():
                 self._discover_inhibited = True
                 try:
                     self.chat.cancel_completion()
@@ -489,6 +532,9 @@ class EnhancedTerminal:
         @bindings.add('up', filter=approval | Condition(lambda: self.details_open))
         def previous_page(event):
             if self.details_open:
+                if self.browser:
+                    self._details_key('up' if event.key_sequence[-1].key == Keys.Up else 'pageup')
+                    return
                 self._details_page = max(0, self._details_page - 1)
             else:
                 self._page = max(0, self._page - 1)
@@ -497,13 +543,24 @@ class EnhancedTerminal:
         @bindings.add('down', filter=approval | Condition(lambda: self.details_open))
         def next_page(event):
             if self.details_open:
+                if self.browser:
+                    self._details_key('down' if event.key_sequence[-1].key == Keys.Down else 'pagedown')
+                    return
                 self._details_page += 1
             else:
                 self._page += 1
 
-        @bindings.add(Keys.Any, filter=Condition(lambda: self.details_open or self.phase not in {"idle", "approval"}))
+        @bindings.add(Keys.Any, filter=Condition(lambda: self.details_open or self.phase not in {"idle", "running", "summary", "approval"}))
         def ignore_running(event):
-            pass
+            if self.details_open and self.browser:
+                if self.browser.searching:
+                    self.browser.insert_search(event.data)
+                else:
+                    self._details_key(event.data)
+
+        @bindings.add('backspace', filter=Condition(lambda: self.details_open), eager=True)
+        def search_backspace(event):
+            self._details_key('backspace')
 
         return bindings
 
@@ -521,15 +578,19 @@ class EnhancedTerminal:
             pass
 
     def set_phase(self, phase):
-        keep_details = self.details_open and self.phase in {'running', 'summary'} and phase == 'idle'
+        keep_details = self.details_open and phase in {'idle', 'running', 'summary'}
         self.discard_pending()
         self.phase = phase
         self.details_open = keep_details
-        self.chat.set_document(Document(""), bypass_readonly=True)
+        if not keep_details and self.browser:
+            self.browser.close()
+        self.chat.cancel_completion()
+        if phase == 'closing':
+            self.chat.set_document(Document(''), bypass_readonly=True)
         self.answer.set_document(Document(""), bypass_readonly=True)
-        if phase in {"idle", "approval"}:
+        if phase in {"idle", "running", "summary", "approval"}:
             self.application.layout.focus(self._details_control if keep_details else
-                self._chat_control if phase == "idle" else self._answer_control)
+                self._answer_control if phase == "approval" else self._chat_control)
         self.application.invalidate()
 
     async def start(self):
@@ -590,17 +651,14 @@ class EnhancedTerminal:
             self._cancel = cancel
             self._history_index, self._history_draft = len(self._history), ""
             self.set_phase("idle")
-            if self._saved_draft is not None:
-                self.chat.set_document(self._saved_draft, bypass_readonly=True)
-                self._saved_draft = None
             try:
                 return await self._wait(cancel)
             finally:
                 self._pending, self._cancel = None, None
 
     def save_draft(self):
-        """自动接续前保存正文和光标；运行及审批仍独占输入。"""
-        self._saved_draft = self.chat.document
+        """增强输入始终使用同一文档，自动接续不再恢复陈旧快照。"""
+        pass
 
     def input_submitted(self):
         """提交 Future 比多层读取协程更早完成，供空闲调度原子检查。"""

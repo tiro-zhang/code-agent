@@ -1,0 +1,14 @@
+{
+  "change": "enhance-terminal-interaction",
+  "state": "archived",
+  "progress": {
+    "total": 28,
+    "complete": 28,
+    "remaining": 0
+  },
+  "documentation_links": "pass",
+  "known_real_secret_scan": "pass",
+  "wheel_matches_current_source": true,
+  "specs_synced": true,
+  "archive_path": "openspec/changes/archive/2026-10-07-enhance-terminal-interaction"
+}

@@ -1,0 +1,11 @@
+Building source distribution...
+  × Failed to build `/Users/tiro/workspace/code/vibecoding/mewcode-demo`
+  ├─▶ Failed to resolve requirements from `build-system.requires`
+  ├─▶ No solution found when resolving: `setuptools>=69`
+  ├─▶ Request failed after 3 retries
+  ├─▶ Failed to fetch: `https://pypi.org/simple/setuptools/`
+  ├─▶ error sending request for url (https://pypi.org/simple/setuptools/)
+  ├─▶ client error (Connect)
+  ├─▶ dns error
+  ╰─▶ failed to lookup address information: nodename nor servname provided, or
+      not known

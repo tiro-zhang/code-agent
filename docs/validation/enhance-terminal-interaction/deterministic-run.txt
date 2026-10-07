@@ -1,0 +1,1 @@
+{"result": "pass", "checks": 14, "captures": 13, "evidence": "/Users/tiro/workspace/code/vibecoding/mewcode-demo/docs/validation/enhance-terminal-interaction/deterministic-result.json"}

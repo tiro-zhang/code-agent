@@ -1,0 +1,17 @@
+{
+  "result": "pass",
+  "wheel": "dist/mewcode-0.1.0-py3-none-any.whl",
+  "source_distribution": "dist/mewcode-0.1.0.tar.gz",
+  "required_modules": [
+    "mewcode/terminal/browser.py",
+    "mewcode/terminal/controller.py",
+    "mewcode/terminal/details.py",
+    "mewcode/terminal/history.py",
+    "mewcode/terminal/input.py",
+    "mewcode/terminal/markdown.py",
+    "mewcode/terminal/result_view.py"
+  ],
+  "python_modules_match_current_source": true,
+  "private_config_and_records_in_packages": false,
+  "known_real_keys_in_packages_or_evidence": false
+}

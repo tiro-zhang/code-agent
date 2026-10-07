@@ -1,0 +1,152 @@
+~/worksp
+ace/code/vibecodin
+g/mewcode-demo/.ve
+nv/bin/python /Use
+rs/tiro/workspace/
+code/vibecoding/me
+wcode-demo/docs/va
+lidation/enhance-t
+erminal-interactio
+n/deterministic-pt
+y.py --child /var/
+folders/vq/3y_6dc1
+51z92wc2kzrqfqcpw0
+000gn/T/mewcode-en
+hance-deterministi
+c-fpq3r9hk
+ tiro@tirodeMacBoo
+k-Pro-2  ~/worksp
+ace/code/vibecodin
+g/mewcode-demo  
+ main ±  /Users/t
+iro/workspace/code
+/vibecoding/mewcod
+e-demo/.venv/bin/p
+ython ~/
+workspace/code/vib
+ecoding/mewcode-de
+mo/docs/validation
+/enhance-terminal-
+interaction/determ
+inistic-pty.py --c
+hild /var/folders/
+vq/3y_6dc151z92wc2
+kzrqfqcpw0000gn/T/
+mewcode-enhance-de
+terministic-fpq3r9
+hk
+[DEFAULT] 执行 ·
+ 权限 default ·
+请求模型 · 请
+求 1/20 · 1.1s ·
+模型 PTY展示事
+件（无模型请
+求） · /tmp/pty
+验收
+容量验收当前运行
+段 · 调用
+
+
+所选轮次已移出
+（保留数量／容量
+限制），选择最
+近可用轮次
+
+
+
+第9行：resize中文
+长正文和逻辑锚点
+
+
+
+
+第10行：resize中
+文长正文和逻辑
+锚点
+
+
+第11行：resize
+中文长正文和
+逻辑锚点
+
+第12行：resize
+中文长正文和
+逻辑锚点
+第13行：resize
+中文长正文和
+逻辑锚点
+[DEFAULT] 执行 ·
+ 权限 default ·
+请求模型 · …
+容量验收当前
+运行段 · 调用
+所选轮次已移
+出（保留数量
+／容量限制）
+，选择最
+第9行：resize中
+文长正文和逻
+辑锚点
+第10行：resize
+中文长正文和
+逻辑锚点
+第11行：resize
+中文长正文和
+逻辑锚点
+第12行：resize
+中文长正文和
+逻辑锚点
+第13行：resize
+中文长正文和
+逻辑锚点
+第14行：resize
+中文长正文和
+逻辑锚点
+第15行：resize
+中文长正文和
+逻辑锚点
+第16行：resize
+中文长正文和
+逻辑锚点
+第17行：resize
+中文长正文和
+逻辑锚点
+第18行：resize
+中文长正文和
+逻辑锚点
+第19行：resize
+中文长正文和
+逻辑锚点
+F2关闭 PgUp/PgDn
+翻页 /搜索 n/N
+匹配 r原始 Esc
+[DEFAULT] 执行 ·
+ 权限 default ·
+请求模型 · …
+容量验收当前
+运行段 · 调用
+所选轮次已移
+出（保留数量
+／容量限制）
+，选择最
+第9行：resize中
+文长正文和逻
+辑锚点
+第10行：resize
+中文长正文和
+逻辑锚点
+第11行：resize
+中文长正文和
+逻辑锚点
+[DEFAULT] 执行 ·…
+容量验收当前运行
+所选轮次已移出（
+第9行：resize中文
+长正文和逻辑锚点
+F2关闭 PgUp/PgDn
+[DEFAULT] 执行 ·…
+容量验收当前运行
+所选轮次已移出（
+第9行：resize中文
+长正文和逻辑锚点
+F2关闭 PgUp/PgDn

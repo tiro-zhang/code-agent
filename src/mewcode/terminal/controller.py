@@ -3,6 +3,7 @@
 import asyncio
 from contextlib import suppress
 import os
+from pathlib import Path
 
 from prompt_toolkit.application import run_in_terminal
 from prompt_toolkit.application.current import set_app
@@ -10,14 +11,16 @@ from prompt_toolkit.input.defaults import create_input
 from prompt_toolkit.output.defaults import create_output
 from prompt_toolkit import print_formatted_text
 from prompt_toolkit.formatted_text import FormattedText
+from prompt_toolkit.utils import get_cwidth
 
 from ..permissions.terminal import TerminalApproval
 from .approval import ApprovalView
-from .input import EnhancedTerminal
+from .input import EnhancedTerminal, _fit_width
 from .state import TerminalState
 from .text import terminal_text
 from .projection import TerminalProjection
 from .markdown import MarkdownStyle
+from .browser import DetailsBrowser
 
 
 class _Output:
@@ -34,6 +37,7 @@ class _Output:
         self.owner.output.flush()
 
     def response_style(self, enabled):
+        self.owner.finish_style()
         self.owner._markdown = MarkdownStyle() if enabled else None
 
 
@@ -43,6 +47,7 @@ class TerminalController:
         self.registry = registry if registry is not None else build_registry()
         self.reader, self.output = reader, output
         self.secret, self.root, self.on_interrupt = secret, root, on_interrupt
+        self.model = ''
         self.state = TerminalState(secret)
         self.projection = TerminalProjection(self.state)
         self.state.set_phase("starting")
@@ -54,6 +59,7 @@ class TerminalController:
         self._deferred_alerts = []
         self._queue = []
         self._partial = ""
+        self._literal_line = False
         self._markdown = None
         self._plain_phase = ''
         self._plain_starts = set()
@@ -88,9 +94,11 @@ class TerminalController:
         try:
             backend = EnhancedTerminal(create_input(self.reader.stream, always_prefer_tty=False),
                 create_output(self.output, always_prefer_tty=False), on_interrupt=self.on_interrupt,
-                status=self.state.compact_status, active=self._active_lines, secret=self.secret,
+                status=self.context_text, active=self._active_lines, secret=self.secret,
                 details=self.state.details_text,
+                browser=DetailsBrowser(self.state.history),
                 on_background=self.background,
+                can_background=lambda: bool(self.phase == 'running' and self.tasks and self.tasks.foreground_task_id),
                 results=lambda: "".join(self._deferred) + '\n'.join(
                     event.text for event in self.projection.flush(consume=False)), registry=self.registry)
             await backend.start()
@@ -130,11 +138,46 @@ class TerminalController:
 
     def sync_session(self, session):
         self.tasks = session.tasks
+        self.model = getattr(getattr(session, 'config', None), 'model', self.model)
+        context = getattr(getattr(session, 'executor', None), 'context', None)
+        self.root = getattr(context, 'root', self.root)
         self.state.mode = session.mode
         self.state.permission_mode = session.permissions.mode
         self.state.max_iterations = session.agent.max_iterations
         if self.backend:
             self.backend.application.invalidate()
+
+    def context_text(self, *, width=None):
+        """宽度不足时先保留阶段，把目录中段省略以留下项目名。"""
+        width = max(1, width or (self.backend.output.get_size().columns - 1 if self.backend else 110))
+        header = self.state.compact_status()
+        model = terminal_text(str(self.model), self.secret)
+        root = str(self.root)
+        home = str(Path.home())
+        if root == home or root.startswith(home + '/'):
+            root = '~' + root[len(home):]
+        root = terminal_text(root, self.secret)
+        def middle(text, budget):
+            if get_cwidth(text) <= budget:
+                return text
+            left = _fit_width(text, min(8, max(1, budget // 3))).rstrip('…')
+            tail, used = '', 0
+            for char in reversed(text):
+                if used + get_cwidth(char) > budget - get_cwidth(left) - 1:
+                    break
+                tail, used = char + tail, used + get_cwidth(char)
+            return left + '…' + tail
+        if width < 32:
+            # 极窄窗口将模式、权限、阶段分行，其他信息由 /status 查看。
+            parts = header.split(' · ')[:3]
+            return '\n'.join(_fit_width(part, width) for part in parts)
+        first = _fit_width(header, width)
+        info = f'{model} · {root}' if model else root
+        if get_cwidth(first + ' · ' + info) <= width:
+            return first + ' · ' + info
+        if get_cwidth(info) <= width:
+            return first + '\n' + info
+        return first + '\n' + _fit_width(model, width) + '\n' + middle(root, width)
 
     def background(self):
         task_id = self.tasks.foreground_task_id if self.tasks else None
@@ -180,17 +223,42 @@ class TerminalController:
         text = self._partial + text
         boundary = text.rfind("\n") + 1
         self._partial = text[boundary:]
+        width = max(1, self.backend.output.get_size().columns - 1)
         # 在入队时固定样式，避免稍后的角色／阶段切换改变已生成的正文。
-        fragments = self._markdown.render(text[:boundary]) if self._markdown else [('', text[:boundary])]
-        live = self._markdown.render(self._partial, commit=False) if self._markdown else [('', self._partial)]
-        self.backend.set_live_text(self._partial, fragments=live)
-        if boundary:
-            self._queue.append((text[:boundary], fragments))
-            if self._writer is None or self._writer.done():
-                self._writer = asyncio.create_task(self._flush())
+        committed = text[:boundary]
+        if self._literal_line and boundary:
+            first, _, remaining = committed.partition('\n')
+            self._enqueue([('', first + '\n')])
+            committed, self._literal_line = remaining, False
+        fragments = self._markdown.render(committed, width=width) if self._markdown else [('', committed)]
+        self._enqueue(fragments)
+        if len(self._partial.encode('utf-8')) >= 64 * 1024:
+            # 超长未结束行直接提交原文，限制活动预览与候选状态的大小。
+            if self._markdown:
+                self._enqueue(self._markdown.flush(width=width, reset=False))
+            self._enqueue([('', self._partial)])
+            self._partial, self._literal_line = '', True
+        live = (self._markdown.render(self._partial, commit=False, width=width)
+                if self._markdown and not self._literal_line else [('', self._partial)])
+        self.backend.set_live_text(''.join(part for _, part in live), fragments=live)
+
+    def _enqueue(self, fragments):
+        text = ''.join(part for _, part in fragments)
+        if not text:
+            return
+        self._queue.append((text, fragments))
+        if self._writer is None or self._writer.done():
+            self._writer = asyncio.create_task(self._flush())
+
+    def finish_style(self):
+        """角色切换前提交表头候选，未闭合围栏不传递到系统消息。"""
+        if self.backend and self._markdown:
+            self.finish_line()
+            self._enqueue(self._markdown.flush(width=max(1, self.backend.output.get_size().columns - 1)))
+            self.backend.set_live_text('')
 
     def finish_line(self):
-        if self._partial:
+        if self._partial or self._literal_line:
             self.write("\n")
 
     async def _flush(self):
@@ -258,14 +326,21 @@ class TerminalController:
         if self.backend:
             self.backend.remember(text)
 
-    def begin_task(self):
+    def begin_task(self, *, title='', started_at=None, source='', parent_id=''):
         self._decisions.clear()
         self.state.begin_task(mode=self.state.mode, permission_mode=self.state.permission_mode,
-                              max_iterations=self.state.max_iterations)
+                              max_iterations=self.state.max_iterations, title=title, started_at=started_at,
+                              source=source, parent_id=parent_id)
         self.set_phase("running")
         self.projection.reset()
         self._plain_phase = ''
         self._plain_starts.clear()
+
+    def finish_task(self, reason='interrupted', text=''):
+        """异常收尾也结束当前展示段，浏览历史不改变执行所有者。"""
+        for event in self.projection.flush():
+            self.write(event.text + '\n')
+        self.state.finish_task(reason=reason, text=text)
 
     def cancelling(self, *, force=False):
         """取消已提出但清理尚未完成；不提前恢复输入。"""
@@ -351,6 +426,8 @@ class TerminalController:
     async def close(self):
         self._release_output()
         self.finish_line()
+        self.finish_style()
         await self.drain()
         if self.backend:
             await self.backend.close()
+        self.state.history.clear()

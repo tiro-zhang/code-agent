@@ -138,7 +138,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                 error_stream.write(f"输入通道失效：{renderer.safe(error)}\n")
                 return 2
             if resume_task:
-                terminal.begin_task()
+                terminal.begin_task(title='自动接续', source='自动接续', parent_id=str(resume_task))
                 active_cancel = asyncio.Event()
                 source = session.resume_parent(resume_task, cancel_event=active_cancel)
                 try:
@@ -146,6 +146,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                         terminal.show(renderer, event, managed_approval=approval_responder is None)
                 finally:
                     await protected(source.aclose(), cancel_event=active_cancel)
+                    terminal.finish_task(reason='cancelled' if active_cancel.is_set() else 'interrupted')
                     active_cancel = None
                     terminal.restore_draft()
                 continue
@@ -192,7 +193,7 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             if maintenance:
                 terminal.set_phase('summary')
             else:
-                terminal.begin_task()
+                terminal.begin_task(title=question)
             terminal.sync_session(session)
             active_cancel = asyncio.Event()
             source = (session.compact(cancel_event=active_cancel) if maintenance else
@@ -207,6 +208,8 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                 await protected(source.aclose(), cancel_event=active_cancel)
                 if active_cancel.is_set():
                     terminal.discard_pending()
+                if not maintenance:
+                    terminal.finish_task(reason='cancelled' if active_cancel.is_set() else 'interrupted')
                 active_cancel = None
                 if maintenance:
                     terminal.set_phase("idle")

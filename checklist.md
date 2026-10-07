@@ -473,3 +473,20 @@ OpenSpec 已同步 10 份主规格并归档至 [2026-10-06-add-worktree-isolatio
 | 取消目标实际收尾、reset／退出保留成果，晚到消息不重启 | 真实 inprocess 活动工具取消通过；cancel-terminal.txt、cancel-state.json，before 写入保留、after 不出现、工具结果 cancelled、Goal cancelled、Member stopped；双后端活动工具停止／reset 的可控运行器测试通过；真实正常退出停窗格且显式恢复 |
 | Git 已执行状态未发布只对账、外部更新竞争和脏目录保护 | 自动化通过；test_team_reconciliation / test_team_integration，真实 Git 提交后故障注入、保留用户后续提交；未人工对真实模型制造精确崩溃窗口，详见 integration.md |
 | 全量回归、构建、OpenSpec 严格校验及脱敏材料 | 最终命令及本轮结果见 summary.md；不得用前期限定测试／跳过实例冒充最终全量通过 |
+
+
+## 终端五项交互优化（enhance-terminal-interaction，2026-10-07 本次验证）
+
+本章使用本次新验证，不继承历史勾选。完整材料见 [验收报告](docs/validation/enhance-terminal-interaction/README.md)、[41 场景映射](docs/validation/enhance-terminal-interaction/spec-audit.md)。
+
+- [x] 粗体、行内代码、围栏／diff 与增量中文表格；不等整轮回复，代码原字符和缩进保持，窄屏字段关联及缺损格式退化有回归。
+- [x] 主对话聚合摘要关联轮次和调用；F2 调用列表／详情、t 轮次、Tab 思考、/ 搜索、e 异常、n/N 匹配、r 原始 JSON、Esc 分层返回；不新增模型请求或读取引用文件。
+- [x] 当前段加最近 10 个已结束段；8 MiB 共享正文、256 KiB 思考、64 KiB 单条参数／结果、1 MiB 元信息及 256 KiB 分页／搜索缓存受限；状态／引用与省略原因保留，超限计数明确下界。
+- [x] 运行与压缩可编辑下一条草稿，Enter 不发送不排队，idle 明确 Enter 才提交；取消／审批／自动接续保持最新文档与光标，正在停止冻结编辑，连续授权和跨阶段粘贴隔离。
+- [x] 真实模型／有效目录／模式／权限／阶段常驻；窄屏优先状态及导航，110×34、45×15、18×6 的选择与阅读锚点保持。
+- [x] 真实已授权 OpenAI 兼容模型 4 工作轮：三文件读取、3 行及 12 行表格、缩进代码、F2 回看、临时命令取消后无延迟文件、明确重发、clear 保留／reset 清除；14 组真实 PTY 确定性边界另列。
+- [x] 全量 1889 passed；最终交互定向 252 passed、思考身份修复相关 45 passed；独立审查发现及增量修复已复验，uv build 和 OpenSpec strict 通过，包内无真实配置／密钥／私密记录。
+- [ ] 本次真实模型流中缩屏：观察窗口先于模型长回复到达结束，未完成；最终长回复、完成后缩屏实测，流中布局转换由本次自动化覆盖。
+- [ ] 本次外部 MCP／Anthropic／团队及 Skill 自动接续的真实模型组合：未执行；沿用本次重跑的相应自动化边界，不能将确定性注入展示事件称为完整 Agent 实机。
+
+真实工作轮均完成其预期（第二轮主动取消）；后台自动记忆提取超时提示如实保留，本次不修改记忆维护。主规格已同步，变更已归档至 [2026-10-07-enhance-terminal-interaction](openspec/changes/archive/2026-10-07-enhance-terminal-interaction/)，28/28 项任务完成；Git 改动尚未提交。

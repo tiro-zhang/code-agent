@@ -1,0 +1,102 @@
+[DEFAULT] 执行 · 权限 strict · 启动中 · ark-code-latest · /private/tmp/mewcode-terminal-real-jvo88pxv
+Ctrl+C 取消启动
+[DEFAULT] 执行 · 权限 strict · 启动中 · ark-code-latest · /private/tmp/mewcode-terminal-real-jvo88pxv
+Ctrl+C 取消启动
+MewCode · openai-compatible-demo · 权限 strict · /help 查看帮助
+会话> 20261007-132836-b924 · 新建存档
+
+你> 这是最终终端显示验收，请读取 README.md；然后先用粗体和行内代码概括启动，再输出一个12行三列表格：步骤、命令
+、说明，每行说明用至少40个汉字解释测试意义；最后给一个保留缩进的Python代码块。只读取 README.md，不执行命令、不
+写文件。
+工具> 轮次 turn-1 · 已读取 1 个文件（1 次调用） · 成功 · #1（F2 / /status 详情）
+MewCode> 已读取 README.md（仅读取，未执行任何命令、未写文件）。
+
+启动概括：先用 uv sync 安装依赖，再执行 uv run mewcode --config .env 加载配置启动，最后运行 uv run pytest -q
+完成终端测试验收。
+
+步骤                                │ 命令                               │ 说明
+1. 进入目录                         │ cd <project-dir>                   │ 切换到包含配置说明的工程根目录，确
+                                    │                                    │ 保后续所有相对路径、依赖声明与环境
+                                    │                                    │ 配置文件都能被命令准确定位并正常读
+                                    │                                    │ 取。
+2. 安装依赖                         │ uv sync                            │ 依据锁定文件创建一致的虚拟环境并安
+                                    │                                    │ 装全部依赖，避免版本漂移导致启动或
+                                    │                                    │ 测试阶段出现难以排查的环境差异问题
+                                    │                                    │ 。
+3. 核对环境                         │ uv run python --version            │ 在项目虚拟环境中确认解释器版本符合
+                                    │                                    │ 要求，保证后续运行的程序与测试都使
+                                    │                                    │ 用同一套彼此隔离且可复现的运行环境
+                                    │                                    │ 。
+4. 准备配置                         │ test -f .env                       │ 检查启动所需的环境配置文件是否已经
+                                    │                                    │ 存在，使程序能读取必要参数，避免因
+                                    │                                    │ 缺少配置而在启动瞬间直接失败退出。
+5. 启动服务                         │ uv run mewcode --config .env       │ 按照说明文档指定方式加载配置并启动
+                                    │                                    │ 主程序，验证入口命令、配置解析与服
+                                    │                                    │ 务初始化链路在当前环境下可以完整跑
+                                    │                                    │ 通。
+6. 观察日志                         │ 查看终端启动输出                   │ 启动后检查是否有报错、警告或成功监
+                                    │                                    │ 听提示，第一时间发现配置错误、端口
+                                    │                                    │ 占用或依赖缺失，确认进程处于正常服
+                                    │                                    │ 务状态。
+7. 保持运行                         │ 另开终端会话                       │ 在服务持续运行期间新开窗口执行后续
+                                    │                                    │ 验证，避免因占用当前前台进程而无法
+                                    │                                    │ 输入测试命令，保证启动与检验互不干
+                                    │                                    │ 扰。
+8. 停止服务                         │ Ctrl+C                             │ 验收启动环节后优雅终止前台进程，释
+                                    │                                    │ 放端口与相关资源，避免遗留进程干扰
+                                    │                                    │ 后续测试，同时验证中断信号可以正常
+                                    │                                    │ 退出。
+9. 运行测试                         │ uv run pytest -q                   │ 以静默模式执行整个自动化测试套件，
+                                    │                                    │ 快速汇总通过与失败数量，确认代码没
+                                    │                                    │ 有破坏既有功能，是终端验收核心回归
+                                    │                                    │ 手段。
+10. 查看明细                        │ uv run pytest -q -rf               │ 当存在跳过或失败用例时输出原因摘要
+                                    │                                    │ ，帮助判断问题属于环境前置条件不满
+                                    │                                    │ 足，还是程序逻辑本身出现了真实回归
+                                    │                                    │ 缺陷。
+11. 核对标记                        │ 输出中查找 TERMINAL_READ_OK_107    │ 对照说明文档给出的验收标记确认读取
+                                    │                                    │ 与展示内容完整无误，防止漏读文件或
+                                    │                                    │ 输出错配，保证终端显示确实来源于该
+                                    │                                    │ 文档。
+12. 完成验收                        │ 记录并归档测试结果                 │ 保存启动与测试的真实输出作为交付凭
+                                    │                                    │ 证，明确通过项与遗留风险，让后续接
+                                    │                                    │ 手者能够复现环境并判断验收是否达到
+                                    │                                    │ 预期标准。
+
+```python
+import subprocess
+import sys
+
+
+STEPS = [
+    ("安装依赖", ["uv", "sync"]),
+    ("启动服务", ["uv", "run", "mewcode", "--config", ".env"]),
+    ("运行测试", ["uv", "run", "pytest", "-q"]),
+]
+
+
+def run_step(name, command):
+    """按顺序执行一个验收步骤，并保留子进程的真实退出码。"""
+    print(f"==> {name}: {' '.join(command)}")
+    result = subprocess.run(command, check=False)
+    if result.returncode != 0:
+        print(f"步骤失败：{name}，退出码 {result.returncode}")
+        sys.exit(result.returncode)
+
+
+def main():
+    for name, command in STEPS:
+        run_step(name, command)
+    print("验收标记：TERMINAL_READ_OK_107")
+
+
+if __name__ == "__main__":
+    main()
+```
+父任务结束> parent_901d914b44324a8eb2359ea7c86d2750 · model_done · 主累计 Token 总输入 6728，输出 3870 · 统计
+完整 · 命中 5232，未命中 1496，写入 未知，命中率 77.8% · 缓存统计完整（/tasks show 查看父子用量）
+结束> model_done · 115.7s · 请求 2/20 · Token 输入 6728 / 输出 3870
+记忆> 自动记忆提取超时，既有笔记保留
+[DEFAULT] 执行 · 权限 strict · 空闲 · ark-code-latest · /private/tmp/mewcode-terminal-real-jvo88pxv
+你>
+Enter 发送 · Esc+Enter 换行 · / 发现命令 · F2 详情 · Ctrl+C 清草稿／空草稿退出

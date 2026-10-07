@@ -68,3 +68,19 @@ def test_startup_interrupt_is_not_reset_before_mcp_start(tmp_path, monkeypatch):
     assert run(config_file(tmp_path),stdin=StringIO('/exit\n'),stdout=output,
                provider_factory=lambda config:provider)==0
     assert '你>' not in output.getvalue() and provider.closed and not provider.requests
+
+
+def test_work_turn_titles_clear_retention_and_reset_are_app_lifecycle(tmp_path, monkeypatch):
+    from mewcode.terminal.controller import TerminalController
+    monkeypatch.chdir(tmp_path)
+    snapshots = []
+    original = TerminalController.begin_task
+    def begin_task(self, **kwargs):
+        original(self, **kwargs)
+        snapshots.append(tuple(turn.title for turn in self.state.history.turns))
+    monkeypatch.setattr(TerminalController, 'begin_task', begin_task)
+    provider = ScriptedProvider([answer('计划'), answer('二答'), answer('三答')])
+    text = '/plan 原始命令\n/status\n/clear\n第二问\n/reset\n第三问\n/exit\n'
+    assert run(config_file(tmp_path), stdin=StringIO(text), stdout=StringIO(),
+               provider_factory=lambda config: provider) == 0
+    assert snapshots == [('/plan 原始命令',), ('/plan 原始命令', '第二问'), ('第三问',)]

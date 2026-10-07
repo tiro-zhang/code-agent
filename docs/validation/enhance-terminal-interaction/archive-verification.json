@@ -1,0 +1,37 @@
+{
+  "change": "enhance-terminal-interaction",
+  "schema": "spec-driven",
+  "archive_path": "openspec/changes/archive/2026-10-07-enhance-terminal-interaction",
+  "tasks_complete": 28,
+  "tasks_incomplete": 0,
+  "specs_synced": true,
+  "sync": {
+    "capability": "interactive-chat",
+    "modified": [
+      "多行草稿与整块粘贴",
+      "输入阶段隔离与兼容退化",
+      "流式正文可读性",
+      "最近任务详情浏览"
+    ],
+    "added": [
+      "常驻工作上下文与阶段提示"
+    ],
+    "unaffected_requirements_preserved": 25,
+    "old_requirements": 29,
+    "new_requirements": 30,
+    "old_scenarios": 136,
+    "new_scenarios": 156,
+    "all_delta_requirements_match": true,
+    "purpose_and_order_preserved": true,
+    "main_spec_sha256": "0205d7a9882ab1eb816ea01a4936964090398fe2835c37e25389d393988e883a"
+  },
+  "archive_files_sha256": {
+    ".openspec.yaml": "720b3de6231f9647898feba395449b03234e0c4fa3bd4ce47fc3bb341b0f16d6",
+    "design.md": "c21fbe3d9b1d2c1e3f4e326b084f2b9e244f64316a8b85559999ffaf01f98d7a",
+    "proposal.md": "66df4dcef5be5dac2a80a174c809cde78d13f7d2d40974d6a3b07d4f294e080f",
+    "specs/interactive-chat/spec.md": "174a611ceae66c9a3462e62b64972b02fb24e3f76d453b9e72257c560a47c31b",
+    "tasks.md": "5011b791cc77a6893126cb3cbeea201c90f011465693e92f70b43f983379586a"
+  },
+  "all_archive_files_unchanged": true,
+  "openspec_yaml_preserved": true
+}

@@ -1,0 +1,1088 @@
+{
+  "result": "pass",
+  "error": null,
+  "scope": "真实tmux PTY、EnhancedTerminal、TerminalState和DetailsBrowser；确定性注入展示事件，无模型请求、工具执行或持久授权",
+  "checks": [
+    {
+      "case": "运行期多行编辑和Enter不提交、不排队，当前段输入不变",
+      "result": "pass",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "original",
+      "draft": "下一条\n第二行",
+      "cursor": 6,
+      "pending": false,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 1,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "case": "运行期收到Enter紧邻结束；idle Future仍未完成，草稿和光标保持",
+      "result": "pass",
+      "phase": "idle",
+      "state_phase": "idle",
+      "run_id": "original",
+      "draft": "下一条\n第二行",
+      "cursor": 6,
+      "pending": true,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 1,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "case": "只有新按Enter消费草稿一次",
+      "result": "pass",
+      "phase": "running",
+      "state_phase": "idle",
+      "run_id": "original",
+      "draft": "",
+      "cursor": 0,
+      "pending": false,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 1,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "case": "自动接续save_draft之后的新编辑不被陈旧快照覆盖",
+      "result": "pass",
+      "phase": "idle",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "接续前草稿新编辑",
+      "cursor": 8,
+      "pending": true,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "case": "跨running→idle分裂paste opener；/reset和数字换行完整丢弃",
+      "result": "pass",
+      "phase": "idle",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "",
+      "cursor": 0,
+      "pending": true,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "case": "F2搜索被审批抢占，搜索残留及跨阶段数字回车零批准",
+      "result": "pass",
+      "phase": "approval",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": true,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": "turn-2",
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "case": "本次明确2+Enter批准一次；同批3+Enter不能批准下一请求",
+      "result": "pass",
+      "phase": "approval",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": true,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": "turn-2",
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "case": "审批后用户F2重开恢复选择，不恢复搜索残留",
+      "result": "pass",
+      "phase": "running",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": "turn-2",
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "case": "第11个已结束轮次淘汰最旧索引，选中轮次明确移出提示",
+      "result": "pass",
+      "phase": "running",
+      "state_phase": "idle",
+      "run_id": "round-10",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": "turn-13",
+      "call_id": "turn-13:54498aea6101a82ce4dfdb4853147dc66661b5e2b3573609af92b72b74312928:call-10",
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 10,
+      "body_bytes": 1341,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "case": "真实8MiB容量淘汰先移出已结束轮正文；选择不跳转、当前段状态不变",
+      "result": "pass",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "capacity-current",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "detail",
+      "searching": false,
+      "turn_id": "turn-4",
+      "call_id": "turn-4:5d7963c4f471e142f5a72214a9666fb164718f9ba1066a7862ac1c5041887940:call-1",
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 11,
+      "body_bytes": 8326518,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "case": "resize 45×15保持轮次/调用/逻辑锚点且关闭入口可达",
+      "result": "pass",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "capacity-current",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "detail",
+      "searching": false,
+      "turn_id": "turn-14",
+      "call_id": "turn-14:c4c6d641c6642c1639bb03bd7e4fe946976df2d1d315f35390b3b1e5d81a6495:resize-call",
+      "anchor": [
+        17,
+        0
+      ],
+      "turn_count": 11,
+      "body_bytes": 8348535,
+      "body_limit": 8388608,
+      "size": [
+        15,
+        45
+      ]
+    },
+    {
+      "case": "resize 18×6保持轮次/调用/逻辑锚点且关闭入口可达",
+      "result": "pass",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "capacity-current",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "detail",
+      "searching": false,
+      "turn_id": "turn-14",
+      "call_id": "turn-14:c4c6d641c6642c1639bb03bd7e4fe946976df2d1d315f35390b3b1e5d81a6495:resize-call",
+      "anchor": [
+        17,
+        0
+      ],
+      "turn_count": 11,
+      "body_bytes": 8348535,
+      "body_limit": 8388608,
+      "size": [
+        6,
+        18
+      ]
+    },
+    {
+      "case": "resize 110×34保持轮次/调用/逻辑锚点且关闭入口可达",
+      "result": "pass",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "capacity-current",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "detail",
+      "searching": false,
+      "turn_id": "turn-14",
+      "call_id": "turn-14:c4c6d641c6642c1639bb03bd7e4fe946976df2d1d315f35390b3b1e5d81a6495:resize-call",
+      "anchor": [
+        17,
+        0
+      ],
+      "turn_count": 11,
+      "body_bytes": 8348535,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "case": "极小窗口再恢复后真实F2关闭仍可达",
+      "result": "pass",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "capacity-current",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "detail",
+      "searching": false,
+      "turn_id": "turn-14",
+      "call_id": "turn-14:c4c6d641c6642c1639bb03bd7e4fe946976df2d1d315f35390b3b1e5d81a6495:resize-call",
+      "anchor": [
+        17,
+        0
+      ],
+      "turn_count": 11,
+      "body_bytes": 8348535,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    }
+  ],
+  "terminal_restoration": {
+    "echo_before": true,
+    "echo_after": true,
+    "canonical_before": true,
+    "canonical_after": true
+  },
+  "verified_at": "2026-10-07T05:28:50.926283+00:00",
+  "driver_events": [
+    {
+      "stage": "initial_idle",
+      "phase": "idle",
+      "state_phase": "idle",
+      "run_id": null,
+      "draft": "",
+      "cursor": 0,
+      "pending": true,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 0,
+      "body_bytes": 0,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "running_draft_ready",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "original",
+      "draft": "",
+      "cursor": 0,
+      "pending": false,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 1,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "race_idle_pending",
+      "phase": "idle",
+      "state_phase": "idle",
+      "run_id": "original",
+      "draft": "下一条\n第二行",
+      "cursor": 6,
+      "pending": true,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 1,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "auto_draft_ready",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "auto",
+      "draft": "",
+      "cursor": 0,
+      "pending": false,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "auto_snapshot_saved",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "auto",
+      "draft": "接续前草稿",
+      "cursor": 5,
+      "pending": false,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "auto_idle_pending",
+      "phase": "idle",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "接续前草稿新编辑",
+      "cursor": 8,
+      "pending": true,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "paste_running",
+      "phase": "running",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "",
+      "cursor": 0,
+      "pending": false,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "paste_partial_opener",
+      "phase": "running",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "",
+      "cursor": 0,
+      "pending": false,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "paste_idle",
+      "phase": "idle",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "",
+      "cursor": 0,
+      "pending": true,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "split_paste_discarded",
+      "phase": "idle",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "",
+      "cursor": 0,
+      "pending": true,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "browser_ready",
+      "phase": "running",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "",
+      "cursor": 0,
+      "pending": false,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "browser_search_checked",
+      "phase": "running",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "call_list",
+      "searching": true,
+      "turn_id": "turn-2",
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "approval_first_ready",
+      "phase": "approval",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": true,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": "turn-2",
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "approval_stale_discarded",
+      "phase": "approval",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": true,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": "turn-2",
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "approval_second_pending",
+      "phase": "approval",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": true,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": "turn-2",
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "approval_done",
+      "phase": "running",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": "turn-2",
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "reopen_checked",
+      "phase": "running",
+      "state_phase": "idle",
+      "run_id": "auto",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": "turn-2",
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 2,
+      "body_bytes": 3849,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "retention_selected",
+      "phase": "running",
+      "state_phase": "idle",
+      "run_id": "round-0",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": null,
+      "call_id": null,
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 1,
+      "body_bytes": 139,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "retention_evicted",
+      "phase": "running",
+      "state_phase": "idle",
+      "run_id": "round-10",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "call_list",
+      "searching": false,
+      "turn_id": "turn-13",
+      "call_id": "turn-13:54498aea6101a82ce4dfdb4853147dc66661b5e2b3573609af92b72b74312928:call-10",
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 10,
+      "body_bytes": 1341,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "capacity_evicted",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "capacity-current",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "detail",
+      "searching": false,
+      "turn_id": "turn-4",
+      "call_id": "turn-4:5d7963c4f471e142f5a72214a9666fb164718f9ba1066a7862ac1c5041887940:call-1",
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 11,
+      "body_bytes": 8326518,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "resize_ready",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "capacity-current",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "detail",
+      "searching": false,
+      "turn_id": "turn-14",
+      "call_id": "turn-14:c4c6d641c6642c1639bb03bd7e4fe946976df2d1d315f35390b3b1e5d81a6495:resize-call",
+      "anchor": [
+        0,
+        0
+      ],
+      "turn_count": 11,
+      "body_bytes": 8334027,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "resize_anchor_checked",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "capacity-current",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "detail",
+      "searching": false,
+      "turn_id": "turn-14",
+      "call_id": "turn-14:c4c6d641c6642c1639bb03bd7e4fe946976df2d1d315f35390b3b1e5d81a6495:resize-call",
+      "anchor": [
+        17,
+        0
+      ],
+      "turn_count": 11,
+      "body_bytes": 8348535,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "resize_narrow_checked",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "capacity-current",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "detail",
+      "searching": false,
+      "turn_id": "turn-14",
+      "call_id": "turn-14:c4c6d641c6642c1639bb03bd7e4fe946976df2d1d315f35390b3b1e5d81a6495:resize-call",
+      "anchor": [
+        17,
+        0
+      ],
+      "turn_count": 11,
+      "body_bytes": 8348535,
+      "body_limit": 8388608,
+      "size": [
+        15,
+        45
+      ]
+    },
+    {
+      "stage": "resize_tiny_checked",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "capacity-current",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "detail",
+      "searching": false,
+      "turn_id": "turn-14",
+      "call_id": "turn-14:c4c6d641c6642c1639bb03bd7e4fe946976df2d1d315f35390b3b1e5d81a6495:resize-call",
+      "anchor": [
+        17,
+        0
+      ],
+      "turn_count": 11,
+      "body_bytes": 8348535,
+      "body_limit": 8388608,
+      "size": [
+        6,
+        18
+      ]
+    },
+    {
+      "stage": "resize_wide_checked",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "capacity-current",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": true,
+      "browser_view": "detail",
+      "searching": false,
+      "turn_id": "turn-14",
+      "call_id": "turn-14:c4c6d641c6642c1639bb03bd7e4fe946976df2d1d315f35390b3b1e5d81a6495:resize-call",
+      "anchor": [
+        17,
+        0
+      ],
+      "turn_count": 11,
+      "body_bytes": 8348535,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    },
+    {
+      "stage": "done",
+      "phase": "running",
+      "state_phase": "model",
+      "run_id": "capacity-current",
+      "draft": "审批期间保留草稿",
+      "cursor": 7,
+      "pending": false,
+      "answer": "",
+      "details_open": false,
+      "browser_view": "detail",
+      "searching": false,
+      "turn_id": "turn-14",
+      "call_id": "turn-14:c4c6d641c6642c1639bb03bd7e4fe946976df2d1d315f35390b3b1e5d81a6495:resize-call",
+      "anchor": [
+        17,
+        0
+      ],
+      "turn_count": 11,
+      "body_bytes": 8348535,
+      "body_limit": 8388608,
+      "size": [
+        34,
+        110
+      ]
+    }
+  ],
+  "socket": "mewcode-enhance-deterministic",
+  "session": "input",
+  "runtime_directory": "/var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/mewcode-enhance-deterministic-fpq3r9hk",
+  "captures": [
+    "deterministic-01-running-enter-idle-pending.txt",
+    "deterministic-02-auto-new-draft.txt",
+    "deterministic-03-cross-phase-paste.txt",
+    "deterministic-04-f2-search.txt",
+    "deterministic-05-approval-zero-stale-decisions.txt",
+    "deterministic-06-second-approval-pending.txt",
+    "deterministic-07-eleventh-turn-eviction.txt",
+    "deterministic-08-eight-mib-body-eviction.txt",
+    "deterministic-09-resize-110x34.txt",
+    "deterministic-10-resize-narrow.txt",
+    "deterministic-10-resize-tiny.txt",
+    "deterministic-10-resize-wide.txt",
+    "deterministic-11-restored.txt"
+  ]
+}

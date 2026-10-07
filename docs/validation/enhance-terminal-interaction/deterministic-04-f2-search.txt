@@ -1,0 +1,34 @@
+~/workspace/code/vibecoding/mewcode-demo/.venv/bin/python ~/workspace/code/vibecoding/mewc
+ode-demo/docs/validation/enhance-terminal-interaction/deterministic-pty.py --child /var/folders/vq/3y_6dc151z9
+2wc2kzrqfqcpw0000gn/T/mewcode-enhance-deterministic-fpq3r9hk
+ tiro@tirodeMacBook-Pro-2  ~/workspace/code/vibecoding/mewcode-demo   main ±  ~/workspace/code/v
+ibecoding/mewcode-demo/.venv/bin/python ~/workspace/code/vibecoding/mewcode-demo/docs/validation/enh
+ance-terminal-interaction/deterministic-pty.py --child /var/folders/vq/3y_6dc151z92wc2kzrqfqcpw0000gn/T/mewcod
+e-enhance-deterministic-fpq3r9hk
+[DEFAULT] 执行 · 权限 default · 空闲 · 模型 PTY展示事件（无模型请求） · /tmp/pty验收
+自动接续 · 调用
+搜索> 2
+暂无调用详情
+F2关闭 搜索：Enter确认 Esc返回
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

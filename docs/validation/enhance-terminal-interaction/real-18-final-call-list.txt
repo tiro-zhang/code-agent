@@ -1,0 +1,34 @@
+def main():
+    for name, command in STEPS:
+        run_step(name, command)
+    print("验收标记：TERMINAL_READ_OK_107")
+
+
+if __name__ == "__main__":
+    main()
+```
+父任务结束> parent_901d914b44324a8eb2359ea7c86d2750 · model_done · 主累计 Token 总输入 6728，输出 3870 · 统计
+完整 · 命中 5232，未命中 1496，写入 未知，命中率 77.8% · 缓存统计完整（/tasks show 查看父子用量）
+结束> model_done · 115.7s · 请求 2/20 · Token 输入 6728 / 输出 3870
+记忆> 自动记忆提取超时，既有笔记保留
+[DEFAULT] 执行 · 权限 strict · 空闲 · ark-code-latest · /private/tmp/mewcode-terminal-real-jvo88pxv
+这是最终终端显示验收，请读取 README.md；然后先用粗体和行内代码概括启动，再输出一个12行三列表格：步骤、命令、
+> #1 成功 read_file 主任务 README.md
+F2关闭 ↑↓选择 Enter详情 t轮次 /搜索 e异常 Tab思考 Esc/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
