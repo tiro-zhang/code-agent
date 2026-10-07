@@ -1,0 +1,224 @@
+- complementary "会话导航":
+  - text: MewCode
+  - generic: LOCAL
+  - button "新建会话":
+    - text: 新建会话
+  - generic: 工作会话
+  - generic: "1"
+  - navigation "项目会话":
+    - button "读取 README.md，用两句话概括启动步骤，并原样引用验收标记。只读文件，不执行命令。 10/07 · 13 条 可以开始":
+      - generic: 读取 README.md，用两句话概括启动步骤，并原样引用验收标记。只读文件，不执行命令。
+      - generic: 10/07 · 13 条
+      - generic: 可以开始
+  - generic: 本机 · 单项目工作区
+  - text: 执行占用仅协调本次 Web 服务
+- banner:
+  - generic: mewcode-web-e2e-20261007
+  - generic "/private/tmp/mewcode-web-e2e-20261007"
+  - generic: ark-code-latest
+  - generic: 已连接
+  - button "打开任务详情":
+- main:
+  - generic: YOUR WORKSPACE
+  - heading "读取 README.md，用两句话概括启动步骤，并原样引用验收标记。只读文件，不执行命令。" [level=1]
+  - generic: ark-code-latest · 执行模式 · 默认权限
+  - generic: 可以开始
+  - status:
+    - text: 本机服务已重新启动，旧操作不会重发。请先检查历史，再明确继续。
+    - button "关闭提示":
+  - generic "聊天记录":
+    - generic: 工具交互未完整提交；仅展示已保存证据，未确认操作可能已有副作用。
+    - generic: 孤立或归属不匹配的工具结果未展示。
+    - generic: 工具交互未完整提交；仅展示已保存证据，未确认操作可能已有副作用。
+    - generic: 孤立或归属不匹配的工具结果未展示。
+    - article:
+      - text: 应用上下文
+      - generic: task_started
+      - generic "查看任务启动记录"
+    - article:
+      - text: 应用上下文
+      - generic: run_started
+      - generic "查看运行启动记录"
+    - article:
+      - generic: 你
+      - text: 你
+      - generic: YOU
+      - generic: 读取 README.md，用两句话概括启动步骤，并原样引用验收标记。只读文件，不执行命令。
+    - article:
+      - text: 应用上下文
+      - generic: runtime
+      - generic "查看运行上下文"
+    - article:
+      - text: MewCode
+      - generic: ASSISTANT
+      - generic "已保存的调用"
+    - article:
+      - text: 工具记录
+      - generic: tool_result
+      - generic "查看工具记录"
+    - article:
+      - text: 应用上下文
+      - generic: runtime
+      - generic "查看运行上下文"
+    - article:
+      - text: MewCode
+      - generic: ASSISTANT
+      - paragraph:
+        - text: 启动步骤概括：先安装 Python 3.11 并运行
+        - code: uv sync
+        - text: 完成依赖准备；再执行
+        - code: mewcode --config 配置路径 --web
+        - text: 启动本机 Web 服务。
+      - paragraph:
+        - text: 验收标记原样引用：
+        - code: WEB_LOCAL_42
+    - article:
+      - text: 应用上下文
+      - generic: run_finished
+      - generic "查看run_finished"
+    - article:
+      - text: 应用上下文
+      - generic: task_finished
+      - generic "查看task_finished"
+    - article:
+      - text: 应用上下文
+      - generic: maintenance_finished
+      - generic "查看maintenance_finished"
+    - article:
+      - text: 应用上下文
+      - generic: task_started
+      - generic "查看任务启动记录"
+    - article:
+      - text: 应用上下文
+      - generic: run_started
+      - generic "查看运行启动记录"
+    - article:
+      - generic: 你
+      - text: 你
+      - generic: YOU
+      - generic: 先读取 edit-target.txt，将唯一的 before-web 替换为 after-web；只使用 read_file 和 edit_file，保留末尾换行。完成后简短确认。
+    - article:
+      - text: 应用上下文
+      - generic: runtime
+      - generic "查看运行上下文"
+    - article:
+      - text: MewCode
+      - generic: ASSISTANT
+      - generic "已保存的调用"
+    - article:
+      - text: 工具记录
+      - generic: tool_result
+      - generic "查看工具记录"
+    - article:
+      - text: 应用上下文
+      - generic: runtime
+      - generic "查看运行上下文"
+    - article:
+      - text: MewCode
+      - generic: ASSISTANT
+      - generic "已保存的调用"
+    - article:
+      - text: 工具记录
+      - generic: tool_result
+      - generic "查看工具记录"
+    - article:
+      - text: 应用上下文
+      - generic: runtime
+      - generic "查看运行上下文"
+    - article:
+      - text: MewCode
+      - generic: ASSISTANT
+      - paragraph:
+        - text: 已完成：
+        - code: before-web
+        - text: 已替换为
+        - code: after-web
+        - text: ，末尾换行保留。
+    - article:
+      - text: 应用上下文
+      - generic: run_finished
+      - generic "查看run_finished"
+    - article:
+      - text: 应用上下文
+      - generic: task_finished
+      - generic "查看task_finished"
+    - article:
+      - text: 应用上下文
+      - generic: maintenance_finished
+      - generic "查看maintenance_finished"
+    - article:
+      - text: 应用上下文
+      - generic: task_started
+      - generic "查看任务启动记录"
+    - article:
+      - text: 应用上下文
+      - generic: run_started
+      - generic "查看运行启动记录"
+    - article:
+      - text: 应用上下文
+      - generic: uncommitted
+      - paragraph: 仅执行一次 execute_command，命令为 sleep 120，不读写任何文件。这是停止功能验收；我会点击停止，取消后不要再次尝试。
+    - article:
+      - text: 应用上下文
+      - generic: runtime
+      - generic "查看运行上下文"
+    - article:
+      - text: MewCode
+      - generic: ASSISTANT
+      - generic "已保存的调用"
+    - article:
+      - text: 应用上下文
+      - generic: task_finished
+      - generic "查看task_finished"
+    - article:
+      - text: 工具记录
+      - generic: tool_result
+      - generic "查看工具记录"
+    - article:
+      - text: 应用上下文
+      - generic: run_finished
+      - generic "查看run_finished"
+    - article:
+      - text: 应用上下文
+      - generic: task_started
+      - generic "查看任务启动记录"
+    - article:
+      - text: 应用上下文
+      - generic: run_started
+      - generic "查看运行启动记录"
+    - article:
+      - generic: 你
+      - text: 你
+      - generic: YOU
+      - generic: 不要调用任何工具。仅依据已恢复的对话，回答 edit-target.txt 上次编辑后的内容，并在末尾加上 WEB_RESUME_OK。
+    - article:
+      - text: 应用上下文
+      - generic: runtime
+      - generic "查看运行上下文"
+    - article:
+      - text: MewCode
+      - generic: ASSISTANT
+      - paragraph: edit-target.txt 上次编辑后的内容（末尾换行已保留）：
+      - generic: CODE
+      - button "复制代码":
+        - text: 复制
+      - code: after-web
+      - paragraph: WEB_RESUME_OK
+    - article:
+      - text: 应用上下文
+      - generic: run_finished
+      - generic "查看run_finished"
+    - article:
+      - text: 应用上下文
+      - generic: task_finished
+      - generic "查看task_finished"
+    - article:
+      - text: 应用上下文
+      - generic: maintenance_finished
+      - generic "查看maintenance_finished"
+  - textbox "任务输入":
+    - /placeholder: 描述你的任务，或输入 / 查看命令…
+  - text: / Ctrl + Enter 发送 · Enter 换行
+  - button "发送任务" [disabled]:
+    - text: 发送
+  - generic: 草稿保留在此标签页 · 只有明确发送才会开始任务

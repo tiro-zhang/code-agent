@@ -1,0 +1,128 @@
+{
+  "session_id": "20261007-185028-eecd",
+  "records": 37,
+  "kinds": {
+    "session_created": 1,
+    "session_resumed": 2,
+    "task_started": 4,
+    "run_started": 4,
+    "interaction_started": 4,
+    "tool_result": 4,
+    "history_commit": 7,
+    "run_finished": 4,
+    "task_finished": 4,
+    "maintenance_finished": 3
+  },
+  "runs": [
+    {
+      "task_id": "1c3a926736ff4eef950ab7f0097fe881",
+      "tools": [
+        {
+          "name": "read_file",
+          "ok": true,
+          "code": null,
+          "call_id": "call_tao7bl7b5l39frwrve4tr2fe"
+        }
+      ],
+      "reason": "model_done",
+      "model_response_count": 2
+    },
+    {
+      "task_id": "24bed7b9160349b28ccfd9d1e7076a41",
+      "tools": [
+        {
+          "name": "read_file",
+          "ok": true,
+          "code": null,
+          "call_id": "call_deq7tecqujo7by7aa7h4npb5"
+        },
+        {
+          "name": "edit_file",
+          "ok": true,
+          "code": null,
+          "call_id": "call_6jd6vfej1ev3i5a0y47tjgeo"
+        }
+      ],
+      "reason": "model_done",
+      "model_response_count": 3
+    },
+    {
+      "task_id": "f161bd6950d845768d49443fedef0350",
+      "tools": [
+        {
+          "name": "execute_command",
+          "ok": false,
+          "code": "cancelled",
+          "call_id": "call_rie8wdc5i1k3db6j26sa6sqn"
+        }
+      ],
+      "reason": "cancelled",
+      "model_response_count": 1
+    },
+    {
+      "task_id": "6b98068180db44889a0ccf504125c096",
+      "tools": [],
+      "reason": "model_done",
+      "model_response_count": 1
+    }
+  ],
+  "work_model_responses": 7,
+  "unique_tool_calls": 4,
+  "tools": {
+    "read_file": 2,
+    "edit_file": 1,
+    "execute_command": 1
+  },
+  "artifact": {
+    "path": "edit-target.txt",
+    "exact_bytes": "b'after-web\\n'",
+    "sha256": "3dcc3f3012e81e60347686d7296bfcadc4ed20415226b2bd890112e044bfc812"
+  },
+  "before_restart_records": 30,
+  "after_explicit_continue_records": 31,
+  "only_added_before_new_task": "session_resumed",
+  "maintenance": [
+    {
+      "purpose": "memory",
+      "usage": {
+        "input_tokens": 858,
+        "output_tokens": 812,
+        "complete": true,
+        "cache_read_tokens": 0,
+        "cache_write_tokens": null,
+        "total_input_tokens": 858,
+        "cache_miss_tokens": 858,
+        "cache_complete": true,
+        "incomplete_fields": []
+      }
+    },
+    {
+      "purpose": "memory",
+      "usage": {
+        "input_tokens": null,
+        "output_tokens": null,
+        "complete": false,
+        "cache_read_tokens": null,
+        "cache_write_tokens": null,
+        "total_input_tokens": null,
+        "cache_miss_tokens": null,
+        "cache_complete": false,
+        "incomplete_fields": []
+      }
+    },
+    {
+      "purpose": "memory",
+      "usage": {
+        "input_tokens": 696,
+        "output_tokens": 477,
+        "complete": true,
+        "cache_read_tokens": 0,
+        "cache_write_tokens": null,
+        "total_input_tokens": 696,
+        "cache_miss_tokens": 696,
+        "cache_complete": true,
+        "incomplete_fields": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "session_id": "20261007-190246-2776",
+  "archive_record_count": 39,
+  "ordinary_tasks": 4,
+  "persisted_work_model_responses": 8,
+  "tool_calls": {
+    "read_file": 3,
+    "edit_file": 1,
+    "execute_command": 1
+  },
+  "tool_results": [
+    {
+      "seq": 5,
+      "ok": true,
+      "error_code": null,
+      "tool": "read_file"
+    },
+    {
+      "seq": 14,
+      "ok": true,
+      "error_code": null,
+      "tool": "read_file"
+    },
+    {
+      "seq": 17,
+      "ok": true,
+      "error_code": null,
+      "tool": "edit_file"
+    },
+    {
+      "seq": 20,
+      "ok": true,
+      "error_code": null,
+      "tool": "read_file"
+    },
+    {
+      "seq": 29,
+      "ok": false,
+      "error_code": "cancelled",
+      "tool": "execute_command"
+    }
+  ],
+  "work_runs": [
+    {
+      "task_id": "31480e8296844c9c83e7a5d685a99270",
+      "reason": "model_done",
+      "persisted_model_responses": 2,
+      "tools": [
+        "read_file"
+      ]
+    },
+    {
+      "task_id": "f5c040d444094198a254bbcb2953441f",
+      "reason": "model_done",
+      "persisted_model_responses": 4,
+      "tools": [
+        "read_file",
+        "edit_file",
+        "read_file"
+      ]
+    },
+    {
+      "task_id": "39c882aa78234a58aaedc80694048eb1",
+      "reason": "cancelled",
+      "persisted_model_responses": 1,
+      "tools": [
+        "execute_command"
+      ]
+    },
+    {
+      "task_id": "c2aa2520b09c441e950a80c67ae26cff",
+      "reason": "model_done",
+      "persisted_model_responses": 1,
+      "tools": []
+    }
+  ],
+  "maintenance_records": {
+    "memory": 3
+  },
+  "maintenance_usage_complete": [
+    true,
+    false,
+    true
+  ],
+  "resume_new_record_kinds": [
+    "session_resumed"
+  ],
+  "resume_new_tool_results": 0,
+  "resume_new_work_runs": 0,
+  "resume_new_maintenance_records": 0,
+  "sample_sha256": "fdc103251ff2414db0856c1a3185af82e67cbd5202ddd7d9f2823d87dc289c68",
+  "sample_content": "status=after\nmarker=CLI_EDIT_20261007\n",
+  "cancel_pid_alive": false,
+  "cancel_start_retained": true,
+  "cancel_end_exists": false,
+  "seconds_since_cancel_start": 193.6
+}

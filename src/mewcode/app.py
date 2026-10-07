@@ -22,6 +22,7 @@ from .commands.builtins import build_registry
 from .commands.adapter import SessionCommandContext
 from .terminal.controller import TerminalController
 from .terminal.text import terminal_text
+from .runtime import RuntimeResources, BackgroundPump
 
 
 
@@ -34,14 +35,16 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
     if resume is not None and team is not None:
         error_stream.write('启动失败：--resume 与 --team 不能同时使用。\n')
         return 2
+    resources = RuntimeResources(config, root=Path.cwd(), provider_factory=factory,
+        permission_mode=permission_mode, approval_responder=approval_responder,
+        persistent=persistent, resume=resume, team=team, memory_enabled=memory_enabled,
+        user_root=user_root, config_path=config_path, registry_factory=build_registry,
+        session_factory=ChatSession, mcp_factory=MCPManager, mcp_config_loader=load_mcp_config)
     try:
-        from .skills.catalog import discover_skills
-        catalog = discover_skills(Path.cwd(), user_root=user_root)
-        registry = build_registry(catalog)
+        registry = resources.validate()
     except (ValueError, ToolError) as error:
         error_stream.write(f"启动失败：{terminal_text(str(error), config.api_key)}\n")
         return 2
-    provider = factory(config)
     loop = asyncio.get_running_loop()
     active_cancel = asyncio.Event()
     idle_cancel = asyncio.Event()
@@ -60,13 +63,9 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
     mcp, terminal, session = None, None, None
     try:
         try:
+            resources.create_provider()
             reader = input_reader or InputReader(input_stream)
-            def maintenance(notification):
-                kind = notification.get('kind')
-                event_kind = 'usage' if kind in {'usage', 'restore_usage'} else 'team_update' if kind == 'team_update' else 'memory_update'
-                event = AgentEvent(event_kind,
-                    purpose=notification.get('purpose', 'team' if kind == 'team_update' else 'memory'), text=notification.get('text', ''),
-                    usage=notification.get('usage'), phase=notification.get('status', ''))
+            def maintenance(event):
                 # 独立通道不写入当前任务统计，也不改变输入阶段或草稿。
                 if terminal is not None:
                     terminal.show(renderer, event, maintenance=True)
@@ -74,15 +73,9 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
                     from .terminal.projection import TerminalProjection
                     for visible in TerminalProjection.maintenance_events(event):
                         renderer.show(visible)
-            session = ChatSession(provider, max_iterations=config.max_iterations, permission_mode=permission_mode,
-                config=config, persistent=persistent, resume=resume, memory_enabled=memory_enabled,
-                user_root=user_root, notify=maintenance, skill_catalog=catalog, provider_factory=factory)
-            session.config_path = Path(config_path).expanduser().resolve() if config_path is not None else None
-            session.permissions.config.load()
-            if team is not None:
-                arguments = {'action': 'resume', 'name': team}
-                session.teams.guard('team', arguments)
-                await session.teams.control(arguments)
+            resources.notify = maintenance
+            session = resources.construct()
+            await resources.resume_team()
             terminal = TerminalController(reader, output_stream, secret=config.api_key,
                 root=session.executor.context.root, on_interrupt=interrupt, allow_enhanced=input_reader is None, registry=registry)
             terminal.sync_session(session)
@@ -92,21 +85,16 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
         except (ValueError, ToolError, OSError) as error:
             error_stream.write(f"启动失败：{renderer.safe(error)}\n")
             return 2
-        snapshot = load_mcp_config(session.executor.context.root)
         def show_mcp(diagnostic):
             server = renderer.safe(diagnostic.server, 100) or "全部 Server"
             renderer.line(f"MCP> {server} · {renderer.safe(diagnostic.stage)} · {renderer.safe(diagnostic.message)}")
-        mcp = MCPManager(snapshot, session.executor.registry, notify=show_mcp)
-        session.executor.mcp = mcp
-        await mcp.start(cancel_event=active_cancel)
+        resources.mcp_notify = show_mcp
+        mcp = await resources.bind_mcp(cancel_event=active_cancel)
         if active_cancel.is_set():
             return 0
-        session.permissions.bind_mcp_tools(mcp.tools)
         terminal.state.bind_tools(mcp.tools)
         try:
-            session.validate_skills()
-            await session.prepare_restore(cancel_event=active_cancel)
-            await session.start(cancel_event=active_cancel)
+            await resources.prepare(cancel_event=active_cancel)
         except (ValueError, OSError) as error:
             error_stream.write(f'恢复失败：{renderer.safe(error, 400)}\n')
             return 2
@@ -121,12 +109,10 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
             status = f'已恢复 · {count} 条工作消息 · 等待新输入' if session.resumed else '新建存档'
             renderer.line(f'会话> {session.session_id} · {status}')
         context = SessionCommandContext(registry, session, terminal, renderer, config)
-        async def notices():
-            while True:
-                report = await session.tasks.events.get()
-                terminal.write(f'后台> {report["task_id"]} · 父 {report["parent_task_id"]} · '
-                    f'{report["display_mode"]} · {report["state"]}（/tasks show 查看结果与用量）\n')
-        notice_task = asyncio.create_task(notices())
+        def notice(event):
+            terminal.write(f'后台> {event.run_id} · 父 {event.parent_run_id} · '
+                f'{event.text} · {event.phase}（/tasks show 查看结果与用量）\n')
+        notice_task = asyncio.create_task(resources.background.notices(notice))
         while True:
             terminal.sync_session(session)
             try:
@@ -223,16 +209,11 @@ async def _run(config, input_stream, output_stream, error_stream, factory, *,
         try:
             if terminal is not None:
                 terminal.set_phase("closing")
-            if session is not None:
-                try:
-                    await protected(session.aclose(), cancel_event=active_cancel)
-                except OSError:
-                    renderer.line('提示> 会话句柄关闭失败，请检查 .mewcode；存档缓存保留')
-            try:
-                if mcp is not None:
-                    await protected(mcp.close(), cancel_event=active_cancel)
-            finally:
-                await protected(provider.aclose(), cancel_event=active_cancel)
+            report = await resources.aclose(cancel_event=active_cancel)
+            for diagnostic in report.errors:
+                renderer.line('提示> ' + diagnostic)
+            if report.pending:
+                renderer.line('提示> 运行资源收尾超过期限；存档及资源状态待核查')
         finally:
             try:
                 if terminal is not None:
@@ -250,30 +231,20 @@ async def _idle_input(terminal, session, cancel):
         except KeyboardInterrupt:
             raise asyncio.CancelledError from None
     read = asyncio.create_task(read_question())
+    wake = asyncio.create_task(BackgroundPump(session).wait_ready())
     try:
-        while True:
-            session.tasks.changed.clear()
-            wake = asyncio.create_task(session.tasks.changed.wait())
-            try:
-                if session.next_parent() is None:
-                    await asyncio.wait((read, wake), return_when=asyncio.FIRST_COMPLETED)
-                # 让已经完成的输入 future 返回给本地控制入口。
-                await asyncio.sleep(0)
-                if read.done() or terminal.input_submitted():
-                    return await read, None
-                parent = session.next_parent()
-                if parent:
-                    terminal.save_draft()
-                    read.cancel()
-                    await asyncio.gather(read, return_exceptions=True)
-                    return '', parent
-            finally:
-                wake.cancel()
-                await asyncio.gather(wake, return_exceptions=True)
+        await asyncio.wait((read, wake), return_when=asyncio.FIRST_COMPLETED)
+        # 终端后台 future 可能先于输入包装任务完成，给已提交控制保留优先权。
+        await asyncio.sleep(0)
+        if read.done() or terminal.input_submitted():
+            return await read, None
+        parent = wake.result()
+        terminal.save_draft()
+        return '', parent
     finally:
-        if not read.done():
-            read.cancel()
-            await asyncio.gather(read, return_exceptions=True)
+        read.cancel()
+        wake.cancel()
+        await asyncio.gather(read, wake, return_exceptions=True)
 
 
 def run(config_path: str | Path, *, stdin: TextIO | None = None, stdout: TextIO | None = None,

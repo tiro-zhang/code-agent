@@ -1,0 +1,8 @@
+Using CPython 3.11.14 interpreter at: .venv/bin/python3
+Resolved 1 package in 11ms
+Prepared 1 package in 18ms
+Installed 1 package in 5ms
+ + mewcode==0.1.0 (from file:///Users/tiro/workspace/code/vibecoding/mewcode-demo/dist/mewcode-0.1.0-py3-none-any.whl)
+{"signal": "SIGINT", "exit_code": 0, "elapsed_seconds": 0.344, "sse_open_on_exit": true, "phase": "unloaded", "node_on_path": false}
+{"signal": "SIGTERM", "exit_code": -15, "elapsed_seconds": 0.236, "sse_open_on_exit": true, "phase": "unloaded", "node_on_path": false}
+{"wheel_static": "complete", "sdist_frontend_lock": "complete", "installed_without_node": true, "artifact_directory": "/private/tmp/mewcode-package-ujxs584o"}

@@ -1,0 +1,7 @@
+graft frontend
+prune frontend/node_modules
+prune frontend/test-results
+prune frontend/playwright-report
+prune frontend/.git
+recursive-include src/mewcode/web/static *
+global-exclude __pycache__ *.py[cod] .DS_Store
