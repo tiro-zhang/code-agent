@@ -1,0 +1,9 @@
+[DEFAULT] 执行 · 权限 strict · 启动中 · ark-code-latest · /private/tmp/mewcode-performance-real-cli-final
+Ctrl+C 取消启动
+[DEFAULT] 执行 · 权限 strict · 启动中 · ark-code-latest · /private/tmp/mewcode-performance-real-cli-final
+Ctrl+C 取消启动
+MewCode · openai-compatible-demo · 权限 strict · /help 查看帮助
+会话> 20261008-115011-3604 · 已恢复 · 9 条工作消息 · 等待新输入
+[DEFAULT] 执行 · 权限 strict · 空闲 · ark-code-latest · /private/tmp/mewcode-performance-real-cli-final
+你>
+Enter 发送 · Esc+Enter 换行 · / 发现命令 · F2 详情 · Ctrl+C 清草稿／空草稿退出

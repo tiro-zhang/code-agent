@@ -1,7 +1,14 @@
-import {useRef} from 'react';
+import {useCallback,useRef,useSyncExternalStore} from 'react';
 import {ArrowUp,Command} from 'lucide-react';
 import {input_error,should_send} from './state';
 import type {Command as CommandType} from './types';
+import type {DraftStore} from './drafts';
+export function DraftComposer({store,project,session,on_send,disabled,commands}:{store:DraftStore;project:string;session:string;on_send:()=>void;disabled:boolean;commands?:CommandType[]}){
+    const subscribe=useCallback((listener:()=>void)=>store.subscribe(project,session,listener),[store,project,session]);
+    const read=useCallback(()=>store.read(project,session),[store,project,session]);
+    const draft=useSyncExternalStore(subscribe,read);
+    return <><Composer text={draft.text} on_change={text=>store.edit(project,session,text)} on_send={on_send} disabled={disabled} commands={commands}/>{store.warning&&<div className="notice-inline" role="alert">{store.warning}</div>}</>;
+}
 interface Props {text:string;on_change:(text:string)=>void;on_send:()=>void;disabled:boolean;commands?:CommandType[];}
 export function Composer({text,on_change,on_send,disabled,commands=[]}:Props){
     const composing=useRef(false);const error=input_error(text);

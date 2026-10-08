@@ -1,0 +1,3139 @@
+{
+  "date": "2026-10-08T03:49:13.474Z",
+  "measurement": {
+    "input": "原生 keyDown 时间戳至两次 RAF；包含焦点和主线程排队",
+    "navigation": "原生 click 时间戳至两次 RAF",
+    "stop": "原生 click 时间戳至 fetch 调用",
+    "queue_probe_ms": 533.4000000357628,
+    "arrival_interval_ms": 200,
+    "probe_excluded_from_reference": true
+  },
+  "correctness": {
+    "input_feedback": true,
+    "navigation_feedback": false,
+    "valid_stops": true,
+    "final_formatted": true
+  },
+  "device": {
+    "os": "darwin 25.6.0",
+    "cpu": "Apple M3",
+    "browser": "154.0.8037.99",
+    "node": "v26.4.0"
+  },
+  "build_sha256": "909f55338e2fe513bfbaea437b51121c7123dbc97b4913b267437529dcf30bb2",
+  "scenario": {
+    "history_count": 100,
+    "history_bytes_each": 1229,
+    "current_bytes": 131075,
+    "notifications_per_second": 40,
+    "stream_duration_ms": 10130,
+    "viewport": [
+      1440,
+      1000
+    ]
+  },
+  "finish_started": 13716.100000023842,
+  "format_ready_at": 17415,
+  "metrics_before": {
+    "metrics": [
+      {
+        "name": "Timestamp",
+        "value": 304171.554191
+      },
+      {
+        "name": "AudioHandlers",
+        "value": 0
+      },
+      {
+        "name": "AudioWorkletProcessors",
+        "value": 0
+      },
+      {
+        "name": "Documents",
+        "value": 1
+      },
+      {
+        "name": "Frames",
+        "value": 1
+      },
+      {
+        "name": "JSEventListeners",
+        "value": 13645
+      },
+      {
+        "name": "LayoutObjects",
+        "value": 202525
+      },
+      {
+        "name": "MediaKeySessions",
+        "value": 0
+      },
+      {
+        "name": "MediaKeys",
+        "value": 0
+      },
+      {
+        "name": "Nodes",
+        "value": 275857
+      },
+      {
+        "name": "Resources",
+        "value": 7
+      },
+      {
+        "name": "ContextLifecycleStateObservers",
+        "value": 9
+      },
+      {
+        "name": "V8PerContextDatas",
+        "value": 2
+      },
+      {
+        "name": "WorkerGlobalScopes",
+        "value": 0
+      },
+      {
+        "name": "UACSSResources",
+        "value": 0
+      },
+      {
+        "name": "RTCPeerConnections",
+        "value": 0
+      },
+      {
+        "name": "ResourceFetchers",
+        "value": 1
+      },
+      {
+        "name": "AdSubframes",
+        "value": 0
+      },
+      {
+        "name": "DetachedScriptStates",
+        "value": 0
+      },
+      {
+        "name": "ArrayBufferContents",
+        "value": 103
+      },
+      {
+        "name": "LayoutCount",
+        "value": 100
+      },
+      {
+        "name": "RecalcStyleCount",
+        "value": 252
+      },
+      {
+        "name": "LayoutDuration",
+        "value": 1.607755
+      },
+      {
+        "name": "RecalcStyleDuration",
+        "value": 1.031774
+      },
+      {
+        "name": "DevToolsCommandDuration",
+        "value": 0.21416
+      },
+      {
+        "name": "ScriptDuration",
+        "value": 8.055761
+      },
+      {
+        "name": "V8CompileDuration",
+        "value": 0
+      },
+      {
+        "name": "TaskDuration",
+        "value": 11.970586
+      },
+      {
+        "name": "TaskOtherDuration",
+        "value": 1.061136
+      },
+      {
+        "name": "ThreadTime",
+        "value": 11.73629
+      },
+      {
+        "name": "ProcessTime",
+        "value": 22.114287
+      },
+      {
+        "name": "JSHeapUsedSize",
+        "value": 138314208
+      },
+      {
+        "name": "JSHeapTotalSize",
+        "value": 215351296
+      },
+      {
+        "name": "FirstMeaningfulPaint",
+        "value": 0
+      },
+      {
+        "name": "DomContentLoaded",
+        "value": 304157.895719
+      },
+      {
+        "name": "NavigationStart",
+        "value": 304157.848449
+      }
+    ]
+  },
+  "metrics_after": {
+    "metrics": [
+      {
+        "name": "Timestamp",
+        "value": 304210.670246
+      },
+      {
+        "name": "AudioHandlers",
+        "value": 0
+      },
+      {
+        "name": "AudioWorkletProcessors",
+        "value": 0
+      },
+      {
+        "name": "Documents",
+        "value": 1
+      },
+      {
+        "name": "Frames",
+        "value": 1
+      },
+      {
+        "name": "JSEventListeners",
+        "value": 12415
+      },
+      {
+        "name": "LayoutObjects",
+        "value": 210665
+      },
+      {
+        "name": "MediaKeySessions",
+        "value": 0
+      },
+      {
+        "name": "MediaKeys",
+        "value": 0
+      },
+      {
+        "name": "Nodes",
+        "value": 303492
+      },
+      {
+        "name": "Resources",
+        "value": 12
+      },
+      {
+        "name": "ContextLifecycleStateObservers",
+        "value": 9
+      },
+      {
+        "name": "V8PerContextDatas",
+        "value": 2
+      },
+      {
+        "name": "WorkerGlobalScopes",
+        "value": 0
+      },
+      {
+        "name": "UACSSResources",
+        "value": 0
+      },
+      {
+        "name": "RTCPeerConnections",
+        "value": 0
+      },
+      {
+        "name": "ResourceFetchers",
+        "value": 1
+      },
+      {
+        "name": "AdSubframes",
+        "value": 0
+      },
+      {
+        "name": "DetachedScriptStates",
+        "value": 0
+      },
+      {
+        "name": "ArrayBufferContents",
+        "value": 3
+      },
+      {
+        "name": "LayoutCount",
+        "value": 213
+      },
+      {
+        "name": "RecalcStyleCount",
+        "value": 571
+      },
+      {
+        "name": "LayoutDuration",
+        "value": 6.322461
+      },
+      {
+        "name": "RecalcStyleDuration",
+        "value": 4.455749
+      },
+      {
+        "name": "DevToolsCommandDuration",
+        "value": 0.460708
+      },
+      {
+        "name": "ScriptDuration",
+        "value": 34.051147
+      },
+      {
+        "name": "V8CompileDuration",
+        "value": 0
+      },
+      {
+        "name": "TaskDuration",
+        "value": 51.025564
+      },
+      {
+        "name": "TaskOtherDuration",
+        "value": 5.735499
+      },
+      {
+        "name": "ThreadTime",
+        "value": 50.495282
+      },
+      {
+        "name": "ProcessTime",
+        "value": 84.684741
+      },
+      {
+        "name": "JSHeapUsedSize",
+        "value": 136474888
+      },
+      {
+        "name": "JSHeapTotalSize",
+        "value": 251068416
+      },
+      {
+        "name": "FirstMeaningfulPaint",
+        "value": 0
+      },
+      {
+        "name": "DomContentLoaded",
+        "value": 304157.895719
+      },
+      {
+        "name": "NavigationStart",
+        "value": 304157.848449
+      }
+    ]
+  },
+  "summary": {
+    "input": {
+      "count": 65,
+      "p95": 8220.400000035763,
+      "max": 8824.300000011921
+    },
+    "navigation": {
+      "count": 22,
+      "p95": 8622.400000035763,
+      "max": 8824.400000035763
+    },
+    "stop": {
+      "count": 20,
+      "p95": 20.69999998807907,
+      "max": 23.099999964237213
+    },
+    "finish": {
+      "count": 15,
+      "p95": 3682.399999976158,
+      "max": 3682.399999976158
+    }
+  },
+  "state_reads": 183,
+  "state_response_bytes": 52820878,
+  "notifications": 424,
+  "state_requests": [
+    {
+      "at": 1791431300675,
+      "stage": "loading",
+      "seq": 1,
+      "bytes": 288629
+    },
+    {
+      "at": 1791431311808,
+      "stage": "streaming",
+      "seq": 334,
+      "bytes": 288635
+    },
+    {
+      "at": 1791431312238,
+      "stage": "streaming",
+      "seq": 351,
+      "bytes": 288635
+    },
+    {
+      "at": 1791431312651,
+      "stage": "streaming",
+      "seq": 366,
+      "bytes": 288635
+    },
+    {
+      "at": 1791431313067,
+      "stage": "streaming",
+      "seq": 383,
+      "bytes": 288635
+    },
+    {
+      "at": 1791431313583,
+      "stage": "streaming",
+      "seq": 384,
+      "bytes": 288635
+    },
+    {
+      "at": 1791431313959,
+      "stage": "streaming",
+      "seq": 384,
+      "bytes": 288635
+    },
+    {
+      "at": 1791431314337,
+      "stage": "finish",
+      "seq": 384,
+      "bytes": 288635
+    },
+    {
+      "at": 1791431318030,
+      "stage": "finish",
+      "seq": 385,
+      "bytes": 288632
+    },
+    {
+      "at": 1791431318821,
+      "stage": "finish",
+      "seq": 385,
+      "bytes": 288632
+    },
+    {
+      "at": 1791431319600,
+      "stage": "finish",
+      "seq": 385,
+      "bytes": 288632
+    },
+    {
+      "at": 1791431320326,
+      "stage": "finish",
+      "seq": 385,
+      "bytes": 288632
+    },
+    {
+      "at": 1791431320330,
+      "stage": "finish",
+      "seq": 385,
+      "bytes": 288632
+    },
+    {
+      "at": 1791431320332,
+      "stage": "finish",
+      "seq": 385,
+      "bytes": 288632
+    },
+    {
+      "at": 1791431320334,
+      "stage": "finish",
+      "seq": 385,
+      "bytes": 288632
+    },
+    {
+      "at": 1791431320337,
+      "stage": "finish",
+      "seq": 385,
+      "bytes": 288632
+    },
+    {
+      "at": 1791431320741,
+      "stage": "finish",
+      "seq": 385,
+      "bytes": 288632
+    },
+    {
+      "at": 1791431320747,
+      "stage": "finish",
+      "seq": 385,
+      "bytes": 288632
+    },
+    {
+      "at": 1791431321120,
+      "stage": "controls",
+      "seq": 386,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431321126,
+      "stage": "controls",
+      "seq": 386,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431321508,
+      "stage": "controls",
+      "seq": 386,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431321519,
+      "stage": "controls",
+      "seq": 386,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431321546,
+      "stage": "controls",
+      "seq": 386,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431321557,
+      "stage": "controls",
+      "seq": 386,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431321950,
+      "stage": "controls",
+      "seq": 387,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431321958,
+      "stage": "controls",
+      "seq": 387,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431322333,
+      "stage": "controls",
+      "seq": 387,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431322725,
+      "stage": "controls",
+      "seq": 388,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431322732,
+      "stage": "controls",
+      "seq": 388,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431323092,
+      "stage": "controls",
+      "seq": 388,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431323107,
+      "stage": "controls",
+      "seq": 388,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431323112,
+      "stage": "controls",
+      "seq": 388,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431323489,
+      "stage": "controls",
+      "seq": 389,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431323523,
+      "stage": "controls",
+      "seq": 389,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431323915,
+      "stage": "controls",
+      "seq": 389,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431324290,
+      "stage": "controls",
+      "seq": 390,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431324309,
+      "stage": "controls",
+      "seq": 390,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431324692,
+      "stage": "controls",
+      "seq": 390,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431324709,
+      "stage": "controls",
+      "seq": 390,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431324712,
+      "stage": "controls",
+      "seq": 390,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431325083,
+      "stage": "controls",
+      "seq": 391,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431325087,
+      "stage": "controls",
+      "seq": 391,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431325489,
+      "stage": "controls",
+      "seq": 391,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431325854,
+      "stage": "controls",
+      "seq": 392,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431325858,
+      "stage": "controls",
+      "seq": 392,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431326225,
+      "stage": "controls",
+      "seq": 392,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431326237,
+      "stage": "controls",
+      "seq": 392,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431326240,
+      "stage": "controls",
+      "seq": 392,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431326710,
+      "stage": "controls",
+      "seq": 393,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431326779,
+      "stage": "controls",
+      "seq": 393,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431327120,
+      "stage": "controls",
+      "seq": 393,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431327539,
+      "stage": "controls",
+      "seq": 394,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431327548,
+      "stage": "controls",
+      "seq": 394,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431328057,
+      "stage": "controls",
+      "seq": 394,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431328118,
+      "stage": "controls",
+      "seq": 394,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431328152,
+      "stage": "controls",
+      "seq": 394,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431328157,
+      "stage": "controls",
+      "seq": 394,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431328181,
+      "stage": "controls",
+      "seq": 394,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431328678,
+      "stage": "controls",
+      "seq": 395,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431328729,
+      "stage": "controls",
+      "seq": 395,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431329130,
+      "stage": "controls",
+      "seq": 395,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431329544,
+      "stage": "controls",
+      "seq": 396,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431329550,
+      "stage": "controls",
+      "seq": 396,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431329915,
+      "stage": "controls",
+      "seq": 396,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431329929,
+      "stage": "controls",
+      "seq": 396,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431329932,
+      "stage": "controls",
+      "seq": 396,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431330314,
+      "stage": "controls",
+      "seq": 397,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431330348,
+      "stage": "controls",
+      "seq": 397,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431330718,
+      "stage": "controls",
+      "seq": 397,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431331090,
+      "stage": "controls",
+      "seq": 398,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431331094,
+      "stage": "controls",
+      "seq": 398,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431331483,
+      "stage": "controls",
+      "seq": 398,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431331500,
+      "stage": "controls",
+      "seq": 398,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431331503,
+      "stage": "controls",
+      "seq": 398,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431331859,
+      "stage": "controls",
+      "seq": 399,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431331866,
+      "stage": "controls",
+      "seq": 399,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431332276,
+      "stage": "controls",
+      "seq": 399,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431332655,
+      "stage": "controls",
+      "seq": 400,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431332658,
+      "stage": "controls",
+      "seq": 400,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431333034,
+      "stage": "controls",
+      "seq": 400,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431333049,
+      "stage": "controls",
+      "seq": 400,
+      "bytes": 288637
+    },
+    {
+      "at": 1791431333491,
+      "stage": "controls",
+      "seq": 401,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431333500,
+      "stage": "controls",
+      "seq": 401,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431333871,
+      "stage": "controls",
+      "seq": 401,
+      "bytes": 288640
+    },
+    {
+      "at": 1791431334267,
+      "stage": "controls",
+      "seq": 402,
+      "bytes": 288638
+    },
+    {
+      "at": 1791431334277,
+      "stage": "controls",
+      "seq": 402,
+      "bytes": 288638
+    },
+    {
+      "at": 1791431334679,
+      "stage": "controls",
+      "seq": 402,
+      "bytes": 288638
+    },
+    {
+      "at": 1791431334702,
+      "stage": "controls",
+      "seq": 402,
+      "bytes": 288638
+    },
+    {
+      "at": 1791431334712,
+      "stage": "controls",
+      "seq": 402,
+      "bytes": 288638
+    },
+    {
+      "at": 1791431335115,
+      "stage": "controls",
+      "seq": 403,
+      "bytes": 288641
+    },
+    {
+      "at": 1791431335122,
+      "stage": "controls",
+      "seq": 403,
+      "bytes": 288641
+    },
+    {
+      "at": 1791431335488,
+      "stage": "controls",
+      "seq": 403,
+      "bytes": 288641
+    },
+    {
+      "at": 1791431335900,
+      "stage": "controls",
+      "seq": 404,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431335914,
+      "stage": "controls",
+      "seq": 404,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431336265,
+      "stage": "controls",
+      "seq": 404,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431336282,
+      "stage": "controls",
+      "seq": 404,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431336286,
+      "stage": "controls",
+      "seq": 404,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431336654,
+      "stage": "controls",
+      "seq": 405,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431336663,
+      "stage": "controls",
+      "seq": 405,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431337063,
+      "stage": "controls",
+      "seq": 405,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431337453,
+      "stage": "controls",
+      "seq": 406,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431337459,
+      "stage": "controls",
+      "seq": 406,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431337835,
+      "stage": "controls",
+      "seq": 406,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431337845,
+      "stage": "controls",
+      "seq": 406,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431337852,
+      "stage": "controls",
+      "seq": 406,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431337868,
+      "stage": "controls",
+      "seq": 406,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431338244,
+      "stage": "controls",
+      "seq": 407,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431338251,
+      "stage": "controls",
+      "seq": 407,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431338610,
+      "stage": "controls",
+      "seq": 407,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431339007,
+      "stage": "controls",
+      "seq": 408,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431339013,
+      "stage": "controls",
+      "seq": 408,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431339376,
+      "stage": "controls",
+      "seq": 408,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431339383,
+      "stage": "controls",
+      "seq": 408,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431339386,
+      "stage": "controls",
+      "seq": 408,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431339390,
+      "stage": "controls",
+      "seq": 408,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431339768,
+      "stage": "controls",
+      "seq": 409,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431339782,
+      "stage": "controls",
+      "seq": 409,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431340152,
+      "stage": "controls",
+      "seq": 409,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431340531,
+      "stage": "controls",
+      "seq": 410,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431340543,
+      "stage": "controls",
+      "seq": 410,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431340944,
+      "stage": "controls",
+      "seq": 410,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431340960,
+      "stage": "controls",
+      "seq": 410,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431340962,
+      "stage": "controls",
+      "seq": 410,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431341324,
+      "stage": "controls",
+      "seq": 411,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431341328,
+      "stage": "controls",
+      "seq": 411,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431341698,
+      "stage": "controls",
+      "seq": 411,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431342105,
+      "stage": "controls",
+      "seq": 412,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431342112,
+      "stage": "controls",
+      "seq": 412,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431342476,
+      "stage": "controls",
+      "seq": 412,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431342487,
+      "stage": "controls",
+      "seq": 412,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431342950,
+      "stage": "controls",
+      "seq": 413,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431342970,
+      "stage": "controls",
+      "seq": 413,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431343394,
+      "stage": "controls",
+      "seq": 413,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431343776,
+      "stage": "controls",
+      "seq": 414,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431343780,
+      "stage": "controls",
+      "seq": 414,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431344189,
+      "stage": "controls",
+      "seq": 414,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431344196,
+      "stage": "controls",
+      "seq": 414,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431344199,
+      "stage": "controls",
+      "seq": 414,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431344592,
+      "stage": "controls",
+      "seq": 415,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431344596,
+      "stage": "controls",
+      "seq": 415,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431344970,
+      "stage": "controls",
+      "seq": 415,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431345398,
+      "stage": "controls",
+      "seq": 416,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431345407,
+      "stage": "controls",
+      "seq": 416,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431345787,
+      "stage": "controls",
+      "seq": 416,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431345800,
+      "stage": "controls",
+      "seq": 416,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431345803,
+      "stage": "controls",
+      "seq": 416,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431346184,
+      "stage": "controls",
+      "seq": 417,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431346189,
+      "stage": "controls",
+      "seq": 417,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431346597,
+      "stage": "controls",
+      "seq": 417,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431346982,
+      "stage": "controls",
+      "seq": 418,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431346990,
+      "stage": "controls",
+      "seq": 418,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431347382,
+      "stage": "controls",
+      "seq": 418,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431347395,
+      "stage": "controls",
+      "seq": 418,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431347398,
+      "stage": "controls",
+      "seq": 418,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431347863,
+      "stage": "controls",
+      "seq": 419,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431347876,
+      "stage": "controls",
+      "seq": 419,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431348264,
+      "stage": "controls",
+      "seq": 419,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431348673,
+      "stage": "controls",
+      "seq": 420,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431348681,
+      "stage": "controls",
+      "seq": 420,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431349155,
+      "stage": "controls",
+      "seq": 420,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431349171,
+      "stage": "controls",
+      "seq": 420,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431349192,
+      "stage": "controls",
+      "seq": 420,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431349619,
+      "stage": "controls",
+      "seq": 421,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431349626,
+      "stage": "controls",
+      "seq": 421,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431349990,
+      "stage": "controls",
+      "seq": 421,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431350409,
+      "stage": "controls",
+      "seq": 422,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431350416,
+      "stage": "controls",
+      "seq": 422,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431350792,
+      "stage": "controls",
+      "seq": 422,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431350795,
+      "stage": "controls",
+      "seq": 422,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431351160,
+      "stage": "controls",
+      "seq": 423,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431351175,
+      "stage": "controls",
+      "seq": 423,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431351564,
+      "stage": "controls",
+      "seq": 423,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431351933,
+      "stage": "controls",
+      "seq": 424,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431351941,
+      "stage": "controls",
+      "seq": 424,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431352292,
+      "stage": "controls",
+      "seq": 424,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431352319,
+      "stage": "controls",
+      "seq": 424,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431352332,
+      "stage": "controls",
+      "seq": 424,
+      "bytes": 288639
+    },
+    {
+      "at": 1791431352702,
+      "stage": "controls",
+      "seq": 425,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431352708,
+      "stage": "controls",
+      "seq": 425,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431353060,
+      "stage": "controls",
+      "seq": 425,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431353459,
+      "stage": "controls",
+      "seq": 425,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431353465,
+      "stage": "controls",
+      "seq": 425,
+      "bytes": 288642
+    },
+    {
+      "at": 1791431353471,
+      "stage": "controls",
+      "seq": 425,
+      "bytes": 288642
+    }
+  ],
+  "samples": {
+    "input": [
+      8824.300000011921,
+      8622.400000035763,
+      8421.400000035763,
+      8220.400000035763,
+      8026.600000023842,
+      7825.600000023842,
+      7624.699999988079,
+      7424.699999988079,
+      7223.699999988079,
+      7021.699999988079,
+      6821.699999988079,
+      6620.699999988079,
+      6418.699999988079,
+      6217.699999988079,
+      6016.799999952316,
+      5814.799999952316,
+      5612.799999952316,
+      5411.699999988079,
+      5209.799999952316,
+      5008.699999988079,
+      4807.699999988079,
+      4606.699999988079,
+      4404.699999988079,
+      4488.400000035763,
+      4286.699999988079,
+      4013.7999999523163,
+      3812.699999988079,
+      3611.7999999523163,
+      3411.699999988079,
+      3210.800000011921,
+      3010.800000011921,
+      2809,
+      2609,
+      2408,
+      2206.099999964237,
+      2004,
+      1803.0999999642372,
+      1603.0999999642372,
+      1401.0999999642372,
+      1200.199999988079,
+      998.1000000238419,
+      799.1000000238419,
+      598.1999999880791,
+      397.19999998807907,
+      337.39999997615814,
+      400.7999999523163,
+      330.39999997615814,
+      144.29999995231628,
+      365.89999997615814,
+      165.0999999642372
+    ],
+    "navigation": [
+      8824.400000035763,
+      8622.400000035763,
+      8421.400000035763,
+      8220.400000035763,
+      8026.600000023842,
+      7825.699999988079,
+      7623.699999988079,
+      7423.699999988079,
+      7222.699999988079,
+      7021.699999988079,
+      6821.699999988079,
+      6620.699999988079,
+      6418.699999988079,
+      6216.699999988079,
+      6016.799999952316,
+      5814.799999952316,
+      5612.799999952316,
+      5411.699999988079,
+      5209.799999952316,
+      5008.699999988079,
+      479.5,
+      371.80000001192093
+    ],
+    "stop": [
+      1.300000011920929,
+      2.800000011920929,
+      2.5,
+      1.600000023841858,
+      3.300000011920929,
+      2.900000035762787,
+      1.5,
+      1.800000011920929,
+      20.69999998807907,
+      2.800000011920929,
+      3.800000011920929,
+      5,
+      1.800000011920929,
+      1.5999999642372131,
+      1.5999999642372131,
+      1.5999999642372131,
+      1.300000011920929,
+      23.099999964237213,
+      3.5,
+      3.600000023841858
+    ],
+    "finish": [
+      3682.399999976158,
+      3652.100000023842,
+      3620.399999976158,
+      3591.699999988079,
+      3559.899999976158,
+      3528.2999999523163,
+      3496.5,
+      3466.7999999523163,
+      3435.099999964237,
+      3404.399999976158,
+      778.8000000119209,
+      1154.5,
+      752.6000000238419,
+      710.5,
+      402.69999998807907
+    ],
+    "probe": [
+      533.4000000357628
+    ],
+    "feedback": [
+      {
+        "kind": "input",
+        "stage": "probe",
+        "start": 1813.199999988079,
+        "duration": 533.4000000357628,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 2351.199999988079,
+        "duration": 8824.300000011921,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 2351.199999988079,
+        "duration": 8824.400000035763,
+        "selected": false
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 2553.199999988079,
+        "duration": 8622.400000035763,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 2553.199999988079,
+        "duration": 8622.400000035763,
+        "selected": true
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 2754.199999988079,
+        "duration": 8421.400000035763,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 2754.199999988079,
+        "duration": 8421.400000035763,
+        "selected": false
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 2955.199999988079,
+        "duration": 8220.400000035763,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 2955.199999988079,
+        "duration": 8220.400000035763,
+        "selected": true
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 3157.199999988079,
+        "duration": 8026.600000023842,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 3157.199999988079,
+        "duration": 8026.600000023842,
+        "selected": false
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 3358.199999988079,
+        "duration": 7825.600000023842,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 3358.199999988079,
+        "duration": 7825.699999988079,
+        "selected": true
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 3559.199999988079,
+        "duration": 7624.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 3560.199999988079,
+        "duration": 7623.699999988079,
+        "selected": false
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 3759.199999988079,
+        "duration": 7424.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 3760.199999988079,
+        "duration": 7423.699999988079,
+        "selected": true
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 3960.199999988079,
+        "duration": 7223.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 3961.199999988079,
+        "duration": 7222.699999988079,
+        "selected": false
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 4162.199999988079,
+        "duration": 7021.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 4162.199999988079,
+        "duration": 7021.699999988079,
+        "selected": true
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 4362.199999988079,
+        "duration": 6821.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 4362.199999988079,
+        "duration": 6821.699999988079,
+        "selected": false
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 4563.199999988079,
+        "duration": 6620.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 4563.199999988079,
+        "duration": 6620.699999988079,
+        "selected": true
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 4765.199999988079,
+        "duration": 6418.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 4765.199999988079,
+        "duration": 6418.699999988079,
+        "selected": false
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 4966.199999988079,
+        "duration": 6217.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 4967.199999988079,
+        "duration": 6216.699999988079,
+        "selected": true
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 5167.100000023842,
+        "duration": 6016.799999952316,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 5167.100000023842,
+        "duration": 6016.799999952316,
+        "selected": false
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 5369.100000023842,
+        "duration": 5814.799999952316,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 5369.100000023842,
+        "duration": 5814.799999952316,
+        "selected": true
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 5571.100000023842,
+        "duration": 5612.799999952316,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 5571.100000023842,
+        "duration": 5612.799999952316,
+        "selected": false
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 5772.199999988079,
+        "duration": 5411.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 5772.199999988079,
+        "duration": 5411.699999988079,
+        "selected": true
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 5974.100000023842,
+        "duration": 5209.799999952316,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 5974.100000023842,
+        "duration": 5209.799999952316,
+        "selected": false
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 6175.199999988079,
+        "duration": 5008.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 6175.199999988079,
+        "duration": 5008.699999988079,
+        "selected": true
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 6376.199999988079,
+        "duration": 4807.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 6577.199999988079,
+        "duration": 4606.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 6779.199999988079,
+        "duration": 4404.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 6981.199999988079,
+        "duration": 4488.400000035763,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 7183.100000023842,
+        "duration": 4286.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 7456.100000023842,
+        "duration": 4013.7999999523163,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 7657.199999988079,
+        "duration": 3812.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 7858.100000023842,
+        "duration": 3611.7999999523163,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 8058.199999988079,
+        "duration": 3411.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 8259.199999988079,
+        "duration": 3210.800000011921,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 8459.199999988079,
+        "duration": 3010.800000011921,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 8661.100000023842,
+        "duration": 2809,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 8861.100000023842,
+        "duration": 2609,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 9062.100000023842,
+        "duration": 2408,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 9264.100000023842,
+        "duration": 2206.099999964237,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 9466.199999988079,
+        "duration": 2004,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 9667.100000023842,
+        "duration": 1803.0999999642372,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 9867.100000023842,
+        "duration": 1603.0999999642372,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 10069.100000023842,
+        "duration": 1401.0999999642372,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 10270.100000023842,
+        "duration": 1200.199999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 10472.199999988079,
+        "duration": 998.1000000238419,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 10671.199999988079,
+        "duration": 799.1000000238419,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 10872.100000023842,
+        "duration": 598.1999999880791,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 11073.100000023842,
+        "duration": 397.19999998807907,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 11274.100000023842,
+        "duration": 337.39999997615814,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 11475.100000023842,
+        "duration": 400.7999999523163,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 11677.100000023842,
+        "duration": 330.39999997615814,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 11878.100000023842,
+        "duration": 144.29999995231628,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 12079.100000023842,
+        "duration": 365.89999997615814,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "streaming",
+        "start": 12280.100000023842,
+        "duration": 165.0999999642372,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "streaming",
+        "start": 12481.100000023842,
+        "duration": 479.5,
+        "selected": true
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 13718.100000023842,
+        "duration": 3682.399999976158,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 13749,
+        "duration": 3652.100000023842,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 13781.100000023842,
+        "duration": 3620.399999976158,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 13810.100000023842,
+        "duration": 3591.699999988079,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 13842.100000023842,
+        "duration": 3559.899999976158,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 13874.100000023842,
+        "duration": 3528.2999999523163,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 13906.100000023842,
+        "duration": 3496.5,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 13936.100000023842,
+        "duration": 3466.7999999523163,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 13968.100000023842,
+        "duration": 3435.099999964237,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 13999.100000023842,
+        "duration": 3404.399999976158,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 17415,
+        "duration": 778.8000000119209,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 17809.100000023842,
+        "duration": 1154.5,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 18220,
+        "duration": 752.6000000238419,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 18991.100000023842,
+        "duration": 710.5,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "input",
+        "stage": "finish",
+        "start": 19716.100000023842,
+        "duration": 402.69999998807907,
+        "changed": true,
+        "mode": "formatted"
+      },
+      {
+        "kind": "navigation",
+        "stage": "finish",
+        "start": 20126,
+        "duration": 371.80000001192093,
+        "selected": true
+      }
+    ],
+    "long_tasks": [
+      {
+        "stage": "loading",
+        "start": 71.5,
+        "duration": 309
+      },
+      {
+        "stage": "loading",
+        "start": 524.6000000238419,
+        "duration": 290
+      },
+      {
+        "stage": "loading",
+        "start": 814.6000000238419,
+        "duration": 118
+      },
+      {
+        "stage": "loading",
+        "start": 934,
+        "duration": 264
+      },
+      {
+        "stage": "loading",
+        "start": 1326.5,
+        "duration": 272
+      },
+      {
+        "stage": "probe",
+        "start": 1962.8999999761581,
+        "duration": 348
+      },
+      {
+        "stage": "streaming",
+        "start": 2353.699999988079,
+        "duration": 771
+      },
+      {
+        "stage": "streaming",
+        "start": 3124.699999988079,
+        "duration": 1236
+      },
+      {
+        "stage": "streaming",
+        "start": 4361.199999988079,
+        "duration": 2531
+      },
+      {
+        "stage": "streaming",
+        "start": 6892.699999988079,
+        "duration": 4283
+      },
+      {
+        "stage": "streaming",
+        "start": 11201.699999988079,
+        "duration": 101
+      },
+      {
+        "stage": "streaming",
+        "start": 11303.199999988079,
+        "duration": 159
+      },
+      {
+        "stage": "streaming",
+        "start": 11483.800000011921,
+        "duration": 120
+      },
+      {
+        "stage": "streaming",
+        "start": 11622.5,
+        "duration": 94
+      },
+      {
+        "stage": "streaming",
+        "start": 11717,
+        "duration": 152
+      },
+      {
+        "stage": "streaming",
+        "start": 11883.5,
+        "duration": 116
+      },
+      {
+        "stage": "streaming",
+        "start": 12023,
+        "duration": 126
+      },
+      {
+        "stage": "streaming",
+        "start": 12149.100000023842,
+        "duration": 160
+      },
+      {
+        "stage": "streaming",
+        "start": 12309.800000011921,
+        "duration": 129
+      },
+      {
+        "stage": "streaming",
+        "start": 12451.300000011921,
+        "duration": 93
+      },
+      {
+        "stage": "streaming",
+        "start": 12544.899999976158,
+        "duration": 396
+      },
+      {
+        "stage": "streaming",
+        "start": 12962.199999988079,
+        "duration": 236
+      },
+      {
+        "stage": "streaming",
+        "start": 13198.800000011921,
+        "duration": 124
+      },
+      {
+        "stage": "streaming",
+        "start": 13338.199999988079,
+        "duration": 256
+      },
+      {
+        "stage": "finish",
+        "start": 13727.5,
+        "duration": 334
+      },
+      {
+        "stage": "finish",
+        "start": 14062.199999988079,
+        "duration": 3333
+      },
+      {
+        "stage": "finish",
+        "start": 17416.600000023842,
+        "duration": 341
+      },
+      {
+        "stage": "finish",
+        "start": 17758,
+        "duration": 58
+      },
+      {
+        "stage": "finish",
+        "start": 17816.899999976158,
+        "duration": 352
+      },
+      {
+        "stage": "finish",
+        "start": 18201.899999976158,
+        "duration": 247
+      },
+      {
+        "stage": "finish",
+        "start": 18449.80000001192,
+        "duration": 519
+      },
+      {
+        "stage": "finish",
+        "start": 18985.30000001192,
+        "duration": 245
+      },
+      {
+        "stage": "finish",
+        "start": 19230.899999976158,
+        "duration": 436
+      },
+      {
+        "stage": "finish",
+        "start": 19718.80000001192,
+        "duration": 357
+      },
+      {
+        "stage": "finish",
+        "start": 20131.5,
+        "duration": 360
+      },
+      {
+        "stage": "controls",
+        "start": 20505.600000023842,
+        "duration": 240
+      },
+      {
+        "stage": "controls",
+        "start": 20745.69999998808,
+        "duration": 127
+      },
+      {
+        "stage": "controls",
+        "start": 20953.399999976158,
+        "duration": 370
+      },
+      {
+        "stage": "controls",
+        "start": 21342.19999998808,
+        "duration": 247
+      },
+      {
+        "stage": "controls",
+        "start": 21589.600000023842,
+        "duration": 106
+      },
+      {
+        "stage": "controls",
+        "start": 21714.100000023842,
+        "duration": 267
+      },
+      {
+        "stage": "controls",
+        "start": 21982,
+        "duration": 106
+      },
+      {
+        "stage": "controls",
+        "start": 22111.30000001192,
+        "duration": 240
+      },
+      {
+        "stage": "controls",
+        "start": 22351.5,
+        "duration": 108
+      },
+      {
+        "stage": "controls",
+        "start": 22494.399999976158,
+        "duration": 368
+      },
+      {
+        "stage": "controls",
+        "start": 22901.5,
+        "duration": 273
+      },
+      {
+        "stage": "controls",
+        "start": 23175.100000023842,
+        "duration": 107
+      },
+      {
+        "stage": "controls",
+        "start": 23299.5,
+        "duration": 241
+      },
+      {
+        "stage": "controls",
+        "start": 23541.100000023842,
+        "duration": 111
+      },
+      {
+        "stage": "controls",
+        "start": 23673.600000023842,
+        "duration": 271
+      },
+      {
+        "stage": "controls",
+        "start": 23945.5,
+        "duration": 110
+      },
+      {
+        "stage": "controls",
+        "start": 24093.399999976158,
+        "duration": 362
+      },
+      {
+        "stage": "controls",
+        "start": 24465.899999976158,
+        "duration": 275
+      },
+      {
+        "stage": "controls",
+        "start": 24741,
+        "duration": 111
+      },
+      {
+        "stage": "controls",
+        "start": 24873.19999998808,
+        "duration": 240
+      },
+      {
+        "stage": "controls",
+        "start": 25113.399999976158,
+        "duration": 111
+      },
+      {
+        "stage": "controls",
+        "start": 25237.600000023842,
+        "duration": 241
+      },
+      {
+        "stage": "controls",
+        "start": 25479.5,
+        "duration": 113
+      },
+      {
+        "stage": "controls",
+        "start": 25622.19999998808,
+        "duration": 437
+      },
+      {
+        "stage": "controls",
+        "start": 26101.899999976158,
+        "duration": 277
+      },
+      {
+        "stage": "controls",
+        "start": 26379.600000023842,
+        "duration": 107
+      },
+      {
+        "stage": "controls",
+        "start": 26504.69999998808,
+        "duration": 242
+      },
+      {
+        "stage": "controls",
+        "start": 26746.899999976158,
+        "duration": 144
+      },
+      {
+        "stage": "controls",
+        "start": 26927.100000023842,
+        "duration": 277
+      },
+      {
+        "stage": "controls",
+        "start": 27204.100000023842,
+        "duration": 205
+      },
+      {
+        "stage": "controls",
+        "start": 27540.600000023842,
+        "duration": 452
+      },
+      {
+        "stage": "controls",
+        "start": 28065.600000023842,
+        "duration": 307
+      },
+      {
+        "stage": "controls",
+        "start": 28372.899999976158,
+        "duration": 121
+      },
+      {
+        "stage": "controls",
+        "start": 28507.899999976158,
+        "duration": 284
+      },
+      {
+        "stage": "controls",
+        "start": 28792.69999998808,
+        "duration": 113
+      },
+      {
+        "stage": "controls",
+        "start": 28934.600000023842,
+        "duration": 242
+      },
+      {
+        "stage": "controls",
+        "start": 29177.19999998808,
+        "duration": 107
+      },
+      {
+        "stage": "controls",
+        "start": 29314.5,
+        "duration": 371
+      },
+      {
+        "stage": "controls",
+        "start": 29726.69999998808,
+        "duration": 252
+      },
+      {
+        "stage": "controls",
+        "start": 29979.600000023842,
+        "duration": 106
+      },
+      {
+        "stage": "controls",
+        "start": 30097.69999998808,
+        "duration": 243
+      },
+      {
+        "stage": "controls",
+        "start": 30341.600000023842,
+        "duration": 105
+      },
+      {
+        "stage": "controls",
+        "start": 30473.80000001192,
+        "duration": 263
+      },
+      {
+        "stage": "controls",
+        "start": 30736.80000001192,
+        "duration": 107
+      },
+      {
+        "stage": "controls",
+        "start": 30885.100000023842,
+        "duration": 347
+      },
+      {
+        "stage": "controls",
+        "start": 31245.30000001192,
+        "duration": 280
+      },
+      {
+        "stage": "controls",
+        "start": 31525.5,
+        "duration": 116
+      },
+      {
+        "stage": "controls",
+        "start": 31659.899999976158,
+        "duration": 247
+      },
+      {
+        "stage": "controls",
+        "start": 31907,
+        "duration": 117
+      },
+      {
+        "stage": "controls",
+        "start": 32037.399999976158,
+        "duration": 245
+      },
+      {
+        "stage": "controls",
+        "start": 32283,
+        "duration": 116
+      },
+      {
+        "stage": "controls",
+        "start": 32431.399999976158,
+        "duration": 394
+      },
+      {
+        "stage": "controls",
+        "start": 32877,
+        "duration": 258
+      },
+      {
+        "stage": "controls",
+        "start": 33135.30000001192,
+        "duration": 107
+      },
+      {
+        "stage": "controls",
+        "start": 33249.89999997616,
+        "duration": 251
+      },
+      {
+        "stage": "controls",
+        "start": 33501.19999998808,
+        "duration": 126
+      },
+      {
+        "stage": "controls",
+        "start": 33656.19999998808,
+        "duration": 255
+      },
+      {
+        "stage": "controls",
+        "start": 33911.89999997616,
+        "duration": 135
+      },
+      {
+        "stage": "controls",
+        "start": 34110.80000001192,
+        "duration": 368
+      },
+      {
+        "stage": "controls",
+        "start": 34505.69999998808,
+        "duration": 241
+      },
+      {
+        "stage": "controls",
+        "start": 34746.80000001192,
+        "duration": 103
+      },
+      {
+        "stage": "controls",
+        "start": 34866.60000002384,
+        "duration": 288
+      },
+      {
+        "stage": "controls",
+        "start": 35155.39999997616,
+        "duration": 111
+      },
+      {
+        "stage": "controls",
+        "start": 35293.5,
+        "duration": 236
+      },
+      {
+        "stage": "controls",
+        "start": 35530.39999997616,
+        "duration": 106
+      },
+      {
+        "stage": "controls",
+        "start": 35665.10000002384,
+        "duration": 349
+      },
+      {
+        "stage": "controls",
+        "start": 36037.69999998808,
+        "duration": 283
+      },
+      {
+        "stage": "controls",
+        "start": 36321.10000002384,
+        "duration": 108
+      },
+      {
+        "stage": "controls",
+        "start": 36447,
+        "duration": 258
+      },
+      {
+        "stage": "controls",
+        "start": 36705.60000002384,
+        "duration": 112
+      },
+      {
+        "stage": "controls",
+        "start": 36838.19999998808,
+        "duration": 243
+      },
+      {
+        "stage": "controls",
+        "start": 37081.80000001192,
+        "duration": 112
+      },
+      {
+        "stage": "controls",
+        "start": 37252.19999998808,
+        "duration": 363
+      },
+      {
+        "stage": "controls",
+        "start": 37629.80000001192,
+        "duration": 240
+      },
+      {
+        "stage": "controls",
+        "start": 37869.89999997616,
+        "duration": 108
+      },
+      {
+        "stage": "controls",
+        "start": 37989.69999998808,
+        "duration": 273
+      },
+      {
+        "stage": "controls",
+        "start": 38263.39999997616,
+        "duration": 106
+      },
+      {
+        "stage": "controls",
+        "start": 38393.60000002384,
+        "duration": 238
+      },
+      {
+        "stage": "controls",
+        "start": 38632.10000002384,
+        "duration": 105
+      },
+      {
+        "stage": "controls",
+        "start": 38771.39999997616,
+        "duration": 352
+      },
+      {
+        "stage": "controls",
+        "start": 39161.10000002384,
+        "duration": 248
+      },
+      {
+        "stage": "controls",
+        "start": 39409.89999997616,
+        "duration": 109
+      },
+      {
+        "stage": "controls",
+        "start": 39530.80000001192,
+        "duration": 246
+      },
+      {
+        "stage": "controls",
+        "start": 39777.69999998808,
+        "duration": 109
+      },
+      {
+        "stage": "controls",
+        "start": 39920.39999997616,
+        "duration": 273
+      },
+      {
+        "stage": "controls",
+        "start": 40193.69999998808,
+        "duration": 110
+      },
+      {
+        "stage": "controls",
+        "start": 40344.30000001192,
+        "duration": 350
+      },
+      {
+        "stage": "controls",
+        "start": 40707.30000001192,
+        "duration": 249
+      },
+      {
+        "stage": "controls",
+        "start": 40956.5,
+        "duration": 112
+      },
+      {
+        "stage": "controls",
+        "start": 41077.10000002384,
+        "duration": 284
+      },
+      {
+        "stage": "controls",
+        "start": 41362,
+        "duration": 110
+      },
+      {
+        "stage": "controls",
+        "start": 41496.19999998808,
+        "duration": 235
+      },
+      {
+        "stage": "controls",
+        "start": 41731.69999998808,
+        "duration": 106
+      },
+      {
+        "stage": "controls",
+        "start": 41869,
+        "duration": 432
+      },
+      {
+        "stage": "controls",
+        "start": 42337.39999997616,
+        "duration": 311
+      },
+      {
+        "stage": "controls",
+        "start": 42648.89999997616,
+        "duration": 112
+      },
+      {
+        "stage": "controls",
+        "start": 42778.5,
+        "duration": 250
+      },
+      {
+        "stage": "controls",
+        "start": 43029.39999997616,
+        "duration": 110
+      },
+      {
+        "stage": "controls",
+        "start": 43158.89999997616,
+        "duration": 272
+      },
+      {
+        "stage": "controls",
+        "start": 43430.89999997616,
+        "duration": 111
+      },
+      {
+        "stage": "controls",
+        "start": 43581.10000002384,
+        "duration": 383
+      },
+      {
+        "stage": "controls",
+        "start": 43974.89999997616,
+        "duration": 246
+      },
+      {
+        "stage": "controls",
+        "start": 44221.10000002384,
+        "duration": 119
+      },
+      {
+        "stage": "controls",
+        "start": 44348.30000001192,
+        "duration": 302
+      },
+      {
+        "stage": "controls",
+        "start": 44651.30000001192,
+        "duration": 111
+      },
+      {
+        "stage": "controls",
+        "start": 44790.80000001192,
+        "duration": 246
+      },
+      {
+        "stage": "controls",
+        "start": 45037.30000001192,
+        "duration": 109
+      },
+      {
+        "stage": "controls",
+        "start": 45182.10000002384,
+        "duration": 377
+      },
+      {
+        "stage": "controls",
+        "start": 45567.19999998808,
+        "duration": 283
+      },
+      {
+        "stage": "controls",
+        "start": 45850.39999997616,
+        "duration": 113
+      },
+      {
+        "stage": "controls",
+        "start": 45981.60000002384,
+        "duration": 254
+      },
+      {
+        "stage": "controls",
+        "start": 46235.89999997616,
+        "duration": 111
+      },
+      {
+        "stage": "controls",
+        "start": 46368.80000001192,
+        "duration": 254
+      },
+      {
+        "stage": "controls",
+        "start": 46623.19999998808,
+        "duration": 123
+      },
+      {
+        "stage": "controls",
+        "start": 46777.60000002384,
+        "duration": 426
+      },
+      {
+        "stage": "controls",
+        "start": 47248.60000002384,
+        "duration": 276
+      },
+      {
+        "stage": "controls",
+        "start": 47525,
+        "duration": 111
+      },
+      {
+        "stage": "controls",
+        "start": 47643.10000002384,
+        "duration": 263
+      },
+      {
+        "stage": "controls",
+        "start": 47906.89999997616,
+        "duration": 125
+      },
+      {
+        "stage": "controls",
+        "start": 48059.80000001192,
+        "duration": 293
+      },
+      {
+        "stage": "controls",
+        "start": 48352.80000001192,
+        "duration": 170
+      },
+      {
+        "stage": "controls",
+        "start": 48596.30000001192,
+        "duration": 388
+      },
+      {
+        "stage": "controls",
+        "start": 49009.89999997616,
+        "duration": 240
+      },
+      {
+        "stage": "controls",
+        "start": 49250.80000001192,
+        "duration": 102
+      },
+      {
+        "stage": "controls",
+        "start": 49374.39999997616,
+        "duration": 278
+      },
+      {
+        "stage": "controls",
+        "start": 49652.39999997616,
+        "duration": 118
+      },
+      {
+        "stage": "controls",
+        "start": 49799.60000002384,
+        "duration": 241
+      },
+      {
+        "stage": "controls",
+        "start": 50041.5,
+        "duration": 105
+      },
+      {
+        "stage": "controls",
+        "start": 50177.19999998808,
+        "duration": 352
+      },
+      {
+        "stage": "controls",
+        "start": 50552.5,
+        "duration": 273
+      },
+      {
+        "stage": "controls",
+        "start": 50825.69999998808,
+        "duration": 103
+      },
+      {
+        "stage": "controls",
+        "start": 50946.5,
+        "duration": 247
+      },
+      {
+        "stage": "controls",
+        "start": 51194,
+        "duration": 103
+      },
+      {
+        "stage": "controls",
+        "start": 51319.60000002384,
+        "duration": 236
+      },
+      {
+        "stage": "controls",
+        "start": 51556.10000002384,
+        "duration": 105
+      },
+      {
+        "stage": "controls",
+        "start": 51715.80000001192,
+        "duration": 356
+      },
+      {
+        "stage": "controls",
+        "start": 52087.19999998808,
+        "duration": 234
+      },
+      {
+        "stage": "controls",
+        "start": 52321.89999997616,
+        "duration": 105
+      },
+      {
+        "stage": "controls",
+        "start": 52439.19999998808,
+        "duration": 271
+      },
+      {
+        "stage": "controls",
+        "start": 52710.69999998808,
+        "duration": 111
+      }
+    ]
+  }
+}

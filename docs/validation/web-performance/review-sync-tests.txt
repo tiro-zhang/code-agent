@@ -1,0 +1,16 @@
+
+> mewcode-web@0.1.0 test
+> vitest run tests/sync.test.ts tests/app-sync.test.tsx
+
+
+ RUN  v3.2.7 [repo]/frontend
+
+ ✓ tests/sync.test.ts (9 tests) 9ms
+ ✓ tests/app-sync.test.tsx (5 tests) 4650ms
+   ✓ 事件连接仍在时状态读取失败后恢复，停止入口随真实连接恢复可用  1060ms
+   ✓ 三次状态失败后同一 SSE 后续通知恢复控制，不重发任务  3074ms
+
+ Test Files  2 passed (2)
+      Tests  14 passed (14)
+   Start at  11:40:26
+   Duration  5.48s (transform 122ms, setup 198ms, collect 336ms, tests 4.66s, environment 520ms, prepare 80ms)

@@ -1,0 +1,44 @@
+{
+  "config": ".env",
+  "project": "/private/tmp/mewcode-performance-real-cli-final",
+  "steps": [
+    {
+      "name": "真实读取与严格审批",
+      "result": "passed"
+    },
+    {
+      "name": "真实运行取消",
+      "result": "passed",
+      "started": true,
+      "end_file": false
+    },
+    {
+      "name": "取消后继续",
+      "result": "passed"
+    },
+    {
+      "name": "退出与显式恢复",
+      "result": "passed",
+      "new_record_kinds": [
+        "maintenance_finished",
+        "session_resumed"
+      ]
+    },
+    {
+      "name": "真实流式中间片段与完成正文",
+      "result": "passed",
+      "stream_observed": true
+    }
+  ],
+  "session": "20261008-115011-3604",
+  "result": "passed",
+  "date": "2026-10-08",
+  "model": "ark-code-latest",
+  "attempt_errors": [
+    {
+      "stage": "流式画面检测",
+      "error": "未捕获生成中的片段",
+      "reason": "检测范围误包含用户请求中的结束标记；修正为实际回复片段后捕获成功"
+    }
+  ]
+}

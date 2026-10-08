@@ -32,18 +32,19 @@ export class Api {
         const response=await this.network('/api/v1/auth',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})});
         if(!response.ok)throw this.error(response.status,await response.json());
     }
-    async connect(state:ServerState):Promise<boolean>{
+    async connect(state:ServerState,current:()=>boolean=()=>true):Promise<boolean>{
         this.storage_key=`mewcode:client:${state.project.key}`;
         let saved:Saved|null=null;
         try{saved=JSON.parse(this.storage.getItem(this.storage_key)||'null');}catch{this.storage_error='标签页存储不可用，草稿仅保留在当前页面。';}
         const changed=Boolean(saved?.client && saved.client.server_instance_id!==state.server_instance_id);
         if(saved?.client.server_instance_id===state.server_instance_id){this.client=saved.client;this.pending=saved.pending;this.identity_issue=saved.identity_issue??null;return false;}
-        await this.register_client(state.server_instance_id);return changed;
+        await this.register_client(state.server_instance_id,current);return changed;
     }
-    private async register_client(expected_instance:string){
+    private async register_client(expected_instance:string,current:()=>boolean=()=>true){
         const response=await this.network('/api/v1/clients',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{}'});
         const body=await response.json();if(!response.ok)throw this.error(response.status,body);
         if(body.server_instance_id!==expected_instance)throw new ApiError('instance_changed','登记期间服务身份已变化，请先同步状态。');
+        if(!current())throw new ApiError('instance_changed','登记结果已过期，请保持当前服务身份。');
         this.client=body;this.pending=null;this.identity_issue=null;this.save();
     }
     private save(){

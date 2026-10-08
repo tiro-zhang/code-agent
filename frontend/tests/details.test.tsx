@@ -14,5 +14,5 @@ it('空用量与不完整用量不显示成已知零用量，运行说明和思�
     render(<RunDetails run={{id:'r',phase:'completed',reason:'cancelled',text:'清理已结束',thinking:'供应商公开片段',calls:[],usage:{},usage_by_purpose:{maintenance:{input_tokens:10,complete:false}}}} session_id="s" api={api}/>);
     expect(screen.getByText('未知 / 不完整')).toBeInTheDocument();
     expect(screen.getByText('清理已结束')).toBeInTheDocument();
-    expect(screen.getByText('供应商公开片段').closest('details')).not.toHaveAttribute('open');
+    expect(screen.queryByText('供应商公开片段')).toBeNull();fireEvent.click(screen.getByText('查看供应商思考片段'));expect(screen.getByText('供应商公开片段')).toBeVisible();
 });

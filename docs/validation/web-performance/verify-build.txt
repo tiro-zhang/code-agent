@@ -1,0 +1,5 @@
+
+> mewcode-web@0.1.0 verify:build
+> node scripts/manifest.mjs verify
+
+前端源码、锁文件与静态产物一致

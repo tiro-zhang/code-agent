@@ -1,0 +1,138 @@
+{
+  "date": "2026-10-08T03:50:04.787Z",
+  "config": ".env",
+  "project": "/private/tmp/mewcode-performance-real-web-final",
+  "steps": [
+    {
+      "name": "真实读取与完整审批",
+      "result": "passed"
+    },
+    {
+      "name": "流式导航/起草/刷新与最终正文",
+      "result": "passed",
+      "run_id": "1c270bf913e441ea8437dfb91c0403c3"
+    },
+    {
+      "name": "工具已启动后的停止",
+      "result": "passed",
+      "cancel_start": true,
+      "cancel_end": false
+    },
+    {
+      "name": "重启/旧凭据失效/双会话草稿保持/显式继续",
+      "result": "passed",
+      "shutdown_ms": 336,
+      "expired_status": 401,
+      "expired_message": "MewCode 本机工作台\n\n请使用终端输出的本次启动链接访问工作台。\n\nuv run mewcode --config .env --web\n\n打开终端中的启动链接。项目和模型配置始终留在本机服务。\n\n重新连接",
+      "auto_replay": false
+    }
+  ],
+  "writes": [
+    {
+      "path": "/api/v1/clients",
+      "action": null
+    },
+    {
+      "path": "/api/v1/sessions",
+      "action": null,
+      "generation": 0
+    },
+    {
+      "path": "/api/v1/sessions",
+      "action": null,
+      "generation": 0
+    },
+    {
+      "path": "/api/v1/sessions/20261008-115006-d2f7/activate",
+      "action": null,
+      "generation": 0
+    },
+    {
+      "path": "/api/v1/sessions/20261008-115006-d2f7/inputs",
+      "action": null,
+      "generation": 1
+    },
+    {
+      "path": "/api/v1/approvals/c2d7fc36a6ec4c7ba4bf082655429dfd/decision",
+      "action": "once",
+      "generation": 1
+    },
+    {
+      "path": "/api/v1/sessions/20261008-115006-d2f7/inputs",
+      "action": null,
+      "generation": 1
+    },
+    {
+      "path": "/api/v1/sessions/20261008-115006-d2f7/inputs",
+      "action": null,
+      "generation": 1
+    },
+    {
+      "path": "/api/v1/approvals/09f195dab6224cf29a96c7f5793b35ac/decision",
+      "action": "once",
+      "generation": 1
+    },
+    {
+      "path": "/api/v1/sessions/20261008-115006-d2f7/controls",
+      "action": "stop",
+      "generation": 1
+    },
+    {
+      "path": "/api/v1/clients",
+      "action": null
+    },
+    {
+      "path": "/api/v1/clients",
+      "action": null
+    },
+    {
+      "path": "/api/v1/clients",
+      "action": null
+    },
+    {
+      "path": "/api/v1/clients",
+      "action": null
+    },
+    {
+      "path": "/api/v1/clients",
+      "action": null
+    },
+    {
+      "path": "/api/v1/sessions/20261008-115006-d2f7/activate",
+      "action": null
+    },
+    {
+      "path": "/api/v1/sessions/20261008-115006-d2f7/inputs",
+      "action": null
+    }
+  ],
+  "result": "passed",
+  "attempt_errors": [
+    {
+      "stage": "已停止任务后的服务退出等待",
+      "error": "验收等待超时",
+      "timeout_seconds": 90,
+      "scope": "退出等待超时；前三项真实功能通过，随后服务实际退出"
+    },
+    {
+      "stage": "脚本页面提示选择器",
+      "error": "locator.waitFor: Timeout 30000ms exceeded.\nCall log:\n  - waiting for getByRole('alert') to be visible\n",
+      "reason": "认证提示没有 alert 角色，改为实际认证卡片和 HTTP 凭据校验"
+    },
+    {
+      "stage": "未分阶段的页面恢复检查",
+      "error": "重启恢复验收等待超时",
+      "reason": "后续分阶段运行定位为同路径 hash 导航未加载新文档，修正后通过"
+    },
+    {
+      "stage": "重新认证与保留草稿",
+      "error": "重启恢复验收等待超时: 重新认证与保留草稿",
+      "reason": "同路径跳转只改变 hash，没有加载新文档；新链接后明确 reload 触发启动凭据交换"
+    }
+  ],
+  "last_stage": "恢复后的新请求",
+  "last_http_status": 401,
+  "session": "20261008-115006-d2f7",
+  "model": "ark-code-latest",
+  "build_sha256": "8f82da9664a1650957311d126bcf5bb3029c36ebc5a41ab8c688b9f28caad25c"
+}

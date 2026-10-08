@@ -1,0 +1,27 @@
+
+> mewcode-web@0.1.0 test:browser
+> playwright test
+
+[WebServer] (node:9073) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:9110) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 12 tests using 1 worker
+
+(node:9112) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/browser/workbench.spec.ts:45:1 › 历史只读、草稿隔离、组合输入、发送后继续编辑与刷新不重发 (2.0s)
+  ✓   2 tests/browser/workbench.spec.ts:61:1 › 窄屏键盘抽屉和详情控制保持可达，忙碌只禁发送 (536ms)
+  ✓   3 tests/browser/workbench.spec.ts:71:1 › 两标签页审批完整分页且至多一次决定，聊天草稿保持 (1.6s)
+  ✓   4 tests/browser/workbench.spec.ts:81:1 › 安全Markdown不加载远程图像或执行HTML，代码复制可用 (703ms)
+  ✓   5 tests/browser/workbench.spec.ts:88:1 › 向上阅读保持滚动位置，新流内容只显示提示，停止在占用会话上执行 (2.3s)
+  ✓   6 tests/browser/workbench.spec.ts:97:1 › 快照替换与重复SSE不会重复回复，临时缺失提示不阻塞停止 (621ms)
+  ✓   7 tests/browser/workbench.spec.ts:108:1 › 历史中登记的超大结果分块只读，明确标注来源截断 (680ms)
+  ✓   8 tests/browser/workbench.spec.ts:115:1 › 复制标签页保留草稿并在身份冲突后独立登记，刷新也不会自动重发 (1.2s)
+  ✓   9 tests/browser/workbench.spec.ts:132:1 › 过期回执在刷新后仍保留草稿，核查历史后明确登记才可再次发送 (809ms)
+  ✓  10 tests/browser/workbench.spec.ts:142:1 › 复制页丢失拒绝响应后核查同身份正文，不能用另一页回执清除草稿 (1.1s)
+  ✓  11 tests/browser/workbench.spec.ts:160:1 › 忙碌转空闲只刷新一次历史首页，清理旧警告并保留分页游标与阅读位置 (4.3s)
+  ✓  12 tests/browser/workbench.spec.ts:180:1 › 结束后的历史刷新不会被晚到的旧首页响应覆盖 (2.5s)
+
+  12 passed (20.2s)

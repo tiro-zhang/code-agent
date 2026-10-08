@@ -38,7 +38,7 @@ it('应用上下文默认折叠并保留来源，主动展开后可完整阅读'
     const {MessageView}=await import('../src/App');const {Api}=await import('../src/api');
     const api=new Api(async()=>Response.json({}),sessionStorage);
     render(<MessageView message={{id:'ctx',role:'context',kind:'runtime',text:'技能目录与原始环境上下文'}} api={api} session_id="s"/>);
-    expect(screen.getByText('技能目录与原始环境上下文')).not.toBeVisible();
+    expect(screen.queryByText('技能目录与原始环境上下文')).toBeNull();
     fireEvent.click(screen.getByText('查看运行上下文'));
     expect(screen.getByText('技能目录与原始环境上下文')).toBeVisible();
 });
@@ -47,7 +47,7 @@ it('工具历史正文默认折叠，仍能主动查看实际结果',async()=>{
     const {MessageView}=await import('../src/App');const {Api}=await import('../src/api');
     const api=new Api(async()=>Response.json({}),sessionStorage);
     render(<MessageView message={{id:'tool',role:'tool',kind:'tool_result',text:'工具原始输出',result:{ok:true,output:'完整结果'}}} api={api} session_id="s"/>);
-    expect(screen.getByText('工具原始输出')).not.toBeVisible();
+    expect(screen.queryByText('工具原始输出')).toBeNull();
     fireEvent.click(screen.getByText('查看工具记录'));
     expect(screen.getByText('工具原始输出')).toBeVisible();
     fireEvent.click(screen.getByText('已保存的结果'));expect(screen.getByText(/完整结果/)).toBeVisible();

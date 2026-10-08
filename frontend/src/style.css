@@ -8,3 +8,8 @@
 .session-statusline{font-size:10px;color:#939aae;margin-top:6px;overflow-wrap:anywhere}
 
 .history-record{border:1px solid var(--line);border-radius:8px;background:#f8f9fc;font-size:12px}.history-record>summary{padding:9px 12px;color:#838b9e;cursor:pointer}.history-record-content{padding:12px;border-top:1px solid var(--line)}
+
+.stream-text { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; margin: 0; }
+
+/* 聊天滚动区的内容尺寸不参与输入区布局，保留真实正文与滚动高度。 */
+.timeline { contain: strict; }
