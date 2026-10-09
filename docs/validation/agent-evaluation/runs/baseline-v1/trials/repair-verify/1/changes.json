@@ -1,0 +1,14 @@
+{
+  "limits.py": {
+    "after": {
+      "kind": "file",
+      "mode": 420,
+      "sha256": "474674568258f1d79181938d82647dd16720d624f432f6f02071ace61e8e8ab9"
+    },
+    "before": {
+      "kind": "file",
+      "mode": 420,
+      "sha256": "03f31c4f47e23275833c37e239c19fc9eae7e9c4dede4663b335d026db826602"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  ".mewcode/permissions.yaml": {
+    "kind": "file",
+    "mode": 420,
+    "sha256": "1450a1495c22286746df3a55ca20e94a9a2c99b5dd42017e68177148c07b5235"
+  },
+  "MEWCODE.md": {
+    "kind": "file",
+    "mode": 420,
+    "sha256": "eb5b90094980c957801f29a16fbda58594c2fd548b12060a041cf6e26e8fc326"
+  },
+  "check.py": {
+    "kind": "file",
+    "mode": 420,
+    "sha256": "f78a058a820fdb9cdb6a429ee5c20dba5fd004654f178408b25ccbf93902a4cc"
+  },
+  "limits.py": {
+    "kind": "file",
+    "mode": 420,
+    "sha256": "03f31c4f47e23275833c37e239c19fc9eae7e9c4dede4663b335d026db826602"
+  }
+}

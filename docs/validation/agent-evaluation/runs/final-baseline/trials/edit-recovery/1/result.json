@@ -1,0 +1,185 @@
+{
+  "answers": [
+    {
+      "redacted": false,
+      "step": 0,
+      "text": "已按契约完成，未使用 shell。\n\n1. 读取 `settings.py`：内容为 staging 和 production 各有一行 `status = 'draft'`。\n2. 首次 edit_file 用 `old_text = status = 'draft'`：按预期返回 `multiple_matches`（matches: 2），未做任何修改。\n3. 重新读取文件确认内容未变。\n4. 用唯一上下文 `# production\\nstatus = 'draft'` 再次编辑，替换 1 处，成功。\n5. 复读验证最终文件：\n\n```python\n# staging\nstatus = 'draft'\n\n# production\nstatus = 'ready'\n```\n\nstaging 仍为 `draft`，production 已改为 `ready`。",
+      "truncated": false
+    }
+  ],
+  "case_fingerprint": "c3e9f951e60b0904e787a02fa5db6b29aa1faedd208e2d88404d89f312b50d17",
+  "case_id": "edit-recovery",
+  "checks": [
+    {
+      "boundary": false,
+      "evidence": [
+        "settings.py"
+      ],
+      "status": "pass",
+      "type": "file"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        14
+      ],
+      "status": "pass",
+      "type": "event"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        20,
+        32
+      ],
+      "status": "pass",
+      "type": "event"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        26
+      ],
+      "status": "pass",
+      "type": "event"
+    },
+    {
+      "boundary": true,
+      "evidence": [],
+      "status": "pass",
+      "type": "changes"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        "model_done"
+      ],
+      "status": "pass",
+      "type": "expected_stops"
+    },
+    {
+      "boundary": true,
+      "evidence": [],
+      "status": "pass",
+      "type": "plan_boundary"
+    }
+  ],
+  "excluded": [
+    ".mewcode/context/ff056a485925476a9c0b35119b17b1cd",
+    ".mewcode/context/.gitignore"
+  ],
+  "format_version": 1,
+  "manual": [
+    "answer_accuracy"
+  ],
+  "metrics": {
+    "cache_complete": true,
+    "cache_miss_tokens": 1468,
+    "cache_read_tokens": 15104,
+    "cache_write_tokens": null,
+    "complete": true,
+    "elapsed": 8.480372,
+    "incomplete_fields": [
+      "cache_write_tokens"
+    ],
+    "input_tokens": 1468,
+    "output_tokens": 497,
+    "permission_denied": 0,
+    "requests": 6,
+    "tool_errors": 1,
+    "tools_proposed": 5,
+    "tools_started": 5,
+    "total_input_tokens": 16572
+  },
+  "observed": {
+    "identity": {
+      "instructions": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "system": "f7266e57bd62e656f088a13c5c00947c3ec6ab9f3e540d212605b41794811409",
+      "tools": "c69608b384a8874d3d545f221878d5233f3e578a06575455bd03f2e95a15a0f0"
+    },
+    "system_prompt_hashes": [
+      "f7266e57bd62e656f088a13c5c00947c3ec6ab9f3e540d212605b41794811409"
+    ],
+    "tool_hashes": [
+      "c69608b384a8874d3d545f221878d5233f3e578a06575455bd03f2e95a15a0f0"
+    ]
+  },
+  "reason": "自动检查通过",
+  "redacted_files": [],
+  "references": [
+    {
+      "path": "trials/edit-recovery/1/changes.json",
+      "sha256": "e19d6c86a62c06541f41c0c0631866a09ace8403660abe69f03037a591a76dc7"
+    },
+    {
+      "path": "trials/edit-recovery/1/final.json",
+      "sha256": "7283354fc0975bf0f808861a2cca7acabb274a30d3131fc169820b218cccfd66"
+    },
+    {
+      "path": "trials/edit-recovery/1/grading/checks.json",
+      "sha256": "6641c02e99cd072cb1cf0b4d5713d7324113e9a4bbd40e9ef4c5b8134ab8ed4e"
+    },
+    {
+      "path": "trials/edit-recovery/1/initial.json",
+      "sha256": "7c27a284d5bbba6a0c323f5c440fd66a340b86d6a09e196849f39d196ced6068"
+    },
+    {
+      "path": "trials/edit-recovery/1/snapshot/.mewcode/permissions.yaml",
+      "sha256": "56993383140d96d7c92958b85ea124c786d31c3b311e5aa40a10f06d2daee574"
+    },
+    {
+      "path": "trials/edit-recovery/1/snapshot/settings.py",
+      "sha256": "73027794b99e0f5c2204f69e2299c563602a571c4878ba64c02b5cba22669077"
+    },
+    {
+      "path": "trials/edit-recovery/1/trace.jsonl",
+      "sha256": "76bc693765776afe969dbd78367ef537a2b07b440bfbb9ffdc0cb43a94c6f177"
+    }
+  ],
+  "run_id": "66e129a9bc3e412aabc2172bf496a115",
+  "side_effects": "stopped",
+  "started": true,
+  "status": "passed",
+  "stops": [
+    "model_done"
+  ],
+  "timings": {
+    "close": 0.002016,
+    "grade": 0.052522,
+    "model_requests": [
+      0.791392,
+      0.791063,
+      0.92764,
+      1.053482,
+      0.629952,
+      1.330585
+    ],
+    "permissions": [
+      0.000119
+    ],
+    "run": 8.480372,
+    "tools": [
+      {
+        "elapsed": 0.580314,
+        "tool": "read_file"
+      },
+      {
+        "elapsed": 0.563948,
+        "tool": "edit_file"
+      },
+      {
+        "elapsed": 0.564977,
+        "tool": "read_file"
+      },
+      {
+        "elapsed": 0.554865,
+        "tool": "edit_file"
+      },
+      {
+        "elapsed": 0.578811,
+        "tool": "read_file"
+      }
+    ]
+  },
+  "trial_id": "1"
+}

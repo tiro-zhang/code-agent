@@ -1,0 +1,184 @@
+{
+  "complete": true,
+  "controls": {
+    "cases": {
+      "create-file": {
+        "fingerprint": "0f15564460bfee0e42ebcc62b2b19df6f46d35322f50a7e2dcaaadedbb6d4d31",
+        "permissions": "ff84c6c001b61f00388068e48a489343566d48c85846b79f1a0f0fe77d794c69",
+        "timeout": 600
+      },
+      "edit-recovery": {
+        "fingerprint": "8634476af2c451898ba4dc05dca0967aba031e0aacdbfbe76a6f374ed0984502",
+        "permissions": "d5ac92e98c58b6f79090d55be5d795e2cd1d3627abb2cb06e7878f9e2a5f5950",
+        "timeout": 600
+      },
+      "failing-check": {
+        "fingerprint": "1bacf19f5fcd981fb65b19146364bd7ba1bc6a91b4f79fd0afc093bacc56c3f3",
+        "permissions": "79c43ddbba4d83536e5eebe50672a5fcf16f3b0f8cee476f35afd20176fc548e",
+        "timeout": 600
+      },
+      "locate-read": {
+        "fingerprint": "a8c1325083c2a29ff1bbf6c235c072fdb0a1ebd85ddd9fe8987718fcc4d1bd44",
+        "permissions": "1658dedeaee241747591c8f79883028c7ceadecf0ebdd1987355afa6521e2432",
+        "timeout": 600
+      },
+      "mode-execute": {
+        "fingerprint": "24bb97d200bbaa08c5128f9ceb44fbe26d0b5966b1520e99500470b22469f3cd",
+        "permissions": "a87652a6a1b43d74cc64226a5562afcdf33301871b5827aeb6b88a9cb2518aee",
+        "timeout": 600
+      },
+      "permission-deny": {
+        "fingerprint": "d005239a9809664830c517a175e55c43acc16ebdc31f095566b6a94080135224",
+        "permissions": "6950fced72001c103fc8f150f262ecc8b3e15a83b545f3dac0220e52596b1d7f",
+        "timeout": 600
+      },
+      "plan-revise": {
+        "fingerprint": "d3c456238dca0e80ae932b0d7c4ae6b0ddff293b7a64b3b7e5482dea42a8dda3",
+        "permissions": "1658dedeaee241747591c8f79883028c7ceadecf0ebdd1987355afa6521e2432",
+        "timeout": 600
+      },
+      "repair-verify": {
+        "fingerprint": "e9e81875e01c1ce38e4d3cdc50f56e9952f64288e559b39c716ea8a4d3885bdb",
+        "permissions": "a87652a6a1b43d74cc64226a5562afcdf33301871b5827aeb6b88a9cb2518aee",
+        "timeout": 600
+      }
+    },
+    "request_budget": 20,
+    "scope": [
+      "edit_file",
+      "execute_command",
+      "glob_files",
+      "read_file",
+      "search_code",
+      "write_file"
+    ],
+    "selected": [
+      "locate-read",
+      "repair-verify",
+      "create-file",
+      "edit-recovery",
+      "plan-revise",
+      "mode-execute",
+      "permission-deny",
+      "failing-check"
+    ],
+    "suite": "7e1dca5968cf61d181a160731d4f4ee5372762a596fd9541f70866eb34bf6e3c",
+    "tool_timeout": 30
+  },
+  "created_at": "2026-10-08T07:43:13.493514+00:00",
+  "execution": "real",
+  "finished_at": "2026-10-08T07:45:16.475276+00:00",
+  "format_version": 1,
+  "ignored_config_fields": [
+    "skill_models",
+    "agent_models",
+    "agent_plugin_dirs",
+    "agent_background_tools",
+    "team_backend",
+    "team_max_running",
+    "team_max_queued",
+    "team_coordinator_enabled"
+  ],
+  "label": "baseline",
+  "repeat": 1,
+  "run_id": "4301287f4105437a9d8ff26571a91a61",
+  "scope": [
+    "edit_file",
+    "execute_command",
+    "glob_files",
+    "read_file",
+    "search_code",
+    "write_file"
+  ],
+  "source": {
+    "commit": "59e91d1e3f288c0ce4d2a84cf1f3575715d940fa",
+    "digest": "2a9e19e2ddc00b55d4e162da07acd589d2810f4c9fcfe2ee16d01ef63c1b3364",
+    "dirty": true,
+    "environment": {
+      "dependencies": {
+        "anthropic": "1.8.0",
+        "jsonschema": "4.26.0",
+        "mcp": "2.3.0",
+        "openai": "3.19.2",
+        "pyyaml": "6.0.3"
+      },
+      "platform": "Darwin",
+      "python": "3.11.14"
+    }
+  },
+  "suite_id": "core-v1",
+  "trials": [
+    {
+      "case_id": "locate-read",
+      "result": "trials/locate-read/1/result.json",
+      "sha256": "8ae8a456e2c195c44f9beaebc6a5fd470b6f6ab5fd4c4e239117453bfd06dc53",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "repair-verify",
+      "result": "trials/repair-verify/1/result.json",
+      "sha256": "c51712889276824a4c41e11a37de2a644724137b44396453071e4f8d6e2d4d15",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "create-file",
+      "result": "trials/create-file/1/result.json",
+      "sha256": "a6fba44e8ea32211a315bc19977999a441101aa228a00c804990b2a77eac6b8b",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "edit-recovery",
+      "result": "trials/edit-recovery/1/result.json",
+      "sha256": "3bf40309bb1fd4e5dfb906d2a7ef1dd6d33ff099bf88de85fcb0db479d50d420",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "plan-revise",
+      "result": "trials/plan-revise/1/result.json",
+      "sha256": "0c729cbe3428a3b2b4a8dbe924ca3e6d629c57bbca3241d0874391c04ec79346",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "mode-execute",
+      "result": "trials/mode-execute/1/result.json",
+      "sha256": "413e1f9ca14e797c0c7b661fd0dc1470b8e85d9ba4e768940035828499d04674",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "permission-deny",
+      "result": "trials/permission-deny/1/result.json",
+      "sha256": "05bf9eb0ce5796c5af9e7161ff6cf92d48285b4f2a6c6a47c61a7f2985885995",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "failing-check",
+      "result": "trials/failing-check/1/result.json",
+      "sha256": "a51f30f877a4b7c436520a5d729837d1470550de14c2625fcdeb1152dad783c3",
+      "trial_id": "1"
+    }
+  ],
+  "variants": {
+    "environment": {
+      "dependencies": {
+        "anthropic": "1.8.0",
+        "jsonschema": "4.26.0",
+        "mcp": "2.3.0",
+        "openai": "3.19.2",
+        "pyyaml": "6.0.3"
+      },
+      "platform": "Darwin",
+      "python": "3.11.14"
+    },
+    "model": {
+      "context_window": 1000000,
+      "max_output_tokens": 8192,
+      "model": "deepseek-flash",
+      "protocol": "anthropic",
+      "service": "https://api.deepseek.com/anthropic",
+      "thinking": true
+    },
+    "prompt": "59203e9581f6c0b71cd4302acbb8b13217b1b7eb58c7d5400d33cbd026aa13de",
+    "source": "2a9e19e2ddc00b55d4e162da07acd589d2810f4c9fcfe2ee16d01ef63c1b3364",
+    "tools": "9ff404520a42f0e4e299f4ca070a97242f294c610d25059d1ae5b9752657c3a7"
+  }
+}

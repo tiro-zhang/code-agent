@@ -1,0 +1,14 @@
+{
+  "settings.py": {
+    "after": {
+      "kind": "file",
+      "mode": 420,
+      "sha256": "73027794b99e0f5c2204f69e2299c563602a571c4878ba64c02b5cba22669077"
+    },
+    "before": {
+      "kind": "file",
+      "mode": 420,
+      "sha256": "e935cfca5068f16ec34929af18667fe8f4e22153fd0b68a4df2e69adf3b97b85"
+    }
+  }
+}

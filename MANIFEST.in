@@ -5,3 +5,4 @@ prune frontend/playwright-report
 prune frontend/.git
 recursive-include src/mewcode/web/static *
 global-exclude __pycache__ *.py[cod] .DS_Store
+recursive-include evals *.yaml *.py *.md *.txt

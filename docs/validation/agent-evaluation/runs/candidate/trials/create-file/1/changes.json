@@ -1,0 +1,10 @@
+{
+  "slug.py": {
+    "after": {
+      "kind": "file",
+      "mode": 384,
+      "sha256": "e603406ac4502d24452df9a997018ba905ae78c0fbdda827f13c993aa4fbf3a2"
+    },
+    "before": null
+  }
+}

@@ -1,0 +1,5 @@
+rules:
+- effect: allow
+  match: exact
+  rule: Bash(python3 -B check.py)
+version: 1

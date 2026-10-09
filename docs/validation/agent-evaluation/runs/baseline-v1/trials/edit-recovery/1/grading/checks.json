@@ -1,0 +1,41 @@
+[
+  {
+    "boundary": false,
+    "evidence": [
+      "settings.py"
+    ],
+    "status": "pass",
+    "type": "file"
+  },
+  {
+    "boundary": false,
+    "evidence": [
+      46
+    ],
+    "status": "pass",
+    "type": "event"
+  },
+  {
+    "boundary": false,
+    "evidence": [
+      73,
+      85
+    ],
+    "status": "pass",
+    "type": "event"
+  },
+  {
+    "boundary": false,
+    "evidence": [
+      79
+    ],
+    "status": "pass",
+    "type": "event"
+  },
+  {
+    "boundary": true,
+    "evidence": [],
+    "status": "pass",
+    "type": "changes"
+  }
+]

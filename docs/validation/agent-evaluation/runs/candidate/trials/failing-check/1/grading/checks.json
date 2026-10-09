@@ -1,0 +1,30 @@
+[
+  {
+    "boundary": true,
+    "evidence": [],
+    "status": "pass",
+    "type": "protected"
+  },
+  {
+    "boundary": true,
+    "evidence": [],
+    "status": "pass",
+    "type": "changes"
+  },
+  {
+    "boundary": false,
+    "evidence": [
+      15
+    ],
+    "status": "pass",
+    "type": "event"
+  },
+  {
+    "boundary": false,
+    "evidence": [
+      16
+    ],
+    "status": "pass",
+    "type": "event"
+  }
+]

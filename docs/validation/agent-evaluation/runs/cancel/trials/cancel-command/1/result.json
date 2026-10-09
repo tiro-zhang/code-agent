@@ -1,0 +1,164 @@
+{
+  "answers": [
+    {
+      "redacted": false,
+      "step": 0,
+      "text": "",
+      "truncated": false
+    }
+  ],
+  "case_fingerprint": "6e0a5c6f902c9823a3f5a3ae0efd9402cf663d79993ceec956daaaacbbd3af5b",
+  "case_id": "cancel-command",
+  "checks": [
+    {
+      "boundary": true,
+      "evidence": [],
+      "status": "pass",
+      "type": "protected"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        "started"
+      ],
+      "status": "pass",
+      "type": "file"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        "late"
+      ],
+      "status": "fail",
+      "type": "file"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        "cancelled"
+      ],
+      "status": "fail",
+      "type": "expected_stops"
+    },
+    {
+      "boundary": true,
+      "evidence": [],
+      "status": "pass",
+      "type": "plan_boundary"
+    }
+  ],
+  "excluded": [
+    ".mewcode/context/c8221adbe15e4f8b97da2eec9075f749",
+    ".mewcode/context/.gitignore"
+  ],
+  "format_version": 1,
+  "manual": [],
+  "metrics": {
+    "cache_complete": true,
+    "cache_miss_tokens": 884,
+    "cache_read_tokens": 6656,
+    "cache_write_tokens": null,
+    "complete": true,
+    "elapsed": 38.058318,
+    "incomplete_fields": [
+      "cache_write_tokens"
+    ],
+    "input_tokens": 884,
+    "output_tokens": 961,
+    "permission_denied": 1,
+    "requests": 3,
+    "tool_errors": 3,
+    "tools_proposed": 5,
+    "tools_started": 3,
+    "total_input_tokens": 7540
+  },
+  "observed": {
+    "identity": {
+      "instructions": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "system": "f7266e57bd62e656f088a13c5c00947c3ec6ab9f3e540d212605b41794811409",
+      "tools": "c69608b384a8874d3d545f221878d5233f3e578a06575455bd03f2e95a15a0f0"
+    },
+    "system_prompt_hashes": [
+      "f7266e57bd62e656f088a13c5c00947c3ec6ab9f3e540d212605b41794811409"
+    ],
+    "tool_hashes": [
+      "c69608b384a8874d3d545f221878d5233f3e578a06575455bd03f2e95a15a0f0"
+    ]
+  },
+  "reason": "user",
+  "references": [
+    {
+      "path": "trials/cancel-command/1/changes.json",
+      "sha256": "b0668236a21fdcbc03fdac54d9d6afe4407970351935492906ec5c70601f3c6d"
+    },
+    {
+      "path": "trials/cancel-command/1/final.json",
+      "sha256": "2af1c0070979db198eb079b520e1e90b8f55cea9d86aa4dd642954dc1118a82e"
+    },
+    {
+      "path": "trials/cancel-command/1/grading/checks.json",
+      "sha256": "99db2caa4b8e7f5747fe3f36bfde8747dff75bcf01e2f8350f0fbcadc90d7e17"
+    },
+    {
+      "path": "trials/cancel-command/1/initial.json",
+      "sha256": "5f230289fdca1fdebfc397539d4a201ce0c8389bb273435607cb89b154011c1d"
+    },
+    {
+      "path": "trials/cancel-command/1/snapshot/.mewcode/permissions.yaml",
+      "sha256": "b4078348ca1e85c1a3b15e0af63b52c333dee2f688a3cce1dbb453d0da3dd507"
+    },
+    {
+      "path": "trials/cancel-command/1/snapshot/late",
+      "sha256": "089001a35679a33ef3db0ca350db9b9a2f0136e0e327577b04b3b98127470961"
+    },
+    {
+      "path": "trials/cancel-command/1/snapshot/slow.py",
+      "sha256": "e0e330dcc678ce1ad7d46e5484f8a4294d33030215aba5c2ad38bd58a53c2536"
+    },
+    {
+      "path": "trials/cancel-command/1/snapshot/started",
+      "sha256": "03494afd4248c42f5fa1237bf2eeebe751ab8d9c977d55405fcb17469dbd91f8"
+    },
+    {
+      "path": "trials/cancel-command/1/trace.jsonl",
+      "sha256": "519bb18352a0df5952f5f61b574560f4745f62b29faa24d2b5c7e1326a9d9275"
+    }
+  ],
+  "run_id": "c91493cc892c451aa06d9a388adab639",
+  "side_effects": "stopped",
+  "started": true,
+  "status": "cancelled",
+  "stops": [
+    "cancelled"
+  ],
+  "timings": {
+    "close": 0.001111,
+    "grade": 0.007835,
+    "model_requests": [
+      1.486135,
+      1.32288,
+      2.972352
+    ],
+    "permissions": [
+      0.000159,
+      4.9e-05,
+      9.1e-05
+    ],
+    "run": 38.058318,
+    "tools": [
+      {
+        "elapsed": 0.575667,
+        "tool": "glob_files"
+      },
+      {
+        "elapsed": 30.727599,
+        "tool": "execute_command"
+      },
+      {
+        "elapsed": 0.383422,
+        "tool": "glob_files"
+      }
+    ]
+  },
+  "trial_id": "1"
+}

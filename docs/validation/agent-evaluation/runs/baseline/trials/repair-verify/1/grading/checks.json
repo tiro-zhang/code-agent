@@ -1,0 +1,32 @@
+[
+  {
+    "asset_sha256": "54e6147ee396e36c859369a520745a47cf37b7088203ea6b05f99d5fe74991ff",
+    "boundary": false,
+    "evidence": [
+      "/private/tmp/mewcode-eval-20261008/baseline/trials/repair-verify/1/grading/0/stdout.txt",
+      "/private/tmp/mewcode-eval-20261008/baseline/trials/repair-verify/1/grading/0/stderr.txt"
+    ],
+    "exit_code": 1,
+    "status": "fail",
+    "timeout": false,
+    "type": "command"
+  },
+  {
+    "boundary": true,
+    "evidence": [],
+    "status": "pass",
+    "type": "protected"
+  },
+  {
+    "boundary": true,
+    "evidence": [],
+    "status": "pass",
+    "type": "changes"
+  },
+  {
+    "boundary": false,
+    "evidence": [],
+    "status": "fail",
+    "type": "event"
+  }
+]

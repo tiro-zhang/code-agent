@@ -1,0 +1,126 @@
+{
+  "complete": true,
+  "config_sha256": "9f249ba628adbd09eef1a1b9d3f28d33b51aa299e54c3996be96f6e29572799c",
+  "controls": {
+    "cases": {
+      "failing-check": {
+        "fingerprint": "f557343fb623395f725dee08179282f0c2c58be40aaeed833e259f84fdbba407",
+        "permissions": "2a83214025e1658d234d1e64acf886575fdf7ad28317be9ca9d5f3533b27a5e4",
+        "timeout": 600
+      },
+      "plan-revise": {
+        "fingerprint": "f621f75c89d39369b8f085096b1b67c79e48e17df2ac3d7f1f650d08527183c0",
+        "permissions": "9762db446e880624909618b14344d3681a9902a7d4d01edd350bcaa3ece84421",
+        "timeout": 600
+      },
+      "repair-verify": {
+        "fingerprint": "4a08286a724a532481c19ed5e0f5bb34ef7173fa40ba1b789b227ef2affd84f3",
+        "permissions": "efa5cacdf7606aa2d9da9e11f5df9fdeee24968a46187d3783e545fcec1bf627",
+        "timeout": 600
+      }
+    },
+    "close_timeout": 5,
+    "request_budget": 20,
+    "scope": [
+      "edit_file",
+      "execute_command",
+      "glob_files",
+      "read_file",
+      "search_code",
+      "write_file"
+    ],
+    "selected": [
+      "repair-verify",
+      "plan-revise",
+      "failing-check"
+    ],
+    "suite": "88ee77634f481268242e7c582b36b5cae4abc9e13215f01a6905e191cec0599e",
+    "tool_timeout": 30
+  },
+  "created_at": "2026-10-08T07:59:13.228704+00:00",
+  "execution": "real",
+  "finished_at": "2026-10-08T08:01:20.056881+00:00",
+  "format_version": 1,
+  "ignored_config_fields": [
+    "skill_models",
+    "agent_models",
+    "agent_plugin_dirs",
+    "agent_background_tools",
+    "team_backend",
+    "team_max_running",
+    "team_max_queued",
+    "team_coordinator_enabled"
+  ],
+  "label": "openai",
+  "repeat": 1,
+  "run_id": "57b28b5f2529457d8ce6409994a41975",
+  "scope": [
+    "edit_file",
+    "execute_command",
+    "glob_files",
+    "read_file",
+    "search_code",
+    "write_file"
+  ],
+  "source": {
+    "commit": "59e91d1e3f288c0ce4d2a84cf1f3575715d940fa",
+    "digest": "bd52867523f0692cf61cb363165592f9651a1bf6d1e4829e67bafd13136b8038",
+    "dirty": true,
+    "environment": {
+      "dependencies": {
+        "anthropic": "1.8.0",
+        "jsonschema": "4.26.0",
+        "mcp": "2.3.0",
+        "openai": "3.19.2",
+        "pyyaml": "6.0.3"
+      },
+      "platform": "Darwin",
+      "python": "3.11.14"
+    }
+  },
+  "suite_id": "core-v1",
+  "trials": [
+    {
+      "case_id": "repair-verify",
+      "result": "trials/repair-verify/1/result.json",
+      "sha256": "9f3be485da1f795a6f14937f44192495276aa79430f49d91c02af50a90f548fb",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "plan-revise",
+      "result": "trials/plan-revise/1/result.json",
+      "sha256": "ead73bd1f01868d91ada9e42a22a32e5c514e7c4eb3193413708689a7fcd0aa1",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "failing-check",
+      "result": "trials/failing-check/1/result.json",
+      "sha256": "4b1bb87e63b1cb5a418eb2044fbc491c12dc6899689f0ea00ce0f9253cf3582f",
+      "trial_id": "1"
+    }
+  ],
+  "variants": {
+    "environment": {
+      "dependencies": {
+        "anthropic": "1.8.0",
+        "jsonschema": "4.26.0",
+        "mcp": "2.3.0",
+        "openai": "3.19.2",
+        "pyyaml": "6.0.3"
+      },
+      "platform": "Darwin",
+      "python": "3.11.14"
+    },
+    "model": {
+      "context_window": 256000,
+      "max_output_tokens": 8192,
+      "model": "ark-code-latest",
+      "protocol": "openai",
+      "service": "https://ark.cn-beijing.volces.com/api/plan/v3",
+      "thinking": false
+    },
+    "prompt": "59203e9581f6c0b71cd4302acbb8b13217b1b7eb58c7d5400d33cbd026aa13de",
+    "source": "bd52867523f0692cf61cb363165592f9651a1bf6d1e4829e67bafd13136b8038",
+    "tools": "9ff404520a42f0e4e299f4ca070a97242f294c610d25059d1ae5b9752657c3a7"
+  }
+}

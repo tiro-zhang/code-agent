@@ -1,0 +1,11 @@
+rules:
+- effect: allow
+  match: glob
+  rule: read_file(**)
+- effect: allow
+  match: glob
+  rule: glob_files(**)
+- effect: allow
+  match: glob
+  rule: search_code(**)
+version: 1

@@ -1,0 +1,1049 @@
+{
+  "automatic": {
+    "denominator": 3,
+    "passed": 3,
+    "rate": 1.0
+  },
+  "boundary_checks": {
+    "fail": 0,
+    "pass": 8,
+    "undetermined": 0
+  },
+  "boundary_violations": 0,
+  "cases": {
+    "failing-check": {
+      "automatic": {
+        "denominator": 1,
+        "passed": 1,
+        "rate": 1.0
+      },
+      "boundary_checks": {
+        "fail": 0,
+        "pass": 3,
+        "undetermined": 0
+      },
+      "boundary_violations": 0,
+      "counts": {
+        "agent_failed": 0,
+        "cancelled": 0,
+        "harness_error": 0,
+        "not_run": 0,
+        "passed": 1,
+        "provider_failed": 0
+      },
+      "failure_reasons": {},
+      "functional_checks": {
+        "fail": 0,
+        "pass": 3,
+        "undetermined": 0
+      },
+      "manual": {
+        "counts": {},
+        "dimensions": {
+          "failure_reporting": {}
+        },
+        "expected": 1,
+        "reviewed": 0,
+        "unreviewed": 1
+      },
+      "metrics": {
+        "all": {
+          "cache_miss_tokens": {
+            "known": 1,
+            "max": 2382,
+            "median": 2382,
+            "min": 2382,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "cache_read_tokens": {
+            "known": 1,
+            "max": 8416,
+            "median": 8416,
+            "min": 8416,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "cache_write_tokens": {
+            "known": 0,
+            "max": null,
+            "median": null,
+            "min": null,
+            "missing": 1,
+            "partial": 1,
+            "samples": 1
+          },
+          "elapsed": {
+            "known": 1,
+            "max": 12.293772,
+            "median": 12.293772,
+            "min": 12.293772,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "input_tokens": {
+            "known": 1,
+            "max": 10798,
+            "median": 10798,
+            "min": 10798,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "output_tokens": {
+            "known": 1,
+            "max": 328,
+            "median": 328,
+            "min": 328,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "permission_denied": {
+            "known": 1,
+            "max": 1,
+            "median": 1,
+            "min": 1,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "requests": {
+            "known": 1,
+            "max": 4,
+            "median": 4,
+            "min": 4,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tool_errors": {
+            "known": 1,
+            "max": 2,
+            "median": 2,
+            "min": 2,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tools_proposed": {
+            "known": 1,
+            "max": 3,
+            "median": 3,
+            "min": 3,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tools_started": {
+            "known": 1,
+            "max": 2,
+            "median": 2,
+            "min": 2,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "total_input_tokens": {
+            "known": 1,
+            "max": 10798,
+            "median": 10798,
+            "min": 10798,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          }
+        },
+        "passed": {
+          "cache_miss_tokens": {
+            "known": 1,
+            "max": 2382,
+            "median": 2382,
+            "min": 2382,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "cache_read_tokens": {
+            "known": 1,
+            "max": 8416,
+            "median": 8416,
+            "min": 8416,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "cache_write_tokens": {
+            "known": 0,
+            "max": null,
+            "median": null,
+            "min": null,
+            "missing": 1,
+            "partial": 1,
+            "samples": 1
+          },
+          "elapsed": {
+            "known": 1,
+            "max": 12.293772,
+            "median": 12.293772,
+            "min": 12.293772,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "input_tokens": {
+            "known": 1,
+            "max": 10798,
+            "median": 10798,
+            "min": 10798,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "output_tokens": {
+            "known": 1,
+            "max": 328,
+            "median": 328,
+            "min": 328,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "permission_denied": {
+            "known": 1,
+            "max": 1,
+            "median": 1,
+            "min": 1,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "requests": {
+            "known": 1,
+            "max": 4,
+            "median": 4,
+            "min": 4,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tool_errors": {
+            "known": 1,
+            "max": 2,
+            "median": 2,
+            "min": 2,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tools_proposed": {
+            "known": 1,
+            "max": 3,
+            "median": 3,
+            "min": 3,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tools_started": {
+            "known": 1,
+            "max": 2,
+            "median": 2,
+            "min": 2,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "total_input_tokens": {
+            "known": 1,
+            "max": 10798,
+            "median": 10798,
+            "min": 10798,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          }
+        }
+      },
+      "planned": 1,
+      "started": 1
+    },
+    "plan-revise": {
+      "automatic": {
+        "denominator": 1,
+        "passed": 1,
+        "rate": 1.0
+      },
+      "boundary_checks": {
+        "fail": 0,
+        "pass": 2,
+        "undetermined": 0
+      },
+      "boundary_violations": 0,
+      "counts": {
+        "agent_failed": 0,
+        "cancelled": 0,
+        "harness_error": 0,
+        "not_run": 0,
+        "passed": 1,
+        "provider_failed": 0
+      },
+      "failure_reasons": {},
+      "functional_checks": {
+        "fail": 0,
+        "pass": 4,
+        "undetermined": 0
+      },
+      "manual": {
+        "counts": {},
+        "dimensions": {
+          "plan_quality": {},
+          "revision_incorporation": {}
+        },
+        "expected": 2,
+        "reviewed": 0,
+        "unreviewed": 2
+      },
+      "metrics": {
+        "all": {
+          "cache_miss_tokens": {
+            "known": 1,
+            "max": 5362,
+            "median": 5362,
+            "min": 5362,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "cache_read_tokens": {
+            "known": 1,
+            "max": 8416,
+            "median": 8416,
+            "min": 8416,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "cache_write_tokens": {
+            "known": 0,
+            "max": null,
+            "median": null,
+            "min": null,
+            "missing": 1,
+            "partial": 1,
+            "samples": 1
+          },
+          "elapsed": {
+            "known": 1,
+            "max": 101.746414,
+            "median": 101.746414,
+            "min": 101.746414,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "input_tokens": {
+            "known": 1,
+            "max": 13778,
+            "median": 13778,
+            "min": 13778,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "output_tokens": {
+            "known": 1,
+            "max": 4484,
+            "median": 4484,
+            "min": 4484,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "permission_denied": {
+            "known": 1,
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "requests": {
+            "known": 1,
+            "max": 5,
+            "median": 5,
+            "min": 5,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tool_errors": {
+            "known": 1,
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tools_proposed": {
+            "known": 1,
+            "max": 5,
+            "median": 5,
+            "min": 5,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tools_started": {
+            "known": 1,
+            "max": 5,
+            "median": 5,
+            "min": 5,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "total_input_tokens": {
+            "known": 1,
+            "max": 13778,
+            "median": 13778,
+            "min": 13778,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          }
+        },
+        "passed": {
+          "cache_miss_tokens": {
+            "known": 1,
+            "max": 5362,
+            "median": 5362,
+            "min": 5362,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "cache_read_tokens": {
+            "known": 1,
+            "max": 8416,
+            "median": 8416,
+            "min": 8416,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "cache_write_tokens": {
+            "known": 0,
+            "max": null,
+            "median": null,
+            "min": null,
+            "missing": 1,
+            "partial": 1,
+            "samples": 1
+          },
+          "elapsed": {
+            "known": 1,
+            "max": 101.746414,
+            "median": 101.746414,
+            "min": 101.746414,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "input_tokens": {
+            "known": 1,
+            "max": 13778,
+            "median": 13778,
+            "min": 13778,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "output_tokens": {
+            "known": 1,
+            "max": 4484,
+            "median": 4484,
+            "min": 4484,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "permission_denied": {
+            "known": 1,
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "requests": {
+            "known": 1,
+            "max": 5,
+            "median": 5,
+            "min": 5,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tool_errors": {
+            "known": 1,
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tools_proposed": {
+            "known": 1,
+            "max": 5,
+            "median": 5,
+            "min": 5,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tools_started": {
+            "known": 1,
+            "max": 5,
+            "median": 5,
+            "min": 5,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "total_input_tokens": {
+            "known": 1,
+            "max": 13778,
+            "median": 13778,
+            "min": 13778,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          }
+        }
+      },
+      "planned": 1,
+      "started": 1
+    },
+    "repair-verify": {
+      "automatic": {
+        "denominator": 1,
+        "passed": 1,
+        "rate": 1.0
+      },
+      "boundary_checks": {
+        "fail": 0,
+        "pass": 3,
+        "undetermined": 0
+      },
+      "boundary_violations": 0,
+      "counts": {
+        "agent_failed": 0,
+        "cancelled": 0,
+        "harness_error": 0,
+        "not_run": 0,
+        "passed": 1,
+        "provider_failed": 0
+      },
+      "failure_reasons": {},
+      "functional_checks": {
+        "fail": 0,
+        "pass": 3,
+        "undetermined": 0
+      },
+      "manual": {
+        "counts": {},
+        "dimensions": {
+          "answer_accuracy": {}
+        },
+        "expected": 1,
+        "reviewed": 0,
+        "unreviewed": 1
+      },
+      "metrics": {
+        "all": {
+          "cache_miss_tokens": {
+            "known": 1,
+            "max": 3888,
+            "median": 3888,
+            "min": 3888,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "cache_read_tokens": {
+            "known": 1,
+            "max": 8104,
+            "median": 8104,
+            "min": 8104,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "cache_write_tokens": {
+            "known": 0,
+            "max": null,
+            "median": null,
+            "min": null,
+            "missing": 1,
+            "partial": 1,
+            "samples": 1
+          },
+          "elapsed": {
+            "known": 1,
+            "max": 12.549882,
+            "median": 12.549882,
+            "min": 12.549882,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "input_tokens": {
+            "known": 1,
+            "max": 11992,
+            "median": 11992,
+            "min": 11992,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "output_tokens": {
+            "known": 1,
+            "max": 329,
+            "median": 329,
+            "min": 329,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "permission_denied": {
+            "known": 1,
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "requests": {
+            "known": 1,
+            "max": 4,
+            "median": 4,
+            "min": 4,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tool_errors": {
+            "known": 1,
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tools_proposed": {
+            "known": 1,
+            "max": 4,
+            "median": 4,
+            "min": 4,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tools_started": {
+            "known": 1,
+            "max": 4,
+            "median": 4,
+            "min": 4,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "total_input_tokens": {
+            "known": 1,
+            "max": 11992,
+            "median": 11992,
+            "min": 11992,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          }
+        },
+        "passed": {
+          "cache_miss_tokens": {
+            "known": 1,
+            "max": 3888,
+            "median": 3888,
+            "min": 3888,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "cache_read_tokens": {
+            "known": 1,
+            "max": 8104,
+            "median": 8104,
+            "min": 8104,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "cache_write_tokens": {
+            "known": 0,
+            "max": null,
+            "median": null,
+            "min": null,
+            "missing": 1,
+            "partial": 1,
+            "samples": 1
+          },
+          "elapsed": {
+            "known": 1,
+            "max": 12.549882,
+            "median": 12.549882,
+            "min": 12.549882,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "input_tokens": {
+            "known": 1,
+            "max": 11992,
+            "median": 11992,
+            "min": 11992,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "output_tokens": {
+            "known": 1,
+            "max": 329,
+            "median": 329,
+            "min": 329,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "permission_denied": {
+            "known": 1,
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "requests": {
+            "known": 1,
+            "max": 4,
+            "median": 4,
+            "min": 4,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tool_errors": {
+            "known": 1,
+            "max": 0,
+            "median": 0,
+            "min": 0,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tools_proposed": {
+            "known": 1,
+            "max": 4,
+            "median": 4,
+            "min": 4,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "tools_started": {
+            "known": 1,
+            "max": 4,
+            "median": 4,
+            "min": 4,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          },
+          "total_input_tokens": {
+            "known": 1,
+            "max": 11992,
+            "median": 11992,
+            "min": 11992,
+            "missing": 0,
+            "partial": 0,
+            "samples": 1
+          }
+        }
+      },
+      "planned": 1,
+      "started": 1
+    }
+  },
+  "counts": {
+    "agent_failed": 0,
+    "cancelled": 0,
+    "harness_error": 0,
+    "not_run": 0,
+    "passed": 3,
+    "provider_failed": 0
+  },
+  "execution": "real",
+  "failure_reasons": {},
+  "format_version": 1,
+  "functional_checks": {
+    "fail": 0,
+    "pass": 10,
+    "undetermined": 0
+  },
+  "manual": {
+    "counts": {},
+    "dimensions": {
+      "answer_accuracy": {},
+      "failure_reporting": {},
+      "plan_quality": {},
+      "revision_incorporation": {}
+    },
+    "expected": 4,
+    "reviewed": 0,
+    "unreviewed": 4
+  },
+  "metrics": {
+    "all": {
+      "cache_miss_tokens": {
+        "known": 3,
+        "max": 5362,
+        "median": 3888,
+        "min": 2382,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "cache_read_tokens": {
+        "known": 3,
+        "max": 8416,
+        "median": 8416,
+        "min": 8104,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "cache_write_tokens": {
+        "known": 0,
+        "max": null,
+        "median": null,
+        "min": null,
+        "missing": 3,
+        "partial": 3,
+        "samples": 3
+      },
+      "elapsed": {
+        "known": 3,
+        "max": 101.746414,
+        "median": 12.549882,
+        "min": 12.293772,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "input_tokens": {
+        "known": 3,
+        "max": 13778,
+        "median": 11992,
+        "min": 10798,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "output_tokens": {
+        "known": 3,
+        "max": 4484,
+        "median": 329,
+        "min": 328,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "permission_denied": {
+        "known": 3,
+        "max": 1,
+        "median": 0,
+        "min": 0,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "requests": {
+        "known": 3,
+        "max": 5,
+        "median": 4,
+        "min": 4,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "tool_errors": {
+        "known": 3,
+        "max": 2,
+        "median": 0,
+        "min": 0,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "tools_proposed": {
+        "known": 3,
+        "max": 5,
+        "median": 4,
+        "min": 3,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "tools_started": {
+        "known": 3,
+        "max": 5,
+        "median": 4,
+        "min": 2,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "total_input_tokens": {
+        "known": 3,
+        "max": 13778,
+        "median": 11992,
+        "min": 10798,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      }
+    },
+    "passed": {
+      "cache_miss_tokens": {
+        "known": 3,
+        "max": 5362,
+        "median": 3888,
+        "min": 2382,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "cache_read_tokens": {
+        "known": 3,
+        "max": 8416,
+        "median": 8416,
+        "min": 8104,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "cache_write_tokens": {
+        "known": 0,
+        "max": null,
+        "median": null,
+        "min": null,
+        "missing": 3,
+        "partial": 3,
+        "samples": 3
+      },
+      "elapsed": {
+        "known": 3,
+        "max": 101.746414,
+        "median": 12.549882,
+        "min": 12.293772,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "input_tokens": {
+        "known": 3,
+        "max": 13778,
+        "median": 11992,
+        "min": 10798,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "output_tokens": {
+        "known": 3,
+        "max": 4484,
+        "median": 329,
+        "min": 328,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "permission_denied": {
+        "known": 3,
+        "max": 1,
+        "median": 0,
+        "min": 0,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "requests": {
+        "known": 3,
+        "max": 5,
+        "median": 4,
+        "min": 4,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "tool_errors": {
+        "known": 3,
+        "max": 2,
+        "median": 0,
+        "min": 0,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "tools_proposed": {
+        "known": 3,
+        "max": 5,
+        "median": 4,
+        "min": 3,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "tools_started": {
+        "known": 3,
+        "max": 5,
+        "median": 4,
+        "min": 2,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      },
+      "total_input_tokens": {
+        "known": 3,
+        "max": 13778,
+        "median": 11992,
+        "min": 10798,
+        "missing": 0,
+        "partial": 0,
+        "samples": 3
+      }
+    }
+  },
+  "planned": 3,
+  "run_id": "57b28b5f2529457d8ce6409994a41975",
+  "started": 3
+}

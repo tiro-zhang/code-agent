@@ -1,0 +1,14 @@
+rules:
+- effect: allow
+  match: glob
+  rule: read_file(**)
+- effect: allow
+  match: glob
+  rule: glob_files(**)
+- effect: allow
+  match: glob
+  rule: search_code(**)
+- effect: allow
+  match: exact
+  rule: Bash(python3 -B check.py)
+version: 1

@@ -1,0 +1,5 @@
+rules:
+- effect: deny
+  match: glob
+  rule: edit_file(*)
+version: 1

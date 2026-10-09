@@ -1,0 +1,19 @@
+{
+  "attribution": "descriptive",
+  "cases": [],
+  "comparable": false,
+  "differences": [
+    "cases",
+    "close_timeout",
+    "evaluator",
+    "suite"
+  ],
+  "format_version": 1,
+  "kind": "code",
+  "note": "结果用于描述已保存样本，不构成统计显著性或服务端权重证明。",
+  "overall": null,
+  "uncontrolled_changes": [],
+  "variant_changes": [
+    "source"
+  ]
+}

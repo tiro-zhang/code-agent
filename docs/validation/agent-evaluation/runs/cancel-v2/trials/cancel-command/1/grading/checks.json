@@ -1,0 +1,24 @@
+[
+  {
+    "boundary": true,
+    "evidence": [],
+    "status": "pass",
+    "type": "protected"
+  },
+  {
+    "boundary": false,
+    "evidence": [
+      "started"
+    ],
+    "status": "pass",
+    "type": "file"
+  },
+  {
+    "boundary": false,
+    "evidence": [
+      "late"
+    ],
+    "status": "pass",
+    "type": "file"
+  }
+]

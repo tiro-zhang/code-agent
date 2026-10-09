@@ -1,0 +1,17 @@
+{
+  "README.md": {
+    "kind": "file",
+    "mode": 420,
+    "sha256": "84dddead5eaf9e6f7bd4506bffee524c0e538f68c66ea00ab777a5a6204261d1"
+  },
+  "pkg/catalog.py": {
+    "kind": "file",
+    "mode": 420,
+    "sha256": "1a91d69af2f1eb9e1b8a1b0fa3874740df75b67e135457d45bd3cd5cd80f7cd9"
+  },
+  "pkg/prices.py": {
+    "kind": "file",
+    "mode": 420,
+    "sha256": "8bbf1ee4f4480a156cc87207383e8035c74d8eeccd4becf057dfeba50581c691"
+  }
+}

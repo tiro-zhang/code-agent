@@ -1,0 +1,10 @@
+{
+  "started": {
+    "after": {
+      "kind": "file",
+      "mode": 420,
+      "sha256": "03494afd4248c42f5fa1237bf2eeebe751ab8d9c977d55405fcb17469dbd91f8"
+    },
+    "before": null
+  }
+}

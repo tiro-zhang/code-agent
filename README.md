@@ -692,3 +692,36 @@ MEWCODE_COORDINATOR=1 uv run mewcode --config .env --team demo
 容量边界：每团队最多 4096 个任务，每邮箱最多 2048 条记录，单个 JSON 记录最多 8 MiB；正文 UTF-8 最多 64 KiB，摘要最多 256 个字符。超限明确拒绝，不丢弃未读消息。固定 inode 的 POSIX `flock` 不依据锁文件年龄或时间戳抢占。消息正文只作数据保存，tmux 使用不透明唤醒信号，不执行正文。
 
 本轮证据及未执行项见 [真实模型双后端验收](docs/validation/agent-teams/e2e.md)、[81 个规格场景映射](docs/validation/agent-teams/spec-audit.md) 与 [Git 整合验证](docs/validation/agent-teams/integration.md)。
+
+## Agent 测评：日常回归与配置比较
+
+安装后增加独立命令 `mewcode-eval`。它运行真实主 Agent、真实模型和六个现有核心工具；规划阶段只开放三个只读工具。第一版使用仓库内受信任务 `evals/core-v1`，不覆盖 Skill、子 Agent、团队或 MCP。任务目录通过参数显式指定，wheel 不内置任务资源；默认 pytest 使用网络替身验证测评器，不产生真实能力分数。
+
+```bash
+uv sync
+uv run mewcode-eval run --config /absolute/path/.env --suite evals/core-v1 --output /private/tmp/mewcode-eval/baseline --label baseline --repeat 3
+uv run mewcode-eval run --config /absolute/path/.env --suite evals/core-v1 --output /private/tmp/mewcode-eval/candidate --label candidate --repeat 3
+uv run mewcode-eval compare --baseline /private/tmp/mewcode-eval/baseline --candidate /private/tmp/mewcode-eval/candidate --kind code --output /private/tmp/mewcode-eval/comparison
+```
+
+每次输出须使用新目录，避免覆盖失败证据。默认全八例、每例一次、串行运行；可重复传入 `--case repair-verify --case plan-revise` 选例。每条明确用户消息沿用配置的请求预算（默认 20）；每次完整试跑总期限 600 秒、工具执行默认 30 秒、收尾独立期限 5 秒。试跑超时只停止本次，Ctrl-C 停止整套并保留取消及未执行记录；不能确认收尾时停止后续尝试并跳过评分。
+
+比较代码时由调用者手动切换版本，分别生成证据，测评器不会切换 Git。比较模型时分别指定不同 `.env`，用 `--kind model`；比较提示／策略代码时用 `--kind strategy`。保存的源码、实际 system／工具声明、指令与有效配置均有指纹，临时路径归一化。任务、评分资产及测评器、权限、选例或预算不兼容时不会给出混合总体结论；同时改变多个维度会标为描述性比较。重复次数可不同，但分母和样本数始终分别列出。
+
+八例包含 locate-read、repair-verify、create-file、edit-recovery、plan-revise、mode-execute、permission-deny 和 failing-check。搜索、歧义编辑和故意失败检查属于明确工具契约探针，不能将小型任务结果外推为复杂项目表现。mode 步骤调用真实切换接口，本身不请求模型或执行规划；后续明确消息才开始执行。
+
+每次尝试使用新的工作目录、隔离用户域和空批准状态，不加载个人指令、记忆、Skill、Hook 或恢复历史。权限仍经过真实规则与审批，未匹配默认拒绝、明确 deny 优先；不使用全局 bypass。目录隔离不是操作系统沙箱，shell 仍可能访问目录外；只运行仓库内受信任务，不能直接接收不受信任务包。
+
+`manifest.json` 先于模型调用落盘；`trials/<case>/<trial>/` 保存 trace、result、初末文件指纹、变化、冻结快照和独立评分输出。评分资产只在运行关闭后引入独立验证目录，模型自己运行的检查不能代替独立验收。原始执行副本放在独立临时域；评分后保存的工作文件和快照会脱敏，并保留原始指纹与 redacted_files 标记。不能确认停止的原始域不作为持久证据。轨迹不保存思考、请求头、密钥或配置全文；为避免跨片段秘密泄漏，流式正文省略，完整最终答复与工具结果另存并脱敏，大字段明确标记裁剪。结果包含真实任务请求账本、已知 Token／缓存、工具意图与开始次数、运行／关闭／评分计时；未知不补零、不估算费用。
+
+自动状态分为 passed、agent_failed、provider_failed、harness_error、cancelled、not_run。通过率为 `passed / (passed + agent_failed + provider_failed + cancelled)`，测评器错误和未执行单列；有效分母为零显示不可计算。报告分别展示功能、边界、人工复核和效率，包括全部有效尝试与自动通过子集的已知／缺失数、中位数和范围。`model_done` 不是成功证明，所有必需检查和终态必须满足。
+
+答复准确性、规划质量等语义维度保持待人工评价，不隐式调用模型裁判。可在证据目录新增 `reviews.jsonl`，每行使用实际运行身份，证据路径相对该目录，例如：
+
+```json
+{"run_id":"manifest 中的 run_id","case_id":"plan-revise","trial_id":"1","dimension":"plan_quality","status":"pass","reviewer":"reviewer-name","time":"2026-10-08T16:00:00+08:00","reason":"完整计划包含目标、修订要求与验证","evidence":["trials/plan-revise/1/result.json"]}
+```
+
+`status` 可为 pass、fail 或 unreviewed，维度必须来自该次 result 的 manual 清单。离线 compare 重新读取并校验人工记录，合并显示覆盖率和结果，不改变原始自动分数。人工未评不影响 run 退出码：全自动通过为 0，有有效失败为 1，输入／测评器／收尾错误为 2，用户中断为 130；compare 成功生成兼容的描述性比较为 0，输入损坏或控制不兼容为 2。比较过程不请求模型、不启动工具或重跑任务。
+
+本次验收与实际覆盖范围见 [agent evaluation 验证材料](docs/validation/agent-evaluation/README.md)。

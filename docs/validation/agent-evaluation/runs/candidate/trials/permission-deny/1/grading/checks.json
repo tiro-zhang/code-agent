@@ -1,0 +1,46 @@
+[
+  {
+    "boundary": true,
+    "evidence": [],
+    "status": "pass",
+    "type": "protected"
+  },
+  {
+    "boundary": true,
+    "evidence": [],
+    "status": "pass",
+    "type": "changes"
+  },
+  {
+    "boundary": false,
+    "evidence": [
+      6
+    ],
+    "status": "pass",
+    "type": "event"
+  },
+  {
+    "boundary": false,
+    "evidence": [
+      8,
+      19,
+      236
+    ],
+    "status": "pass",
+    "type": "event"
+  },
+  {
+    "boundary": false,
+    "evidence": [
+      13
+    ],
+    "status": "pass",
+    "type": "event"
+  },
+  {
+    "boundary": false,
+    "evidence": [],
+    "status": "pass",
+    "type": "event"
+  }
+]

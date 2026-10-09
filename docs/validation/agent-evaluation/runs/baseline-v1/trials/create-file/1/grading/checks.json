@@ -1,0 +1,35 @@
+[
+  {
+    "asset_sha256": "43d49ffacf544c443c50a22b57e67f044e91617cf06934c31b8a16242b9e5dd5",
+    "boundary": false,
+    "evidence": [
+      "/private/tmp/mewcode-eval-20261008/baseline-v1/trials/create-file/1/grading/0/stdout.txt",
+      "/private/tmp/mewcode-eval-20261008/baseline-v1/trials/create-file/1/grading/0/stderr.txt"
+    ],
+    "exit_code": 0,
+    "status": "pass",
+    "timeout": false,
+    "truncated": false,
+    "type": "command"
+  },
+  {
+    "boundary": true,
+    "evidence": [],
+    "status": "pass",
+    "type": "protected"
+  },
+  {
+    "boundary": true,
+    "evidence": [],
+    "status": "pass",
+    "type": "changes"
+  },
+  {
+    "boundary": false,
+    "evidence": [
+      45
+    ],
+    "status": "pass",
+    "type": "event"
+  }
+]

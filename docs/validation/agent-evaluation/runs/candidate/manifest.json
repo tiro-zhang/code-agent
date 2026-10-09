@@ -1,0 +1,187 @@
+{
+  "complete": true,
+  "config_sha256": "632e8c1561e08eadb6c42aad4ca1f24679d13c9fffb5f453a151db46cb253198",
+  "controls": {
+    "cases": {
+      "create-file": {
+        "fingerprint": "f7274b427078dd908da3495b9ecc2c0b0d0d5973ad38a0068f217730c7cd755a",
+        "permissions": "b4a15227696cd9f9b0fc0c44466494d9656b655b5c04d8743af57988f1df82cb",
+        "timeout": 600
+      },
+      "edit-recovery": {
+        "fingerprint": "c3e9f951e60b0904e787a02fa5db6b29aa1faedd208e2d88404d89f312b50d17",
+        "permissions": "5b21e940b86bd93b83c75cf6f470bca50cea3c4d1b001cf12d6e47ac6d063ec8",
+        "timeout": 600
+      },
+      "failing-check": {
+        "fingerprint": "f557343fb623395f725dee08179282f0c2c58be40aaeed833e259f84fdbba407",
+        "permissions": "2a83214025e1658d234d1e64acf886575fdf7ad28317be9ca9d5f3533b27a5e4",
+        "timeout": 600
+      },
+      "locate-read": {
+        "fingerprint": "8a510eed2017840223075add96732dec4de17f762ec9ab9232cca0c6fa7f0a53",
+        "permissions": "9762db446e880624909618b14344d3681a9902a7d4d01edd350bcaa3ece84421",
+        "timeout": 600
+      },
+      "mode-execute": {
+        "fingerprint": "d907d7d8f5d24163ae64a1d941b4a3e6ace848f85da2f469420949c6740d3f56",
+        "permissions": "efa5cacdf7606aa2d9da9e11f5df9fdeee24968a46187d3783e545fcec1bf627",
+        "timeout": 600
+      },
+      "permission-deny": {
+        "fingerprint": "d005239a9809664830c517a175e55c43acc16ebdc31f095566b6a94080135224",
+        "permissions": "6950fced72001c103fc8f150f262ecc8b3e15a83b545f3dac0220e52596b1d7f",
+        "timeout": 600
+      },
+      "plan-revise": {
+        "fingerprint": "f621f75c89d39369b8f085096b1b67c79e48e17df2ac3d7f1f650d08527183c0",
+        "permissions": "9762db446e880624909618b14344d3681a9902a7d4d01edd350bcaa3ece84421",
+        "timeout": 600
+      },
+      "repair-verify": {
+        "fingerprint": "4a08286a724a532481c19ed5e0f5bb34ef7173fa40ba1b789b227ef2affd84f3",
+        "permissions": "efa5cacdf7606aa2d9da9e11f5df9fdeee24968a46187d3783e545fcec1bf627",
+        "timeout": 600
+      }
+    },
+    "close_timeout": 5,
+    "evaluator": "76165e9e14dbea7c339705e1a7e1aed27c86a710287a4aafdbb38c0412e15fe6",
+    "request_budget": 20,
+    "scope": [
+      "edit_file",
+      "execute_command",
+      "glob_files",
+      "read_file",
+      "search_code",
+      "write_file"
+    ],
+    "selected": [
+      "locate-read",
+      "repair-verify",
+      "create-file",
+      "edit-recovery",
+      "plan-revise",
+      "mode-execute",
+      "permission-deny",
+      "failing-check"
+    ],
+    "suite": "88ee77634f481268242e7c582b36b5cae4abc9e13215f01a6905e191cec0599e",
+    "tool_timeout": 30
+  },
+  "created_at": "2026-10-08T08:18:20.036889+00:00",
+  "execution": "real",
+  "finished_at": "2026-10-08T08:19:23.508421+00:00",
+  "format_version": 1,
+  "ignored_config_fields": [
+    "skill_models",
+    "agent_models",
+    "agent_plugin_dirs",
+    "agent_background_tools",
+    "team_backend",
+    "team_max_running",
+    "team_max_queued",
+    "team_coordinator_enabled"
+  ],
+  "label": "candidate",
+  "repeat": 1,
+  "run_id": "d9bcb867de344a938e71e98f3646a166",
+  "scope": [
+    "edit_file",
+    "execute_command",
+    "glob_files",
+    "read_file",
+    "search_code",
+    "write_file"
+  ],
+  "source": {
+    "commit": "59e91d1e3f288c0ce4d2a84cf1f3575715d940fa",
+    "digest": "5b2e079eaa54b38ac54947074d3ca3f36ab67d0c9dece46a9030e19db36532d6",
+    "dirty": true,
+    "environment": {
+      "dependencies": {
+        "anthropic": "1.8.0",
+        "jsonschema": "4.26.0",
+        "mcp": "2.3.0",
+        "openai": "3.19.2",
+        "pyyaml": "6.0.3"
+      },
+      "platform": "Darwin",
+      "python": "3.11.14"
+    }
+  },
+  "suite_id": "core-v1",
+  "trials": [
+    {
+      "case_id": "locate-read",
+      "result": "trials/locate-read/1/result.json",
+      "sha256": "355b8d1a73ab134112c41a0a1938da24dc02ba90c68b4a5f9dce81476bf09836",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "repair-verify",
+      "result": "trials/repair-verify/1/result.json",
+      "sha256": "5cd1d896481db67c772ee40396b5221d21c9b03e301660dda603865bb40cb900",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "create-file",
+      "result": "trials/create-file/1/result.json",
+      "sha256": "72e3714196d42a9f909bb4a56b058d9ada6c0fe9290b64f4a23d588d95faa414",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "edit-recovery",
+      "result": "trials/edit-recovery/1/result.json",
+      "sha256": "241cc8bf40afadf49f4f6f7cd309d86c9f8dbe7c91d6b8e9fd8492d580fa3ad9",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "plan-revise",
+      "result": "trials/plan-revise/1/result.json",
+      "sha256": "5b1faa9a7db2ece12a450ebb18bcfc1be2f29cbae9a0f786721e239e29167d14",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "mode-execute",
+      "result": "trials/mode-execute/1/result.json",
+      "sha256": "4d34018392b9f8cc8dc8383ad590ccf713e32260fa0d8cac5146659f94d1ab4e",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "permission-deny",
+      "result": "trials/permission-deny/1/result.json",
+      "sha256": "b307db16347255f005e34985e6a572d5d75133f0e08e1af40ad38f550b9618cc",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "failing-check",
+      "result": "trials/failing-check/1/result.json",
+      "sha256": "5687093acb9ff10673fc991b7cb5d76db9f6ff872b50974900b60628b7a8076c",
+      "trial_id": "1"
+    }
+  ],
+  "variants": {
+    "environment": {
+      "dependencies": {
+        "anthropic": "1.8.0",
+        "jsonschema": "4.26.0",
+        "mcp": "2.3.0",
+        "openai": "3.19.2",
+        "pyyaml": "6.0.3"
+      },
+      "platform": "Darwin",
+      "python": "3.11.14"
+    },
+    "model": {
+      "context_window": 1000000,
+      "max_output_tokens": 8192,
+      "model": "deepseek-flash",
+      "protocol": "anthropic",
+      "service": "https://api.deepseek.com/anthropic",
+      "thinking": true
+    },
+    "prompt": "59203e9581f6c0b71cd4302acbb8b13217b1b7eb58c7d5400d33cbd026aa13de",
+    "source": "5b2e079eaa54b38ac54947074d3ca3f36ab67d0c9dece46a9030e19db36532d6",
+    "tools": "9ff404520a42f0e4e299f4ca070a97242f294c610d25059d1ae5b9752657c3a7"
+  }
+}

@@ -1,0 +1,1 @@
+independent clamp checks passed

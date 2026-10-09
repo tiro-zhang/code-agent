@@ -1,0 +1,109 @@
+{
+  "complete": true,
+  "config_sha256": "632e8c1561e08eadb6c42aad4ca1f24679d13c9fffb5f453a151db46cb253198",
+  "controls": {
+    "cases": {
+      "cancel-command": {
+        "fingerprint": "26b1dd8c57ef67aaaab3393880ede260e630b058871b450c2e685007b7c5b06f",
+        "permissions": "431a1e50200be8d0dff74ae4f3548040bc860eba6be1253d9f4a0a62fa5b3f6e",
+        "timeout": 180
+      }
+    },
+    "close_timeout": 5,
+    "evaluator": "76165e9e14dbea7c339705e1a7e1aed27c86a710287a4aafdbb38c0412e15fe6",
+    "request_budget": 20,
+    "scope": [
+      "edit_file",
+      "execute_command",
+      "glob_files",
+      "read_file",
+      "search_code",
+      "write_file"
+    ],
+    "selected": [
+      "cancel-command"
+    ],
+    "suite": "9ccac694ef1fb0a898547ffd788fd1273355f3c864995e94dd6096ba12f4cc70",
+    "tool_timeout": 30
+  },
+  "created_at": "2026-10-08T08:17:20.987649+00:00",
+  "execution": "real",
+  "finished_at": "2026-10-08T08:17:25.275312+00:00",
+  "format_version": 1,
+  "ignored_config_fields": [
+    "skill_models",
+    "agent_models",
+    "agent_plugin_dirs",
+    "agent_background_tools",
+    "team_backend",
+    "team_max_running",
+    "team_max_queued",
+    "team_coordinator_enabled"
+  ],
+  "label": "cancel-v2",
+  "repeat": 2,
+  "run_id": "57a3f2c809dc4fd990fdd3422d35e72e",
+  "scope": [
+    "edit_file",
+    "execute_command",
+    "glob_files",
+    "read_file",
+    "search_code",
+    "write_file"
+  ],
+  "source": {
+    "commit": "59e91d1e3f288c0ce4d2a84cf1f3575715d940fa",
+    "digest": "5b2e079eaa54b38ac54947074d3ca3f36ab67d0c9dece46a9030e19db36532d6",
+    "dirty": true,
+    "environment": {
+      "dependencies": {
+        "anthropic": "1.8.0",
+        "jsonschema": "4.26.0",
+        "mcp": "2.3.0",
+        "openai": "3.19.2",
+        "pyyaml": "6.0.3"
+      },
+      "platform": "Darwin",
+      "python": "3.11.14"
+    }
+  },
+  "suite_id": "cancel-v2",
+  "trials": [
+    {
+      "case_id": "cancel-command",
+      "result": "trials/cancel-command/1/result.json",
+      "sha256": "48618d53a55a7b833b266235d008def2c1a5667fe1dfa5cb8101dde056a31543",
+      "trial_id": "1"
+    },
+    {
+      "case_id": "cancel-command",
+      "result": "trials/cancel-command/2/result.json",
+      "sha256": "2ea4227eb962ce88bedacb6b9df8de74e4db2e0ce5cb8a8eaeb308624ccbefbf",
+      "trial_id": "2"
+    }
+  ],
+  "variants": {
+    "environment": {
+      "dependencies": {
+        "anthropic": "1.8.0",
+        "jsonschema": "4.26.0",
+        "mcp": "2.3.0",
+        "openai": "3.19.2",
+        "pyyaml": "6.0.3"
+      },
+      "platform": "Darwin",
+      "python": "3.11.14"
+    },
+    "model": {
+      "context_window": 1000000,
+      "max_output_tokens": 8192,
+      "model": "deepseek-flash",
+      "protocol": "anthropic",
+      "service": "https://api.deepseek.com/anthropic",
+      "thinking": true
+    },
+    "prompt": "59203e9581f6c0b71cd4302acbb8b13217b1b7eb58c7d5400d33cbd026aa13de",
+    "source": "5b2e079eaa54b38ac54947074d3ca3f36ab67d0c9dece46a9030e19db36532d6",
+    "tools": "9ff404520a42f0e4e299f4ca070a97242f294c610d25059d1ae5b9752657c3a7"
+  }
+}

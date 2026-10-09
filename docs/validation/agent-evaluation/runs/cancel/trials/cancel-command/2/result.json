@@ -1,0 +1,15 @@
+{
+  "answers": [],
+  "case_id": "cancel-command",
+  "checks": [],
+  "format_version": 1,
+  "manual": [],
+  "metrics": {},
+  "reason": "user",
+  "references": [],
+  "run_id": "c91493cc892c451aa06d9a388adab639",
+  "started": false,
+  "status": "not_run",
+  "stops": [],
+  "trial_id": "2"
+}

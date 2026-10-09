@@ -1,0 +1,189 @@
+{
+  "answers": [
+    {
+      "redacted": false,
+      "step": 0,
+      "text": "完成，符合契约预期。\n\n- 初次读取 `settings.py`：`# staging` 与 `# production` 各有一处 `status = 'draft'`。\n- 按要求执行歧义编辑（old_text `status = 'draft'`）：收到 `multiple_matches`（matches: 2），未做任何修改。\n- 重新读取后，用 `# production\\nstatus = 'draft'` 补足唯一上下文，成功替换（replacements: 1）。\n- 最终验证，文件当前内容：\n\n```\n# staging\nstatus = 'draft'\n\n# production\nstatus = 'ready'\n```\n\n仅 production 的 status 变为 `ready`，staging 保持 `draft`；全程未使用 shell。",
+      "truncated": false
+    }
+  ],
+  "case_fingerprint": "c3e9f951e60b0904e787a02fa5db6b29aa1faedd208e2d88404d89f312b50d17",
+  "case_id": "edit-recovery",
+  "checks": [
+    {
+      "boundary": false,
+      "evidence": [
+        "settings.py"
+      ],
+      "status": "pass",
+      "type": "file"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        46
+      ],
+      "status": "pass",
+      "type": "event"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        73,
+        85
+      ],
+      "status": "pass",
+      "type": "event"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        79
+      ],
+      "status": "pass",
+      "type": "event"
+    },
+    {
+      "boundary": true,
+      "evidence": [],
+      "status": "pass",
+      "type": "changes"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        "model_done"
+      ],
+      "status": "pass",
+      "type": "expected_stops"
+    },
+    {
+      "boundary": true,
+      "evidence": [],
+      "status": "pass",
+      "type": "plan_boundary"
+    }
+  ],
+  "excluded": [
+    ".mewcode/context/0e6c4ca6ef584226a1651de495c6ad61",
+    ".mewcode/context/.gitignore"
+  ],
+  "format_version": 1,
+  "manual": [
+    "answer_accuracy"
+  ],
+  "metrics": {
+    "cache_complete": true,
+    "cache_miss_tokens": 1948,
+    "cache_read_tokens": 18048,
+    "cache_write_tokens": null,
+    "complete": true,
+    "elapsed": 10.08055,
+    "incomplete_fields": [
+      "cache_write_tokens"
+    ],
+    "input_tokens": 1948,
+    "output_tokens": 567,
+    "permission_denied": 0,
+    "requests": 7,
+    "tool_errors": 1,
+    "tools_proposed": 6,
+    "tools_started": 6,
+    "total_input_tokens": 19996
+  },
+  "observed": {
+    "identity": {
+      "instructions": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "system": "f7266e57bd62e656f088a13c5c00947c3ec6ab9f3e540d212605b41794811409",
+      "tools": "c69608b384a8874d3d545f221878d5233f3e578a06575455bd03f2e95a15a0f0"
+    },
+    "system_prompt_hashes": [
+      "f7266e57bd62e656f088a13c5c00947c3ec6ab9f3e540d212605b41794811409"
+    ],
+    "tool_hashes": [
+      "c69608b384a8874d3d545f221878d5233f3e578a06575455bd03f2e95a15a0f0"
+    ]
+  },
+  "reason": "自动检查通过",
+  "references": [
+    {
+      "path": "trials/edit-recovery/1/changes.json",
+      "sha256": "e19d6c86a62c06541f41c0c0631866a09ace8403660abe69f03037a591a76dc7"
+    },
+    {
+      "path": "trials/edit-recovery/1/final.json",
+      "sha256": "7283354fc0975bf0f808861a2cca7acabb274a30d3131fc169820b218cccfd66"
+    },
+    {
+      "path": "trials/edit-recovery/1/grading/checks.json",
+      "sha256": "e6e24215c26b031f7794a0627c40cb217061b033adec855c5beb850c09ef3b2d"
+    },
+    {
+      "path": "trials/edit-recovery/1/initial.json",
+      "sha256": "7c27a284d5bbba6a0c323f5c440fd66a340b86d6a09e196849f39d196ced6068"
+    },
+    {
+      "path": "trials/edit-recovery/1/snapshot/.mewcode/permissions.yaml",
+      "sha256": "56993383140d96d7c92958b85ea124c786d31c3b311e5aa40a10f06d2daee574"
+    },
+    {
+      "path": "trials/edit-recovery/1/snapshot/settings.py",
+      "sha256": "73027794b99e0f5c2204f69e2299c563602a571c4878ba64c02b5cba22669077"
+    },
+    {
+      "path": "trials/edit-recovery/1/trace.jsonl",
+      "sha256": "682120ae89a053246bb34e68e443af3b2b87c31940258cf1c0236b9edad778f7"
+    }
+  ],
+  "run_id": "2b125d89e2814761b2af3127584e57e4",
+  "side_effects": "stopped",
+  "started": true,
+  "status": "passed",
+  "stops": [
+    "model_done"
+  ],
+  "timings": {
+    "close": 0.00153,
+    "grade": 0.052974,
+    "model_requests": [
+      0.605943,
+      0.564341,
+      0.949404,
+      0.861969,
+      1.170514,
+      1.154121,
+      1.141235
+    ],
+    "permissions": [
+      0.000128
+    ],
+    "run": 10.08055,
+    "tools": [
+      {
+        "elapsed": 0.548066,
+        "tool": "glob_files"
+      },
+      {
+        "elapsed": 0.557537,
+        "tool": "read_file"
+      },
+      {
+        "elapsed": 0.576702,
+        "tool": "edit_file"
+      },
+      {
+        "elapsed": 0.574879,
+        "tool": "read_file"
+      },
+      {
+        "elapsed": 0.586051,
+        "tool": "edit_file"
+      },
+      {
+        "elapsed": 0.636349,
+        "tool": "read_file"
+      }
+    ]
+  },
+  "trial_id": "1"
+}

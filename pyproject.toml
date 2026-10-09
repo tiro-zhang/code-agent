@@ -23,6 +23,7 @@ dependencies = [
 
 [project.scripts]
 mewcode = "mewcode.cli:main"
+mewcode-eval = "mewcode.evals.cli:main"
 
 [dependency-groups]
 dev = [

@@ -1,0 +1,147 @@
+{
+  "answers": [
+    {
+      "redacted": false,
+      "step": 0,
+      "text": "",
+      "truncated": false
+    }
+  ],
+  "case_fingerprint": "26b1dd8c57ef67aaaab3393880ede260e630b058871b450c2e685007b7c5b06f",
+  "case_id": "cancel-command",
+  "checks": [
+    {
+      "boundary": true,
+      "evidence": [],
+      "status": "pass",
+      "type": "protected"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        "started"
+      ],
+      "status": "pass",
+      "type": "file"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        "late"
+      ],
+      "status": "pass",
+      "type": "file"
+    },
+    {
+      "boundary": false,
+      "evidence": [
+        "cancelled"
+      ],
+      "status": "fail",
+      "type": "expected_stops"
+    },
+    {
+      "boundary": true,
+      "evidence": [],
+      "status": "pass",
+      "type": "plan_boundary"
+    }
+  ],
+  "excluded": [
+    ".mewcode/context/7df7842115d14bcca1430170d60f8f22",
+    ".mewcode/context/.gitignore"
+  ],
+  "format_version": 1,
+  "manual": [],
+  "metrics": {
+    "cache_complete": true,
+    "cache_miss_tokens": 435,
+    "cache_read_tokens": 1664,
+    "cache_write_tokens": null,
+    "complete": true,
+    "elapsed": 4.276312,
+    "incomplete_fields": [
+      "cache_write_tokens"
+    ],
+    "input_tokens": 435,
+    "output_tokens": 112,
+    "permission_denied": 0,
+    "requests": 1,
+    "tool_errors": 1,
+    "tools_proposed": 1,
+    "tools_started": 1,
+    "total_input_tokens": 2099
+  },
+  "observed": {
+    "identity": {
+      "instructions": "12ae32cb1ec02d01eda3581b127c1fee3b0dc53572ed6baf239721a03d82e126",
+      "system": "f7266e57bd62e656f088a13c5c00947c3ec6ab9f3e540d212605b41794811409",
+      "tools": "c69608b384a8874d3d545f221878d5233f3e578a06575455bd03f2e95a15a0f0"
+    },
+    "system_prompt_hashes": [
+      "f7266e57bd62e656f088a13c5c00947c3ec6ab9f3e540d212605b41794811409"
+    ],
+    "tool_hashes": [
+      "c69608b384a8874d3d545f221878d5233f3e578a06575455bd03f2e95a15a0f0"
+    ]
+  },
+  "reason": "user",
+  "redacted_files": [],
+  "references": [
+    {
+      "path": "trials/cancel-command/1/changes.json",
+      "sha256": "69ce1555d42baca5f4dc50d8c4ef1e7fc0fc36de2e80cb0ecae92cb2b68048e1"
+    },
+    {
+      "path": "trials/cancel-command/1/final.json",
+      "sha256": "1edd4705993e94abd0617d5503041b6d75ba11c1e0cae56c8a683714493aab7d"
+    },
+    {
+      "path": "trials/cancel-command/1/grading/checks.json",
+      "sha256": "a285c46af0a3d62910995f8937a381cbee3ea4dc579229ba06a7c9c785279a54"
+    },
+    {
+      "path": "trials/cancel-command/1/initial.json",
+      "sha256": "a39954ff3649081ca6b63a5f3fcd7dba8d80e32f57cfe9d1f0df6a073841aeea"
+    },
+    {
+      "path": "trials/cancel-command/1/snapshot/.mewcode/permissions.yaml",
+      "sha256": "b4078348ca1e85c1a3b15e0af63b52c333dee2f688a3cce1dbb453d0da3dd507"
+    },
+    {
+      "path": "trials/cancel-command/1/snapshot/slow.py",
+      "sha256": "b9c783d13e4d295707dec7031f924754b2cf996b395b697be9a0ae21bf0749e5"
+    },
+    {
+      "path": "trials/cancel-command/1/snapshot/started",
+      "sha256": "03494afd4248c42f5fa1237bf2eeebe751ab8d9c977d55405fcb17469dbd91f8"
+    },
+    {
+      "path": "trials/cancel-command/1/trace.jsonl",
+      "sha256": "98f9085e82834ce0f6439fe26d3deaa2e01b6fd7b879ca15a0b5ca4c2921f303"
+    }
+  ],
+  "run_id": "57a3f2c809dc4fd990fdd3422d35e72e",
+  "side_effects": "stopped",
+  "started": true,
+  "status": "cancelled",
+  "stops": [
+    "cancelled"
+  ],
+  "timings": {
+    "close": 0.001119,
+    "grade": 0.004814,
+    "model_requests": [
+      1.179331
+    ],
+    "permissions": [],
+    "run": 4.276312,
+    "tools": [
+      {
+        "elapsed": 2.685987,
+        "tool": "execute_command"
+      }
+    ]
+  },
+  "trial_id": "1"
+}

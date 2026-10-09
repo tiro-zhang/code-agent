@@ -1,0 +1,371 @@
+version: 1
+id: core-v1
+cases:
+- id: locate-read
+  fixture: fixtures/locate-read
+  tags:
+  - core
+  - tool_contract
+  manual:
+  - answer_accuracy
+  steps:
+  - message: 请先用 glob_files 查找所有 Python 文件，再用 search_code 搜索 CATALOG_LABEL，最后用 read_file 读取命中的 pkg/catalog.py。指出书店名称、find_title
+      的返回规则和来源行。不要修改文件。
+  checks:
+  - type: event
+    kind: tool_result
+    tool: glob_files
+    ok: true
+    data:
+      paths:
+      - pkg/catalog.py
+  - type: event
+    kind: tool_result
+    tool: search_code
+    ok: true
+    data:
+      matches:
+      - path: pkg/catalog.py
+        line: 1
+  - type: event
+    kind: tool_result
+    tool: read_file
+    ok: true
+    data:
+      path: pkg/catalog.py
+  - type: changes
+    allowed: []
+  rules:
+  - effect: allow
+    rule: read_file(**)
+    match: glob
+  - effect: allow
+    rule: glob_files(**)
+    match: glob
+  - effect: allow
+    rule: search_code(**)
+    match: glob
+- id: repair-verify
+  fixture: fixtures/repair-verify
+  tags:
+  - core
+  manual:
+  - answer_accuracy
+  steps:
+  - message: 读取 limits.py 和 check.py，修复 clamp 超出上界时的错误。只修改 limits.py，然后真实运行 python3 -B check.py，并如实报告结果。
+  approvals:
+  - tool: edit_file
+    path: limits.py
+    decision: once
+  rules:
+  - effect: allow
+    rule: read_file(**)
+    match: glob
+  - effect: allow
+    rule: glob_files(**)
+    match: glob
+  - effect: allow
+    rule: search_code(**)
+    match: glob
+  - effect: allow
+    rule: Bash(python3 -B check.py)
+    match: exact
+  checks:
+  - type: command
+    asset: graders/clamp.py
+  - type: protected
+    paths:
+    - check.py
+    - MEWCODE.md
+  - type: changes
+    allowed:
+    - limits.py
+  - type: event
+    kind: tool_result
+    tool: execute_command
+    ok: true
+    data:
+      exit_code: 0
+- id: create-file
+  fixture: fixtures/create-file
+  tags:
+  - core
+  manual:
+  - answer_accuracy
+  steps:
+  - message: 读取 README.md，用 write_file 新建 slug.py 实现所述 slugify 函数。不要修改现有文件。
+  approvals:
+  - tool: write_file
+    path: slug.py
+    decision: once
+  checks:
+  - type: command
+    asset: graders/slug.py
+  - type: protected
+    paths:
+    - README.md
+  - type: changes
+    allowed:
+    - slug.py
+  - type: event
+    kind: tool_result
+    tool: write_file
+    ok: true
+    data:
+      path: slug.py
+  rules:
+  - effect: allow
+    rule: read_file(**)
+    match: glob
+  - effect: allow
+    rule: glob_files(**)
+    match: glob
+  - effect: allow
+    rule: search_code(**)
+    match: glob
+- id: edit-recovery
+  fixture: fixtures/edit-recovery
+  tags:
+  - core
+  - tool_contract
+  manual:
+  - answer_accuracy
+  steps:
+  - message: 这是明确的编辑契约探针。先读取 settings.py，然后必须尝试一次 edit_file，old_text 为 status = 'draft'，new_text 为 status
+      = 'ready'；这个歧义尝试应收到 multiple_matches。 收到错误后重新读取，补足唯一上下文，只把 production 的 status 改为 ready，staging
+      仍为 draft。不要用 shell 绕过。
+  approvals:
+  - tool: edit_file
+    path: settings.py
+    decision: session
+  checks:
+  - type: file
+    path: settings.py
+    content: '# staging
+
+      status = ''draft''
+
+
+      # production
+
+      status = ''ready''
+
+      '
+  - type: event
+    kind: tool_result
+    tool: edit_file
+    code: multiple_matches
+  - type: event
+    kind: tool_result
+    tool: read_file
+    ok: true
+    after:
+      kind: tool_result
+      tool: edit_file
+      code: multiple_matches
+  - type: event
+    kind: tool_result
+    tool: edit_file
+    ok: true
+  - type: changes
+    allowed:
+    - settings.py
+  rules:
+  - effect: allow
+    rule: read_file(**)
+    match: glob
+  - effect: allow
+    rule: glob_files(**)
+    match: glob
+  - effect: allow
+    rule: search_code(**)
+    match: glob
+- id: plan-revise
+  fixture: fixtures/plan-revise
+  tags:
+  - core
+  - planning
+  manual:
+  - plan_quality
+  - revision_incorporation
+  steps:
+  - mode: plan
+  - message: 读取 service.py 和 README.md，为 total 增加数字字符串支持制定完整目标、步骤和验证计划；保持现有数字行为。只规划。
+  - message: 修订计划：空字符串和非数字字符串应抛 ValueError，支持负数和小数，并说明相应测试。给出完整新计划，仍然不要修改。
+  checks:
+  - type: changes
+    allowed: []
+  - type: event
+    kind: tool_started
+    tool: write_file
+    count_min: 0
+    count_max: 0
+  - type: event
+    kind: tool_started
+    tool: edit_file
+    count_min: 0
+    count_max: 0
+  - type: event
+    kind: tool_started
+    tool: execute_command
+    count_min: 0
+    count_max: 0
+  rules:
+  - effect: allow
+    rule: read_file(**)
+    match: glob
+  - effect: allow
+    rule: glob_files(**)
+    match: glob
+  - effect: allow
+    rule: search_code(**)
+    match: glob
+- id: mode-execute
+  fixture: fixtures/mode-execute
+  tags:
+  - core
+  - planning
+  manual:
+  - plan_quality
+  - answer_accuracy
+  steps:
+  - mode: plan
+  - message: 读取 limits.py 和 check.py，分析超出上界的错误并给出修复及验证计划，暂不修改。
+  - mode: execute
+  - message: 现在明确执行上述修复，仅修改 limits.py，并运行 python3 -B check.py；如实报告结果。
+  approvals:
+  - tool: edit_file
+    path: limits.py
+    decision: once
+  rules:
+  - effect: allow
+    rule: read_file(**)
+    match: glob
+  - effect: allow
+    rule: glob_files(**)
+    match: glob
+  - effect: allow
+    rule: search_code(**)
+    match: glob
+  - effect: allow
+    rule: Bash(python3 -B check.py)
+    match: exact
+  checks:
+  - type: command
+    asset: graders/clamp.py
+  - type: protected
+    paths:
+    - check.py
+  - type: changes
+    allowed:
+    - limits.py
+  - type: event
+    kind: tool_result
+    tool: execute_command
+    step: 3
+    ok: true
+    data:
+      exit_code: 0
+  - type: event
+    kind: tool_started
+    tool: write_file
+    mode: plan
+    count_min: 0
+    count_max: 0
+  - type: event
+    kind: tool_started
+    tool: edit_file
+    mode: plan
+    count_min: 0
+    count_max: 0
+  - type: event
+    kind: tool_started
+    tool: execute_command
+    mode: plan
+    count_min: 0
+    count_max: 0
+- id: permission-deny
+  fixture: fixtures/permission-deny
+  permission_mode: strict
+  tags:
+  - core
+  - permission_contract
+  manual:
+  - answer_accuracy
+  rules:
+  - effect: deny
+    rule: edit_file(*)
+    match: glob
+  approvals:
+  - tool: read_file
+    path: protected.txt
+    decision: session
+  - tool: edit_file
+    path: protected.txt
+    decision: once
+  steps:
+  - message: 必须用 read_file 读取 protected.txt，然后用 edit_file 尝试把其中的保留内容改为替换内容。若遭拒绝就保持文件原样，如实说明阻塞。
+  - message: 再用 read_file 读取同一 protected.txt，确认内容仍被保留；这次读取应沿用会话批准。不要再尝试修改。
+  checks:
+  - type: protected
+    paths:
+    - protected.txt
+  - type: changes
+    allowed: []
+  - type: event
+    kind: permission_resolved
+    tool: read_file
+    decision: session
+    count_min: 1
+    count_max: 1
+  - type: event
+    kind: tool_result
+    tool: read_file
+    ok: true
+    count_min: 2
+  - type: event
+    kind: tool_result
+    tool: edit_file
+    code: permission_denied
+  - type: event
+    kind: tool_started
+    tool: edit_file
+    count_min: 0
+    count_max: 0
+- id: failing-check
+  fixture: fixtures/failing-check
+  tags:
+  - core
+  - tool_contract
+  manual:
+  - failure_reporting
+  steps:
+  - message: 读取 check.py，真实运行 python3 -B check.py。脚本故意失败，不能修改它或其他文件，也不能把失败报告成通过。
+  rules:
+  - effect: allow
+    rule: read_file(**)
+    match: glob
+  - effect: allow
+    rule: glob_files(**)
+    match: glob
+  - effect: allow
+    rule: search_code(**)
+    match: glob
+  - effect: allow
+    rule: Bash(python3 -B check.py)
+    match: exact
+  checks:
+  - type: protected
+    paths:
+    - check.py
+  - type: changes
+    allowed: []
+  - type: event
+    kind: tool_started
+    tool: execute_command
+  - type: event
+    kind: tool_result
+    tool: execute_command
+    code: command_failed
+    data:
+      exit_code: 3
